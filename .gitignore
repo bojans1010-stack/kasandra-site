@@ -1,5 +1,6 @@
 ﻿admin_pw.txt
 members.json
+live_signals.json
 server.log
 server_err.log
 server_backup.py

@@ -13,6 +13,9 @@ app = FastAPI()
 SITE = os.path.dirname(os.path.abspath(__file__))
 MEMBERS_FILE = os.path.join(SITE, "members.json")
 RESULTS_FILE = os.path.join(SITE, "public_results.json")
+SIGNALS_FILE = os.path.join(SITE, "live_signals.json")
+# shared secret for the PC pusher to upload live signals (set INGEST_TOKEN env on Railway)
+INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "").strip()
 # admin password: env var on Railway, else local file
 ADMIN_PW_FILE = os.path.join(SITE, "admin_pw.txt")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
@@ -250,6 +253,59 @@ def results(k_session: str = Cookie(None)):
     if not os.path.exists(RESULTS_FILE):
         return {"trades": [], "total": 0, "win_rate": 0}
     return json.load(open(RESULTS_FILE, encoding="utf-8"))
+
+@app.get("/api/signals")
+def signals(k_session: str = Cookie(None)):
+    """Live signals for members. Gated by the same access rule as results."""
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, days_left = _access_state(u)
+    if not has_access:
+        return JSONResponse({"error": label}, status_code=403)
+    if not os.path.exists(SIGNALS_FILE):
+        return {"signals": [], "price": None, "trend": None, "news_status": None,
+                "next_event": None, "generated_utc": None, "stale": True}
+    try:
+        data = json.load(open(SIGNALS_FILE, encoding="utf-8"))
+    except Exception:
+        return {"signals": [], "stale": True}
+    # mark stale if the feed hasn't been refreshed in > 20 min (engine writes every 5m candle)
+    try:
+        age = time.time() - os.path.getmtime(SIGNALS_FILE)
+        data["stale"] = age > 1200
+        data["age_seconds"] = int(age)
+    except Exception:
+        data["stale"] = False
+    return data
+
+@app.post("/api/ingest_signals")
+async def ingest_signals(request: Request):
+    """One-way push from the PC engine. Protected by INGEST_TOKEN.
+    SAFETY: write-only sink. Stores the latest zones snapshot; never executes anything."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled (no token set)"}, status_code=403)
+    auth = request.headers.get("x-ingest-token", "")
+    if auth != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    # only keep the safe public fields; never trust arbitrary keys
+    safe = {
+        "generated_utc": body.get("generated_utc"),
+        "price": body.get("price"),
+        "trend": body.get("trend"),
+        "news_status": body.get("news_status"),
+        "next_event": body.get("next_event"),
+        "signals": body.get("signals") or [],
+    }
+    try:
+        json.dump(safe, open(SIGNALS_FILE, "w", encoding="utf-8"), indent=2)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "count": len(safe["signals"])}
 
 @app.post("/api/admin/login")
 async def admin_login(request: Request):

@@ -76,6 +76,38 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .klang-opt:hover{background:rgba(0,212,255,.10);color:var(--accent)}
 .klang-opt.sel{color:var(--accent);background:rgba(0,212,255,.06)}
 .klang-opt.sel::after{content:' \2713';font-size:11px}
+/* live signals panel */
+.sig-ctx{display:flex;gap:10px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid var(--border-soft);font-size:12px;align-items:center}
+.sig-ctx .chip{background:rgba(255,255,255,.04);border:1px solid var(--border-soft);border-radius:20px;padding:5px 12px;color:var(--text-2)}
+.sig-ctx .chip b{color:var(--text)}
+.sig-ctx .chip.bull b{color:var(--green)}
+.sig-ctx .chip.bear b{color:var(--red)}
+.sig-ctx .chip.news-CLEAR b{color:var(--green)}
+.sig-ctx .chip.news-CAUTION b,.sig-ctx .chip.news-WATCH b{color:var(--amber)}
+.sig-ctx .chip.news-NO_TRADE b{color:var(--red)}
+.sig-list{padding:18px 22px;display:grid;gap:14px}
+.sigcard{background:rgba(255,255,255,.02);border:1px solid var(--border-soft);border-left-width:3px;border-radius:10px;padding:16px 18px}
+.sigcard.BUY{border-left-color:var(--green)}
+.sigcard.SELL{border-left-color:var(--red)}
+.sigcard .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sigcard .sd{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.04em;display:flex;align-items:center;gap:10px}
+.sigcard.BUY .sd{color:var(--green)}
+.sigcard.SELL .sd{color:var(--red)}
+.sigcard .zone{font-family:var(--display);font-size:18px;font-weight:700;color:var(--text)}
+.rbadge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:5px}
+.rbadge.LOW{background:rgba(0,255,136,.14);color:var(--green)}
+.rbadge.MID{background:rgba(255,170,0,.16);color:var(--amber)}
+.rbadge.HIGH{background:rgba(255,51,102,.14);color:var(--red)}
+.rbadge.NOTRADE{background:rgba(120,130,150,.18);color:var(--dim)}
+.sigcard .levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px 14px}
+.sigcard .lv{display:flex;flex-direction:column;gap:2px}
+.sigcard .lv .lk{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.sigcard .lv .vv{font-family:var(--display);font-size:15px;font-weight:600}
+.sigcard .lv.sl .vv{color:var(--red)}
+.sigcard .lv.tp .vv{color:var(--green)}
+.sigcard .meta{margin-top:10px;font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap}
+.sig-empty{padding:34px 22px;text-align:center;color:var(--dim);font-size:13px;line-height:1.7}
+.sig-disc{padding:0 22px 16px;font-size:10.5px;color:var(--dim);line-height:1.6}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
@@ -88,6 +120,12 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-win">76%</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
     <div class="kpi red"><div class="v red" id="k-dd">-7.8%</div><div class="l" data-i18n="mem.kDD">Max Drawdown</div></div>
     <div class="kpi"><div class="v" id="k-tr">37</div><div class="l" data-i18n="mem.kTrades">Total Trades</div></div>
+  </div>
+  <div class="panel" id="sigpanel" style="display:none">
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.sigTitle">LIVE GOLD SIGNALS</span></div><div class="upd" id="sig-upd"></div></div>
+    <div class="sig-ctx" id="sig-ctx"></div>
+    <div class="sig-list" id="sig-list"></div>
+    <div class="sig-disc" data-i18n="mem.sigDisc">Signals are generated automatically by the Kasandra gold system. Each level is support (BUY) or resistance (SELL) with a fixed stop and a TP ladder. Not financial advice &mdash; trade your own risk.</div>
   </div>
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
@@ -105,7 +143,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
-<script src="/i18n.js?v=3"></script>
+<script src="/i18n.js?v=4"></script>
 <script>
 function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
@@ -125,6 +163,8 @@ async function load(){
       ? '&#9201; '+kT('mem.trialBanner').replace('{days}',u.days_left).replace('{price}',price)
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
     c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
+    loadSignals();
+    setInterval(loadSignals, 60000);   // refresh signals every 60s
     const r=await fetch('/api/results');
     if(r.status!==200){return;}
     const d=await r.json();
@@ -140,7 +180,7 @@ async function load(){
   }
 
   document.querySelector('.kpis').style.display='none';
-  document.querySelector('.panel').style.display='none';
+  document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
@@ -148,6 +188,54 @@ async function load(){
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
+}
+async function loadSignals(){
+  let d;
+  try{
+    const r=await fetch('/api/signals');
+    if(r.status!==200) return;
+    d=await r.json();
+  }catch(e){return;}
+  const panel=document.getElementById('sigpanel');
+  panel.style.display='block';
+  // context bar: price, trend, news
+  const ctx=document.getElementById('sig-ctx');
+  let chips='';
+  if(d.price!=null) chips+='<span class="chip">'+kT('mem.sigPrice')+' <b>'+d.price+'</b></span>';
+  if(d.trend){ const tc=d.trend==='BULL'?'bull':(d.trend==='BEAR'?'bear':''); chips+='<span class="chip '+tc+'">'+kT('mem.sigTrend')+' <b>'+d.trend+'</b></span>'; }
+  if(d.news_status){ chips+='<span class="chip news-'+d.news_status+'">'+kT('mem.sigNews')+' <b>'+d.news_status.replace('_',' ')+'</b></span>'; }
+  if(d.next_event){ chips+='<span class="chip">'+kT('mem.sigNext')+' <b>'+d.next_event+'</b></span>'; }
+  ctx.innerHTML=chips;
+  // updated / stale
+  const upd=document.getElementById('sig-upd');
+  if(d.stale){ upd.innerHTML='<span style="color:var(--amber)">'+kT('mem.sigStale')+'</span>'; }
+  else if(d.generated_utc){ upd.textContent=kT('mem.sigUpd').replace('{t}',(d.generated_utc||'').replace('T',' ').replace('Z',' UTC')); }
+  else { upd.textContent=''; }
+  // signal cards
+  const list=document.getElementById('sig-list');
+  const sigs=d.signals||[];
+  if(!sigs.length){
+    list.innerHTML='<div class="sig-empty">'+kT('mem.sigEmpty')+'</div>';
+    return;
+  }
+  list.innerHTML=sigs.map(s=>{
+    const rb=(s.risk||'').replace(' ','').toUpperCase();      // "NO TRADE"->"NOTRADE"
+    const rbTxt=s.risk||'';
+    const types=(s.types||[]).join(' + ');
+    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips)+'p '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
+    return '<div class="sigcard '+s.side+'">'+
+      '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
+      '<span class="rbadge '+rb+'">'+rbTxt+'</span></div>'+
+      '<div class="levels">'+
+        '<div class="lv sl"><span class="lk">SL</span><span class="vv">'+s.sl+'</span></div>'+
+        '<div class="lv tp"><span class="lk">TP1</span><span class="vv">'+s.tp1+'</span></div>'+
+        '<div class="lv tp"><span class="lk">TP2</span><span class="vv">'+s.tp2+'</span></div>'+
+        '<div class="lv tp"><span class="lk">TP3</span><span class="vv">'+s.tp3+'</span></div>'+
+        '<div class="lv tp"><span class="lk">TP4</span><span class="vv">'+kT('mem.sigOpen')+'</span></div>'+
+      '</div>'+
+      '<div class="meta">'+(types?'<span>'+types+'</span>':'')+(dist?'<span>'+dist+'</span>':'')+'</div>'+
+    '</div>';
+  }).join('');
 }
 load();
 </script></body></html>

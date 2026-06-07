@@ -385,6 +385,16 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
+@app.get("/api/health")
+def health():
+    """Non-sensitive diagnostic: which storage backend is live, and member count."""
+    mode = "postgres" if _USE_DB else "file(ephemeral)"
+    try:
+        n = len(_all_members())
+    except Exception as e:
+        n = -1
+    return {"storage": mode, "members": n, "db_url_set": bool(DATABASE_URL)}
+
 @app.get("/")
 def home(): return FileResponse(os.path.join(SITE, "index.html"))
 

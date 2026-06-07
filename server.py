@@ -315,6 +315,9 @@ def home(): return FileResponse(os.path.join(SITE, "index.html"))
 @app.get("/public_results.json")
 def pub_results(): return FileResponse(RESULTS_FILE)
 
+@app.get("/i18n.js")
+def i18n_js(): return FileResponse(os.path.join(SITE, "i18n.js"), media_type="application/javascript")
+
 @app.get("/login")
 def login_page(): return FileResponse(os.path.join(SITE, "login.html"))
 

@@ -43,6 +43,10 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .nav-links a:hover{color:var(--accent)}
 .nav-cta{padding:8px 18px;border:1px solid var(--accent);border-radius:8px;color:var(--accent)!important;font-weight:600;transition:all .25s}
 .nav-cta:hover{background:var(--accent);color:var(--bg)!important;box-shadow:0 0 24px rgba(0,212,255,.4)}
+.langtog{display:flex;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.langtog button{background:transparent;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;font-weight:600;padding:7px 11px;cursor:pointer;transition:all .2s}
+.langtog button.active{background:var(--accent);color:var(--bg)}
+.langtog button:not(.active):hover{color:var(--accent)}
 
 /* HERO */
 .hero{padding:100px 0 70px;text-align:center}
@@ -195,28 +199,29 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
   <div class="nav-in">
     <div class="brand"><span class="dot"></span>KASANDRA</div>
     <div class="nav-links">
-      <a href="#how">How it works</a>
-      <a href="#trades">Live Trades</a>
-      <a href="#join">Join</a>
-      <a href="/login" class="nav-cta">Member Login</a>
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#trades" data-i18n="nav.trades">Live Trades</a>
+      <a href="#join" data-i18n="nav.join">Join</a>
+      <span class="langtog"><button data-lang-btn="en" onclick="kSetLang('en')">EN</button><button data-lang-btn="mk" onclick="kSetLang('mk')">МК</button></span>
+      <a href="/login" class="nav-cta" data-i18n="nav.login">Member Login</a>
     </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">Kasandra Technologies</div>
+    <div class="eyebrow" data-i18n="hero.eyebrow">Kasandra Technologies</div>
     <h1>Automated <span class="ac">gold</span> trading,<br>built on <span class="ac">transparency</span>.</h1>
-    <p class="lead">A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.</p>
+    <p class="lead" data-i18n="hero.lead">A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.</p>
     <div class="hero-ctas">
-      <a href="#how" class="btn-primary">HOW IT WORKS</a>
-      <a href="#trades" class="btn-ghost">See every trade</a>
+      <a href="#how" class="btn-primary" data-i18n="hero.btnHow">HOW IT WORKS</a>
+      <a href="#trades" class="btn-ghost" data-i18n="hero.btnTrades">See every trade</a>
     </div>
     <div class="stats" id="results">
-      <div class="stat green"><div class="v green" id="s-roi">+41.8%</div><div class="l">Return</div><div class="since">since Jun 2026</div></div>
-      <div class="stat"><div class="v" id="s-win">76%</div><div class="l">Win Rate</div><div class="since">live trades</div></div>
-      <div class="stat red"><div class="v red" id="s-dd">-7.8%</div><div class="l">Max Drawdown</div><div class="since">worst dip</div></div>
-      <div class="stat"><div class="v" id="s-tr">37</div><div class="l">Trades</div><div class="since">and counting</div></div>
+      <div class="stat green"><div class="v green" id="s-roi">+41.8%</div><div class="l" data-i18n="stat.return">Return</div><div class="since" data-i18n="stat.since">since Jun 2026</div></div>
+      <div class="stat"><div class="v" id="s-win">76%</div><div class="l" data-i18n="stat.winrate">Win Rate</div><div class="since" data-i18n="stat.livetrades">live trades</div></div>
+      <div class="stat red"><div class="v red" id="s-dd">-7.8%</div><div class="l" data-i18n="stat.maxdd">Max Drawdown</div><div class="since" data-i18n="stat.worstdip">worst dip</div></div>
+      <div class="stat"><div class="v" id="s-tr">37</div><div class="l" data-i18n="stat.trades">Trades</div><div class="since" data-i18n="stat.counting">and counting</div></div>
     </div>
   </div>
 </header>
@@ -224,20 +229,20 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 <section class="block transp" id="transparency">
   <div class="wrap">
     <div class="sec-head">
-      <div class="tag">Why Kasandra</div>
-      <h2>The numbers are the pitch.</h2>
-      <p>Most signal services show you screenshots. We show you every trade, dated from the day the system went live, drawdowns included.</p>
+      <div class="tag" data-i18n="transp.tag">Why Kasandra</div>
+      <h2 data-i18n="transp.h2">The numbers are the pitch.</h2>
+      <p data-i18n="transp.sub">Most signal services show you screenshots. We show you every trade, dated from the day the system went live, drawdowns included.</p>
     </div>
     <div class="transp-grid">
-      <div class="tcard"><div class="ico">&#9678;</div><h3>Real, dated results</h3><p>Performance tracked from the exact day the system started trading live. We never reset the clock to hide a bad run.</p></div>
-      <div class="tcard"><div class="ico">&#9878;</div><h3>Drawdowns shown</h3><p>We publish the worst dip, not just the best week. You see the full risk picture before you ever connect.</p></div>
-      <div class="tcard"><div class="ico">&#10227;</div><h3>Rules, not feelings</h3><p>A fixed strategy with strict risk limits. Single-entry discipline, hard stops, no revenge trading, no martingale.</p></div>
+      <div class="tcard"><div class="ico">&#9678;</div><h3 data-i18n="transp.c1h">Real, dated results</h3><p data-i18n="transp.c1p">Performance tracked from the exact day the system started trading live. We never reset the clock to hide a bad run.</p></div>
+      <div class="tcard"><div class="ico">&#9878;</div><h3 data-i18n="transp.c2h">Drawdowns shown</h3><p data-i18n="transp.c2p">We publish the worst dip, not just the best week. You see the full risk picture before you ever connect.</p></div>
+      <div class="tcard"><div class="ico">&#10227;</div><h3 data-i18n="transp.c3h">Rules, not feelings</h3><p data-i18n="transp.c3p">A fixed strategy with strict risk limits. Single-entry discipline, hard stops, no revenge trading, no martingale.</p></div>
     </div>
     <div style="margin-top:18px;background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--accent-dim);border-radius:14px;padding:26px 30px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
       <div style="font-size:30px;color:var(--accent);flex-shrink:0">&#128274;</div>
       <div style="flex:1;min-width:240px">
-        <h3 style="font-family:var(--display);font-size:19px;font-weight:700;margin-bottom:6px">Your money never touches us</h3>
-        <p style="color:var(--text-2);font-size:13.5px;line-height:1.7">We do not hold, manage, or have access to your funds. Everything sits in <b style="color:var(--text)">your own VT Markets account</b>, in your name, under your control &mdash; you can withdraw any time. Kasandra only provides the technology that connects you to the strategy. We never ask for your deposits, and we never could move them.</p>
+        <h3 style="font-family:var(--display);font-size:19px;font-weight:700;margin-bottom:6px" data-i18n="transp.moneyh">Your money never touches us</h3>
+        <p style="color:var(--text-2);font-size:13.5px;line-height:1.7" data-i18n="transp.moneyp">We do not hold, manage, or have access to your funds. Everything sits in <b style="color:var(--text)">your own VT Markets account</b>, in your name, under your control &mdash; you can withdraw any time. Kasandra only provides the technology that connects you to the strategy. We never ask for your deposits, and we never could move them.</p>
       </div>
     </div>
   </div>
@@ -246,18 +251,18 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 <section class="block" id="trades">
   <div class="wrap">
     <div class="sec-head">
-      <div class="tag">Full transparency</div>
-      <h2>Every trade we take.</h2>
-      <p>This is the live record straight from the account. Entry, direction, result. Updated as the system trades.</p>
+      <div class="tag" data-i18n="trades.tag">Full transparency</div>
+      <h2 data-i18n="trades.h2">Every trade we take.</h2>
+      <p data-i18n="trades.sub">This is the live record straight from the account. Entry, direction, result. Updated as the system trades.</p>
     </div>
     <div class="trades-panel">
       <div class="tp-head">
-        <div class="t"><span class="dot"></span>LIVE TRADE LOG</div>
+        <div class="t"><span class="dot"></span><span data-i18n="trades.log">LIVE TRADE LOG</span></div>
         <div class="upd" id="tp-updated">loading...</div>
       </div>
       <table class="trades-table">
-        <thead><tr><th>Date</th><th>Time</th><th>Side</th><th>Entry</th><th>Exit</th><th>Points</th><th>Result</th></tr></thead>
-        <tbody id="trades-body"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">loading live trades...</td></tr></tbody>
+        <thead><tr><th data-i18n="trades.thDate">Date</th><th data-i18n="trades.thTime">Time</th><th data-i18n="trades.thSide">Side</th><th data-i18n="trades.thEntry">Entry</th><th data-i18n="trades.thExit">Exit</th><th data-i18n="trades.thPoints">Points</th><th data-i18n="trades.thResult">Result</th></tr></thead>
+        <tbody id="trades-body"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px" data-i18n="trades.loading">loading live trades...</td></tr></tbody>
       </table>
       <div class="tp-foot" id="tp-foot"></div>
     </div>
@@ -268,38 +273,38 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 <section class="block" id="how">
   <div class="wrap">
     <div class="sec-head">
-      <div class="tag">How it works</div>
-      <h2>One system. Two ways to use it.</h2>
+      <div class="tag" data-i18n="how.tag">How it works</div>
+      <h2 data-i18n="how.h2">One system. Two ways to use it.</h2>
     </div>
-    <p class="how-intro">Kasandra runs a single rules-based system on gold (XAU/USD). It reads the market around the clock and acts only when its conditions line up, with <b>fixed risk on every trade</b> &mdash; tight stops, single entries, no martingale, no revenge trading. You can let that system trade <b>for you automatically</b>, or take its signals and trade them <b>yourself</b>. <b>We never touch or hold your money.</b> You trade through your own VT Markets account &mdash; your funds stay in your name, with the broker, under your control at all times. We simply provide the technology that connects you to the strategy.</p>
+    <p class="how-intro" data-i18n-html="how.intro">Kasandra runs a single rules-based system on gold (XAU/USD). It reads the market around the clock and acts only when its conditions line up, with <b>fixed risk on every trade</b> &mdash; tight stops, single entries, no martingale, no revenge trading. You can let that system trade <b>for you automatically</b>, or take its signals and trade them <b>yourself</b>. <b>We never touch or hold your money.</b> You trade through your own VT Markets account &mdash; your funds stay in your name, with the broker, under your control at all times. We simply provide the technology that connects you to the strategy.</p>
     <div class="ways">
       <div class="way best">
-        <span class="tagpill">Best results &middot; hands-off</span>
-        <h3>Automated copy trading</h3>
-        <div class="sub">The system trades your account for you</div>
+        <span class="tagpill" data-i18n="how.bestTag">Best results &middot; hands-off</span>
+        <h3 data-i18n="how.bestH">Automated copy trading</h3>
+        <div class="sub" data-i18n="how.bestSub">The system trades your account for you</div>
         <ul>
-          <li>Connect your VT Markets account to our automated copy trading</li>
-          <li>Every trade the system takes is copied to your account automatically</li>
-          <li>No screen time, no manual entries, nothing to miss</li>
-          <li>Same entries, same risk control, fully hands-off</li>
-          <li>This is how you get results closest to the live track record above</li>
+          <li data-i18n="how.bestL1">Connect your VT Markets account to our automated copy trading</li>
+          <li data-i18n="how.bestL2">Every trade the system takes is copied to your account automatically</li>
+          <li data-i18n="how.bestL3">No screen time, no manual entries, nothing to miss</li>
+          <li data-i18n="how.bestL4">Same entries, same risk control, fully hands-off</li>
+          <li data-i18n="how.bestL5">This is how you get results closest to the live track record above</li>
         </ul>
-        <a class="wbtn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">CONNECT &amp; COPY AUTOMATICALLY &rarr;</a>
-        <div class="price">Open account &middot; enter code uKdrW9fs &middot; message us to connect</div>
+        <a class="wbtn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="how.bestBtn">CONNECT &amp; COPY AUTOMATICALLY &rarr;</a>
+        <div class="price" data-i18n="how.bestPrice">Open account &middot; enter code uKdrW9fs &middot; message us to connect</div>
       </div>
       <div class="way manual">
-        <span class="tagpill">Try it free &middot; 7 days</span>
-        <h3>Trade the signals yourself</h3>
-        <div class="sub">You place the trades manually</div>
+        <span class="tagpill" data-i18n="how.manualTag">Try it free &middot; 7 days</span>
+        <h3 data-i18n="how.manualH">Trade the signals yourself</h3>
+        <div class="sub" data-i18n="how.manualSub">You place the trades manually</div>
         <ul>
-          <li>Get the system&rsquo;s live signals in your members area</li>
-          <li>Place the trades yourself, in your own time</li>
-          <li>Full control over every entry and exit</li>
-          <li><b>7-day free trial</b> &mdash; see the signals before you pay</li>
-          <li>After the trial, continue for 99 USDT / month</li>
+          <li data-i18n="how.manualL1">Get the system&rsquo;s live signals in your members area</li>
+          <li data-i18n="how.manualL2">Place the trades yourself, in your own time</li>
+          <li data-i18n="how.manualL3">Full control over every entry and exit</li>
+          <li data-i18n="how.manualL4"><b>7-day free trial</b> &mdash; see the signals before you pay</li>
+          <li data-i18n="how.manualL5">After the trial, continue for 99 USDT / month</li>
         </ul>
-        <a class="wbtn" href="/signup">START 7-DAY FREE TRIAL &rarr;</a>
-        <div class="price">Free for 7 days, then 99 USDT / month. Cancel anytime.</div>
+        <a class="wbtn" href="/signup" data-i18n="how.manualBtn">START 7-DAY FREE TRIAL &rarr;</a>
+        <div class="price" data-i18n="how.manualPrice">Free for 7 days, then 99 USDT / month. Cancel anytime.</div>
       </div>
     </div>
   </div>
@@ -308,27 +313,27 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 <section class="block" id="join">
   <div class="wrap">
     <div class="sec-head">
-      <div class="tag">Get connected</div>
-      <h2>Three steps to join.</h2>
-      <p>You trade through your own VT Markets account. Your funds stay in your name, with a regulated broker.</p>
+      <div class="tag" data-i18n="join.tag">Get connected</div>
+      <h2 data-i18n="join.h2">Three steps to join.</h2>
+      <p data-i18n="join.sub">You trade through your own VT Markets account. Your funds stay in your name, with a regulated broker.</p>
     </div>
     <div class="steps">
       <div class="step">
-        <div class="st-ic">Open account</div>
-        <h3>Create your VT Markets account</h3>
-        <p>Open a live account through our partner link below. Takes a few minutes.</p>
-        <a href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" class="btn-primary" style="margin-top:18px;display:inline-block;padding:12px 24px;font-size:13px">OPEN VT ACCOUNT &rarr;</a>
+        <div class="st-ic" data-i18n="join.s1ic">Open account</div>
+        <h3 data-i18n="join.s1h">Create your VT Markets account</h3>
+        <p data-i18n="join.s1p">Open a live account through our partner link below. Takes a few minutes.</p>
+        <a href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" class="btn-primary" style="margin-top:18px;display:inline-block;padding:12px 24px;font-size:13px" data-i18n="join.s1btn">OPEN VT ACCOUNT &rarr;</a>
       </div>
       <div class="step">
-        <div class="st-ic">Enter code</div>
-        <h3>Use the invite code</h3>
-        <p>During signup, enter our invite code so your account is linked to Kasandra. Tap to copy.</p>
+        <div class="st-ic" data-i18n="join.s2ic">Enter code</div>
+        <h3 data-i18n="join.s2h">Use the invite code</h3>
+        <p data-i18n="join.s2p">During signup, enter our invite code so your account is linked to Kasandra. Tap to copy.</p>
         <div class="code-pill" onclick="copyCode()"><span class="cp">CODE</span> uKdrW9fs &#10696;</div>
       </div>
       <div class="step">
-        <div class="st-ic">Connect</div>
-        <h3>Message us to go live</h3>
-        <p>Once your account is open and funded, contact us on Telegram to get connected and started.</p>
+        <div class="st-ic" data-i18n="join.s3ic">Connect</div>
+        <h3 data-i18n="join.s3h">Message us to go live</h3>
+        <p data-i18n="join.s3p">Once your account is open and funded, contact us on Telegram to get connected and started.</p>
         <p style="margin-top:16px">&rarr; <a href="https://t.me/vanja_milanov" target="_blank" class="tg">@vanja_milanov</a></p>
       </div>
     </div>
@@ -338,12 +343,12 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 <section class="block">
   <div class="wrap">
     <div class="cta-band">
-      <h2>Trade with a system that shows its work.</h2>
-      <p>Open your account, enter the code, message us. That is it.</p>
-      <a href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" class="btn-primary">GET STARTED WITH VT MARKETS &rarr;</a>
+      <h2 data-i18n="cta.h2">Trade with a system that shows its work.</h2>
+      <p data-i18n="cta.p">Open your account, enter the code, message us. That is it.</p>
+      <a href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" class="btn-primary" data-i18n="cta.btn">GET STARTED WITH VT MARKETS &rarr;</a>
     </div>
     <div class="disclaimer">
-      <p><b>Risk disclaimer.</b> Trading foreign exchange, gold and CFDs carries a high level of risk and may not be suitable for all investors. Past performance is not indicative of future results. The performance figures shown are from a live account from the date stated and include both profits and losses; results vary and you may lose some or all of your invested capital. Kasandra Technologies is not a licensed financial advisor and nothing on this site constitutes financial advice. You trade through your own account with VT Markets, a third-party broker, and your funds remain under your control. We may receive partner compensation when you open an account through our link. Only trade with capital you can afford to lose.</p>
+      <p><b data-i18n="disc.title">Risk disclaimer.</b> <span data-i18n="disc.body">Trading foreign exchange, gold and CFDs carries a high level of risk and may not be suitable for all investors. Past performance is not indicative of future results. The performance figures shown are from a live account from the date stated and include both profits and losses; results vary and you may lose some or all of your invested capital. Kasandra Technologies is not a licensed financial advisor and nothing on this site constitutes financial advice. You trade through your own account with VT Markets, a third-party broker, and your funds remain under your control. We may receive partner compensation when you open an account through our link. Only trade with capital you can afford to lose.</span></p>
     </div>
   </div>
 </section>
@@ -352,10 +357,10 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
   <div class="wrap foot-in">
     <div class="brand"><span class="dot"></span>KASANDRA</div>
     <div class="foot-links">
-      <a href="#how">How it works</a>
-      <a href="#trades">Live Trades</a>
-      <a href="/login">Member Login</a>
-      <a href="https://t.me/vanja_milanov" target="_blank">Contact</a>
+      <a href="#how" data-i18n="foot.how">How it works</a>
+      <a href="#trades" data-i18n="foot.trades">Live Trades</a>
+      <a href="/login" data-i18n="foot.login">Member Login</a>
+      <a href="https://t.me/vanja_milanov" target="_blank" data-i18n="foot.contact">Contact</a>
     </div>
     <div class="copy">&copy; 2026 Kasandra Technologies</div>
   </div>
@@ -363,14 +368,15 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 
 <div class="copied" id="copied">Code copied &#10003;</div>
 
+<script src="/i18n.js"></script>
 <script>
 function copyCode(){
   navigator.clipboard.writeText('uKdrW9fs').then(()=>{
-    const t=document.getElementById('copied');t.classList.add('show');
+    const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),1800);
   });
 }
-let allTrades=[],showingAll=false;
+let allTrades=[],showingAll=false,lastData=null;
 function renderTrades(){
   const body=document.getElementById('trades-body');
   const list=showingAll?allTrades:allTrades.slice(0,10);
@@ -388,23 +394,31 @@ function renderTrades(){
     '</tr>';
   }).join('');
   const btn=document.getElementById('show-more');
-  if(allTrades.length>10){btn.style.display='block';btn.textContent=showingAll?'Show less':('Show all '+allTrades.length+' trades');}
+  if(allTrades.length>10){btn.style.display='block';btn.textContent=showingAll?kT('trades.showLess'):kT('trades.showAll');}
+}
+function renderFoot(){
+  if(!lastData)return;
+  const d=lastData;
+  document.getElementById('tp-updated').textContent=kT('trades.updated').replace('{t}',d.updated||'');
+  document.getElementById('tp-foot').textContent=kT('trades.foot').replace('{wins}',d.wins).replace('{losses}',(d.total-d.wins)).replace('{wr}',d.win_rate);
 }
 function toggleAll(){showingAll=!showingAll;renderTrades();}
 async function loadResults(){
   try{
     const r=await fetch('public_results.json?t='+Date.now());
     const d=await r.json();
+    lastData=d;
     allTrades=d.trades||[];
     document.getElementById('s-win').textContent=d.win_rate+'%';
     document.getElementById('s-tr').textContent=d.total;
-    document.getElementById('tp-updated').textContent='updated '+d.updated;
-    document.getElementById('tp-foot').textContent=d.wins+' wins / '+(d.total-d.wins)+' losses · '+d.win_rate+'% win rate · live account';
+    renderFoot();
     renderTrades();
   }catch(e){
-    document.getElementById('trades-body').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">Trade log will appear here once connected to the live feed.</td></tr>';
+    document.getElementById('trades-body').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">'+kT('trades.loading')+'</td></tr>';
   }
 }
+// re-render dynamic bits when language switches
+document.addEventListener('langchange',()=>{renderFoot();renderTrades();});
 loadResults();
 </script>
 </body>

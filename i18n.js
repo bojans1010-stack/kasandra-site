@@ -1,0 +1,242 @@
+// Kasandra Technologies - i18n (multilanguage) engine
+// Adds EN / MK switching. Remembers choice in localStorage.
+// To add a language later: add another block to TRANSLATIONS.
+
+const TRANSLATIONS = {
+  en: {
+    // nav
+    "nav.how": "How it works",
+    "nav.trades": "Live Trades",
+    "nav.join": "Join",
+    "nav.login": "Member Login",
+    // hero
+    "hero.eyebrow": "Kasandra Technologies",
+    "hero.h1a": "Automated ",
+    "hero.h1gold": "gold",
+    "hero.h1b": " trading,",
+    "hero.h1c": "built on ",
+    "hero.h1transp": "transparency",
+    "hero.lead": "A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.",
+    "hero.btnHow": "HOW IT WORKS",
+    "hero.btnTrades": "See every trade",
+    // stats
+    "stat.return": "Return",
+    "stat.since": "since Jun 2026",
+    "stat.winrate": "Win Rate",
+    "stat.livetrades": "live trades",
+    "stat.maxdd": "Max Drawdown",
+    "stat.worstdip": "worst dip",
+    "stat.trades": "Trades",
+    "stat.counting": "and counting",
+    // transparency
+    "transp.tag": "Why Kasandra",
+    "transp.h2": "The numbers are the pitch.",
+    "transp.sub": "Most signal services show you screenshots. We show you every trade, dated from the day the system went live, drawdowns included.",
+    "transp.c1h": "Real, dated results",
+    "transp.c1p": "Performance tracked from the exact day the system started trading live. We never reset the clock to hide a bad run.",
+    "transp.c2h": "Drawdowns shown",
+    "transp.c2p": "We publish the worst dip, not just the best week. You see the full risk picture before you ever connect.",
+    "transp.c3h": "Rules, not feelings",
+    "transp.c3p": "A fixed strategy with strict risk limits. Single-entry discipline, hard stops, no revenge trading, no martingale.",
+    "transp.moneyh": "Your money never touches us",
+    "transp.moneyp": "We do not hold, manage, or have access to your funds. Everything sits in your own VT Markets account, in your name, under your control — you can withdraw any time. Kasandra only provides the technology that connects you to the strategy. We never ask for your deposits, and we never could move them.",
+    // trades
+    "trades.tag": "Full transparency",
+    "trades.h2": "Every trade we take.",
+    "trades.sub": "This is the live record straight from the account. Entry, direction, result. Updated as the system trades.",
+    "trades.log": "LIVE TRADE LOG",
+    "trades.thDate": "Date",
+    "trades.thTime": "Time",
+    "trades.thSide": "Side",
+    "trades.thEntry": "Entry",
+    "trades.thExit": "Exit",
+    "trades.thPoints": "Points",
+    "trades.thResult": "Result",
+    "trades.showAll": "Show all trades",
+    "trades.showLess": "Show less",
+    "trades.loading": "loading live trades...",
+    "trades.foot": "{wins} wins / {losses} losses · {wr}% win rate · live account",
+    "trades.updated": "updated {t}",
+    // how
+    "how.tag": "How it works",
+    "how.h2": "One system. Two ways to use it.",
+    "how.intro": "Kasandra runs a single rules-based system on gold (XAU/USD). It reads the market around the clock and acts only when its conditions line up, with fixed risk on every trade — tight stops, single entries, no martingale, no revenge trading. You can let that system trade for you automatically, or take its signals and trade them yourself. We never touch or hold your money. You trade through your own VT Markets account — your funds stay in your name, with the broker, under your control at all times. We simply provide the technology that connects you to the strategy.",
+    "how.bestTag": "Best results · hands-off",
+    "how.bestH": "Automated copy trading",
+    "how.bestSub": "The system trades your account for you",
+    "how.bestL1": "Connect your VT Markets account to our automated copy trading",
+    "how.bestL2": "Every trade the system takes is copied to your account automatically",
+    "how.bestL3": "No screen time, no manual entries, nothing to miss",
+    "how.bestL4": "Same entries, same risk control, fully hands-off",
+    "how.bestL5": "This is how you get results closest to the live track record above",
+    "how.bestBtn": "CONNECT & COPY AUTOMATICALLY →",
+    "how.bestPrice": "Open account · enter code uKdrW9fs · message us to connect",
+    "how.manualTag": "Try it free · 7 days",
+    "how.manualH": "Trade the signals yourself",
+    "how.manualSub": "You place the trades manually",
+    "how.manualL1": "Get the system's live signals in your members area",
+    "how.manualL2": "Place the trades yourself, in your own time",
+    "how.manualL3": "Full control over every entry and exit",
+    "how.manualL4": "7-day free trial — see the signals before you pay",
+    "how.manualL5": "After the trial, continue for 99 USDT / month",
+    "how.manualBtn": "START 7-DAY FREE TRIAL →",
+    "how.manualPrice": "Free for 7 days, then 99 USDT / month. Cancel anytime.",
+    // join
+    "join.tag": "Get connected",
+    "join.h2": "Three steps to join.",
+    "join.sub": "You trade through your own VT Markets account. Your funds stay in your name, with a regulated broker.",
+    "join.s1ic": "Open account",
+    "join.s1h": "Create your VT Markets account",
+    "join.s1p": "Open a live account through our partner link below. Takes a few minutes.",
+    "join.s1btn": "OPEN VT ACCOUNT →",
+    "join.s2ic": "Enter code",
+    "join.s2h": "Use the invite code",
+    "join.s2p": "During signup, enter our invite code so your account is linked to Kasandra. Tap to copy.",
+    "join.s3ic": "Connect",
+    "join.s3h": "Message us to go live",
+    "join.s3p": "Once your account is open and funded, contact us on Telegram to get connected and started.",
+    // cta
+    "cta.h2": "Trade with a system that shows its work.",
+    "cta.p": "Open your account, enter the code, message us. That is it.",
+    "cta.btn": "GET STARTED WITH VT MARKETS →",
+    // disclaimer + footer
+    "disc.title": "Risk disclaimer.",
+    "disc.body": "Trading foreign exchange, gold and CFDs carries a high level of risk and may not be suitable for all investors. Past performance is not indicative of future results. The performance figures shown are from a live account from the date stated and include both profits and losses; results vary and you may lose some or all of your invested capital. Kasandra Technologies is not a licensed financial advisor and nothing on this site constitutes financial advice. You trade through your own account with VT Markets, a third-party broker, and your funds remain under your control. We may receive partner compensation when you open an account through our link. Only trade with capital you can afford to lose.",
+    "foot.how": "How it works",
+    "foot.trades": "Live Trades",
+    "foot.login": "Member Login",
+    "foot.contact": "Contact",
+    "copied": "Code copied ✓"
+  },
+  mk: {
+    // nav
+    "nav.how": "Како функционира",
+    "nav.trades": "Тргувања во живо",
+    "nav.join": "Приклучи се",
+    "nav.login": "Најава за членови",
+    // hero
+    "hero.eyebrow": "Kasandra Technologies",
+    "hero.h1a": "Автоматизирано тргување со ",
+    "hero.h1gold": "злато",
+    "hero.h1b": ",",
+    "hero.h1c": "изградено на ",
+    "hero.h1transp": "транспарентност",
+    "hero.lead": "Систем во живо, базиран на правила, кој тргува XAU/USD на VT Markets. Без преувеличување, без скриени бројки. Секое тргување, секој резултат, прикажан точно онака како што се случил.",
+    "hero.btnHow": "КАКО ФУНКЦИОНИРА",
+    "hero.btnTrades": "Види ги сите тргувања",
+    // stats
+    "stat.return": "Принос",
+    "stat.since": "од јуни 2026",
+    "stat.winrate": "Стапка на успех",
+    "stat.livetrades": "тргувања во живо",
+    "stat.maxdd": "Макс. пад",
+    "stat.worstdip": "најлош пад",
+    "stat.trades": "Тргувања",
+    "stat.counting": "и се повеќе",
+    // transparency
+    "transp.tag": "Зошто Kasandra",
+    "transp.h2": "Бројките се доказот.",
+    "transp.sub": "Повеќето сервиси за сигнали ви покажуваат слики од екран. Ние ви го покажуваме секое тргување, датирано од денот кога системот почна да работи во живо, вклучително и падовите.",
+    "transp.c1h": "Вистински, датирани резултати",
+    "transp.c1p": "Перформансите се следат од точниот ден кога системот почна да тргува во живо. Никогаш не го ресетираме часовникот за да сокриеме лош период.",
+    "transp.c2h": "Прикажани падови",
+    "transp.c2p": "Го објавуваме најлошиот пад, не само најдобрата недела. Ја гледате целосната слика на ризикот пред воопшто да се поврзете.",
+    "transp.c3h": "Правила, не емоции",
+    "transp.c3p": "Фиксна стратегија со строги ограничувања на ризик. Дисциплина на единечен влез, цврсти стоп-лосови, без одмазднички тргувања, без мартингал.",
+    "transp.moneyh": "Вашите пари никогаш не доаѓаат кај нас",
+    "transp.moneyp": "Ние не ги чуваме, управуваме или имаме пристап до вашите средства. Сè стои во вашата сопствена VT Markets сметка, на ваше име, под ваша контрола — можете да повлечете во секое време. Kasandra само ја обезбедува технологијата што ве поврзува со стратегијата. Никогаш не бараме ваши депозити, и никогаш не би можеле да ги поместиме.",
+    // trades
+    "trades.tag": "Целосна транспарентност",
+    "trades.h2": "Секое тргување што го правиме.",
+    "trades.sub": "Ова е записот во живо директно од сметката. Влез, насока, резултат. Се ажурира како што тргува системот.",
+    "trades.log": "ДНЕВНИК НА ТРГУВАЊА ВО ЖИВО",
+    "trades.thDate": "Датум",
+    "trades.thTime": "Време",
+    "trades.thSide": "Страна",
+    "trades.thEntry": "Влез",
+    "trades.thExit": "Излез",
+    "trades.thPoints": "Поени",
+    "trades.thResult": "Резултат",
+    "trades.showAll": "Прикажи ги сите тргувања",
+    "trades.showLess": "Прикажи помалку",
+    "trades.loading": "се вчитуваат тргувања во живо...",
+    "trades.foot": "{wins} добиени / {losses} изгубени · {wr}% стапка на успех · сметка во живо",
+    "trades.updated": "ажурирано {t}",
+    // how
+    "how.tag": "Како функционира",
+    "how.h2": "Еден систем. Два начини на користење.",
+    "how.intro": "Kasandra работи со единствен систем базиран на правила за злато (XAU/USD). Го чита пазарот деноноќно и реагира само кога ќе се совпаднат неговите услови, со фиксен ризик на секое тргување — цврсти стопови, единечни влезови, без мартингал, без одмазднички тргувања. Можете да го оставите системот да тргува за вас автоматски, или да ги земете неговите сигнали и да тргувате сами. Ние никогаш не ги допираме или чуваме вашите пари. Тргувате преку вашата сопствена VT Markets сметка — вашите средства остануваат на ваше име, кај брокерот, под ваша контрола во секое време. Ние едноставно ја обезбедуваме технологијата што ве поврзува со стратегијата.",
+    "how.bestTag": "Најдобри резултати · без вмешување",
+    "how.bestH": "Автоматско копи-тргување",
+    "how.bestSub": "Системот тргува на вашата сметка наместо вас",
+    "how.bestL1": "Поврзете ја вашата VT Markets сметка со нашето автоматско копи-тргување",
+    "how.bestL2": "Секое тргување што го прави системот автоматски се копира на вашата сметка",
+    "how.bestL3": "Без седење пред екран, без рачни влезови, ништо не пропуштате",
+    "how.bestL4": "Исти влезови, иста контрола на ризик, целосно без вмешување",
+    "how.bestL5": "Вака добивате резултати најблиски до записот во живо погоре",
+    "how.bestBtn": "ПОВРЗИ СЕ И КОПИРАЈ АВТОМАТСКИ →",
+    "how.bestPrice": "Отвори сметка · внеси код uKdrW9fs · пиши ни за поврзување",
+    "how.manualTag": "Пробај бесплатно · 7 дена",
+    "how.manualH": "Тргувај ги сигналите сам",
+    "how.manualSub": "Вие ги поставувате тргувањата рачно",
+    "how.manualL1": "Добивај ги сигналите во живо од системот во твојата членска зона",
+    "how.manualL2": "Поставувај ги тргувањата сам, во свое време",
+    "how.manualL3": "Целосна контрола врз секој влез и излез",
+    "how.manualL4": "7-дневен бесплатен пробен период — види ги сигналите пред да платиш",
+    "how.manualL5": "По пробниот период, продолжи за 99 USDT / месечно",
+    "how.manualBtn": "ЗАПОЧНИ 7-ДНЕВЕН БЕСПЛАТЕН ПЕРИОД →",
+    "how.manualPrice": "Бесплатно 7 дена, потоа 99 USDT / месечно. Откажи во секое време.",
+    // join
+    "join.tag": "Поврзи се",
+    "join.h2": "Три чекори за приклучување.",
+    "join.sub": "Тргувате преку вашата сопствена VT Markets сметка. Вашите средства остануваат на ваше име, кај регулиран брокер.",
+    "join.s1ic": "Отвори сметка",
+    "join.s1h": "Креирај ја твојата VT Markets сметка",
+    "join.s1p": "Отвори сметка во живо преку нашиот партнерски линк подолу. Трае неколку минути.",
+    "join.s1btn": "ОТВОРИ VT СМЕТКА →",
+    "join.s2ic": "Внеси код",
+    "join.s2h": "Искористи го кодот за покана",
+    "join.s2p": "При регистрација, внеси го нашиот код за покана за да биде твојата сметка поврзана со Kasandra. Допри за копирање.",
+    "join.s3ic": "Поврзи се",
+    "join.s3h": "Пиши ни за активирање",
+    "join.s3p": "Откако твојата сметка е отворена и наполнета, контактирај нè на Telegram за да те поврземе и започнеме.",
+    // cta
+    "cta.h2": "Тргувај со систем што го покажува својот труд.",
+    "cta.p": "Отвори сметка, внеси го кодот, пиши ни. Тоа е сè.",
+    "cta.btn": "ЗАПОЧНИ СО VT MARKETS →",
+    // disclaimer + footer
+    "disc.title": "Изјава за ризик.",
+    "disc.body": "Тргувањето со девизи, злато и CFD носи високо ниво на ризик и можеби не е соодветно за сите инвеститори. Минатите перформанси не се показател за идни резултати. Прикажаните бројки за перформанси се од сметка во живо од наведениот датум и вклучуваат и добивки и загуби; резултатите варираат и можете да изгубите дел или целиот вложен капитал. Kasandra Technologies не е лиценциран финансиски советник и ништо на оваа страница не претставува финансиски совет. Тргувате преку вашата сопствена сметка кај VT Markets, брокер од трета страна, и вашите средства остануваат под ваша контрола. Можеби добиваме партнерски надомест кога ќе отворите сметка преку нашиот линк. Тргувајте само со капитал што можете да си дозволите да го изгубите.",
+    "foot.how": "Како функционира",
+    "foot.trades": "Тргувања во живо",
+    "foot.login": "Најава за членови",
+    "foot.contact": "Контакт",
+    "copied": "Кодот е копиран ✓"
+  }
+};
+
+function kGetLang(){ return localStorage.getItem('k_lang') || 'en'; }
+function kSetLang(l){ localStorage.setItem('k_lang', l); kApplyLang(l); }
+function kT(key){ const l=kGetLang(); return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || (TRANSLATIONS.en[key]) || key; }
+
+function kApplyLang(lang){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    const val = (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || (TRANSLATIONS.en[key]);
+    if(val !== undefined) el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-html');
+    const val = (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || (TRANSLATIONS.en[key]);
+    if(val !== undefined) el.innerHTML = val;
+  });
+  // update the toggle buttons' active state
+  document.querySelectorAll('[data-lang-btn]').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-lang-btn')===lang);
+  });
+  // let page-specific code react (e.g. re-render dynamic content)
+  document.dispatchEvent(new CustomEvent('langchange',{detail:{lang}}));
+}
+
+document.addEventListener('DOMContentLoaded',()=>kApplyLang(kGetLang()));

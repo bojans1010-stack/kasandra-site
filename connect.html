@@ -32,29 +32,32 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:re
 .continue:hover{background:rgba(0,212,255,.06);border-color:var(--accent)}
 .copied{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 24px;border-radius:30px;font-weight:600;font-size:14px;opacity:0;transition:opacity .3s;z-index:100;pointer-events:none}
 .copied.show{opacity:1}
+.langtog{display:inline-flex;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.langtog button{background:transparent;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer}
+.langtog button.active{background:var(--accent);color:var(--bg)}
 </style></head><body>
 <div class="wrap">
   <div class="hd">
     <div class="brand"><span class="dot"></span>KASANDRA</div>
-    <div class="welcome-badge">Account created</div>
-    <h1>One more step to go live</h1>
-    <p>Your account is ready. To start trading the system, connect through VT Markets below.</p>
+    <div class="welcome-badge" data-i18n="conn.badge">Account created</div>
+    <h1 data-i18n="conn.h1">One more step to go live</h1>
+    <p data-i18n="conn.sub">Your account is ready. To start trading the system, connect through VT Markets below.</p>
   </div>
 
   <div class="step">
     <div class="num">1</div>
     <div>
-      <h3>Open your VT Markets account</h3>
-      <p>Open a live trading account through our partner link. It takes a few minutes and your funds stay in your own name with the broker.</p>
-      <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">OPEN VT MARKETS ACCOUNT &rarr;</a>
+      <h3 data-i18n="conn.s1h">Open your VT Markets account</h3>
+      <p data-i18n="conn.s1p">Open a live trading account through our partner link. It takes a few minutes and your funds stay in your own name with the broker.</p>
+      <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="conn.s1btn">OPEN VT MARKETS ACCOUNT &rarr;</a>
     </div>
   </div>
 
   <div class="step">
     <div class="num">2</div>
     <div>
-      <h3>Enter the invite code</h3>
-      <p>During signup, enter our invite code so your account is linked to Kasandra. Tap to copy it.</p>
+      <h3 data-i18n="conn.s2h">Enter the invite code</h3>
+      <p data-i18n="conn.s2p">During signup, enter our invite code so your account is linked to Kasandra. Tap to copy it.</p>
       <div class="code" onclick="copyCode()"><span class="cp">CODE</span> uKdrW9fs &#10696;</div>
     </div>
   </div>
@@ -62,19 +65,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:re
   <div class="step">
     <div class="num">3</div>
     <div>
-      <h3>Message us on Telegram</h3>
-      <p>Once your account is open and funded, message <a class="tg" href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> on Telegram so we can verify and connect you.</p>
+      <h3 data-i18n="conn.s3h">Message us on Telegram</h3>
+      <p data-i18n-html="conn.s3p">Once your account is open and funded, message <a class="tg" href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> on Telegram so we can verify and connect you.</p>
     </div>
   </div>
 
   <div class="review">
-    <h3>What happens next</h3>
-    <p>After you message us and we verify your VT account, we approve your access. Once approved, your members dashboard unlocks with the live signals and full results. You can log in any time to check your status.</p>
+    <h3 data-i18n="conn.nexth">What happens next</h3>
+    <p data-i18n="conn.nextp">After you message us and we verify your VT account, we approve your access. Once approved, your members dashboard unlocks with the live signals and full results. You can log in any time to check your status.</p>
   </div>
 
-  <a class="continue" href="/members">CONTINUE TO MY DASHBOARD &rarr;</a>
+  <a class="continue" href="/members" data-i18n="conn.continue">CONTINUE TO MY DASHBOARD &rarr;</a>
+  <div style="text-align:center;margin-top:20px"><span class="langtog"><button data-lang-btn="en" onclick="kSetLang('en')">EN</button><button data-lang-btn="mk" onclick="kSetLang('mk')">МК</button></span></div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
+<script src="/i18n.js"></script>
 <script>
-function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
+function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 </script></body></html>

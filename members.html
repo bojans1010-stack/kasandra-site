@@ -66,37 +66,41 @@ tr:hover td{background:rgba(0,212,255,.03)}
 }
 .copied{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 24px;border-radius:30px;font-weight:600;font-size:14px;opacity:0;transition:opacity .3s;z-index:100;pointer-events:none}
 .copied.show{opacity:1}
+.langtog{display:inline-flex;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.langtog button{background:transparent;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 10px;cursor:pointer}
+.langtog button.active{background:var(--accent);color:var(--bg)}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
-  <div class="nav-right"><span class="who" id="who">...</span><a class="signout" onclick="signout()">Sign out</a></div>
+  <div class="nav-right"><span class="langtog"><button data-lang-btn="en" onclick="kSetLang('en')">EN</button><button data-lang-btn="mk" onclick="kSetLang('mk')">МК</button></span><span class="who" id="who">...</span><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
 </div></nav>
 <div class="wrap">
-  <div class="welcome"><h1>Welcome, <span id="name">member</span>.</h1><p>Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
+  <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
   <div class="kpis">
-    <div class="kpi green"><div class="v green" id="k-roi">+41.8%</div><div class="l">Return / Jun 2026</div></div>
-    <div class="kpi"><div class="v" id="k-win">76%</div><div class="l">Win Rate</div></div>
-    <div class="kpi red"><div class="v red" id="k-dd">-7.8%</div><div class="l">Max Drawdown</div></div>
-    <div class="kpi"><div class="v" id="k-tr">37</div><div class="l">Total Trades</div></div>
+    <div class="kpi green"><div class="v green" id="k-roi">+41.8%</div><div class="l" data-i18n="mem.kReturn">Return / Jun 2026</div></div>
+    <div class="kpi"><div class="v" id="k-win">76%</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
+    <div class="kpi red"><div class="v red" id="k-dd">-7.8%</div><div class="l" data-i18n="mem.kDD">Max Drawdown</div></div>
+    <div class="kpi"><div class="v" id="k-tr">37</div><div class="l" data-i18n="mem.kTrades">Total Trades</div></div>
   </div>
   <div class="connect">
-    <h3>Not connected yet? Start here.</h3>
+    <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
-      <li>Open a VT Markets account through our <a href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">partner link</a></li>
-      <li>Enter invite code <span class="code" onclick="copyCode()">uKdrW9fs</span> during signup</li>
-      <li>Message <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> on Telegram to get connected</li>
+      <li data-i18n="mem.connStep1">Open a VT Markets account through our partner link</li>
+      <li><span data-i18n="mem.connStep2pre">Enter invite code</span> <span class="code" onclick="copyCode()">uKdrW9fs</span> <span data-i18n="mem.connStep2post">during signup</span></li>
+      <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
     </ol>
-    <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">OPEN VT MARKETS ACCOUNT &rarr;</a>
+    <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="mem.connBtn">OPEN VT MARKETS ACCOUNT &rarr;</a>
   </div>
   <div class="panel">
-    <div class="ph"><div class="t"><span class="dot"></span>LIVE TRADE LOG</div><div class="upd" id="upd">loading...</div></div>
-    <table><thead><tr><th>Date</th><th>Time</th><th>Side</th><th>Entry</th><th>Exit</th><th>Points</th><th>Result</th></tr></thead>
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.logTitle">LIVE TRADE LOG</span></div><div class="upd" id="upd">loading...</div></div>
+    <table><thead><tr><th data-i18n="trades.thDate">Date</th><th data-i18n="trades.thTime">Time</th><th data-i18n="trades.thSide">Side</th><th data-i18n="trades.thEntry">Entry</th><th data-i18n="trades.thExit">Exit</th><th data-i18n="trades.thPoints">Points</th><th data-i18n="trades.thResult">Result</th></tr></thead>
     <tbody id="body"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">loading...</td></tr></tbody></table>
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
+<script src="/i18n.js"></script>
 <script>
-function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
+function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
 async function load(){
   const me=await fetch('/api/me');
@@ -107,20 +111,19 @@ async function load(){
   const price=u.price_usdt||99;
 
   if(u.has_access){
-    // ACTIVE (trial or paid) - show a status banner + the signals
     const c=document.querySelector('.connect');
     let bannerColor=u.access_label==='trial'?'rgba(0,212,255,.07)':'rgba(0,255,136,.07)';
     let bannerBorder=u.access_label==='trial'?'rgba(0,212,255,.35)':'rgba(0,255,136,.35)';
     let txt=u.access_label==='trial'
-      ? '&#9201; Free trial active &mdash; '+u.days_left+' day'+(u.days_left===1?'':'s')+' left. After that it is '+price+' USDT / month to continue.'
-      : '&#10003; Subscription active &mdash; '+u.days_left+' day'+(u.days_left===1?'':'s')+' left.';
+      ? '&#9201; '+kT('mem.trialBanner').replace('{days}',u.days_left).replace('{price}',price)
+      : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
     c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
     const r=await fetch('/api/results');
     if(r.status!==200){return;}
     const d=await r.json();
     document.getElementById('k-win').textContent=(d.win_rate||0)+'%';
     document.getElementById('k-tr').textContent=d.total||0;
-    document.getElementById('upd').textContent='updated '+(d.updated||'');
+    document.getElementById('upd').textContent=kT('trades.updated').replace('{t}',d.updated||'');
     const list=d.trades||[];
     document.getElementById('body').innerHTML=list.map(t=>{
       const cc=t.pts>=0?'pos':'neg';const p=(t.pts>=0?'+':'')+t.pts;
@@ -129,17 +132,14 @@ async function load(){
     return;
   }
 
-  // NO ACCESS - hide signals, show the right message
   document.querySelector('.kpis').style.display='none';
   document.querySelector('.panel').style.display='none';
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
-    // trial/subscription ended -> pay screen
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">Your access has ended</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">Your free trial / subscription period is over. To keep seeing the live signals and results, continue for <b style="color:var(--accent)">'+price+' USDT / month</b>.</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">Message <a href="https://t.me/vanja_milanov" target="_blank" style="color:var(--accent);font-weight:600">@vanja_milanov</a> on Telegram to pay and reactivate your access.</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/vanja_milanov" target="_blank" style="color:var(--accent);font-weight:600">@vanja_milanov</a> '+kT('mem.expiredP2post')+'</p></div>');
   } else {
-    // pending review
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; Account under review</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">Thanks for signing up. Complete the VT Markets steps below and message us on Telegram. Once we verify your account we start your 7 day free trial, and the live signals unlock here automatically.</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
 }
 load();

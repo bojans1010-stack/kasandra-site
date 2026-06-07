@@ -121,6 +121,28 @@ section.block{padding:80px 0}
 .code-pill .cp{font-size:10px;color:var(--dim);letter-spacing:1px}
 .step a.tg{color:var(--accent);text-decoration:none;font-weight:600;border-bottom:1px solid var(--accent-dim)}
 
+/* HOW IT WORKS + TWO WAYS */
+.how-intro{max-width:760px;margin:0 auto 44px;text-align:center;color:var(--text-2);font-size:15px;line-height:1.8}
+.how-intro b{color:var(--text)}
+.ways{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.way{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;padding:34px 30px;position:relative;overflow:hidden}
+.way.best{border:2px solid var(--accent)}
+.way .tagpill{display:inline-block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:16px;font-weight:700}
+.way.best .tagpill{background:var(--accent);color:var(--bg)}
+.way.manual .tagpill{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent-dim)}
+.way h3{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:6px}
+.way .sub{color:var(--accent);font-size:13px;margin-bottom:18px}
+.way ul{list-style:none;margin:0 0 22px}
+.way li{color:var(--text-2);font-size:13.5px;line-height:1.7;padding-left:24px;position:relative;margin-bottom:8px}
+.way li::before{content:'\2713';position:absolute;left:0;color:var(--green);font-weight:700}
+.way .wbtn{display:inline-block;padding:13px 26px;border-radius:9px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.04em;text-decoration:none;transition:all .25s}
+.way.best .wbtn{background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;box-shadow:0 8px 24px rgba(0,212,255,.25)}
+.way.best .wbtn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,212,255,.4)}
+.way.manual .wbtn{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.way.manual .wbtn:hover{background:rgba(0,212,255,.08)}
+.way .price{font-size:12px;color:var(--dim);margin-top:12px}
+@media(max-width:820px){.ways{grid-template-columns:1fr}}
+
 /* CTA */
 .cta-band{text-align:center;background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--accent-dim);border-radius:18px;padding:56px 40px;position:relative;overflow:hidden}
 .cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(0,212,255,.12),transparent 60%)}
@@ -147,8 +169,8 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
     <div class="brand"><span class="dot"></span>KASANDRA</div>
     <div class="nav-links">
       <a href="#how">How it works</a>
-      <a href="#results">Results</a>
       <a href="#trades">Live Trades</a>
+      <a href="#join">Join</a>
       <a href="/login" class="nav-cta">Member Login</a>
     </div>
   </div>
@@ -160,7 +182,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
     <h1>Automated <span class="ac">gold</span> trading,<br>built on <span class="ac">transparency</span>.</h1>
     <p class="lead">A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.</p>
     <div class="hero-ctas">
-      <a href="#how" class="btn-primary">START IN 3 STEPS</a>
+      <a href="#how" class="btn-primary">HOW IT WORKS</a>
       <a href="#trades" class="btn-ghost">See every trade</a>
     </div>
     <div class="stats" id="results">
@@ -210,6 +232,46 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 </section>
 
 <section class="block" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag">How it works</div>
+      <h2>One system. Two ways to use it.</h2>
+    </div>
+    <p class="how-intro">Kasandra runs a single rules-based system on gold (XAU/USD). It reads the market around the clock and acts only when its conditions line up, with <b>fixed risk on every trade</b> &mdash; tight stops, single entries, no martingale, no revenge trading. You can let that system trade <b>for you automatically</b>, or take its signals and trade them <b>yourself</b>. Either way you trade through your own VT Markets account, so your money always stays in your name with the broker.</p>
+    <div class="ways">
+      <div class="way best">
+        <span class="tagpill">Best results &middot; hands-off</span>
+        <h3>Automated copy trading</h3>
+        <div class="sub">The system trades your account for you</div>
+        <ul>
+          <li>Connect your VT Markets account to our automated copy trading</li>
+          <li>Every trade the system takes is copied to your account automatically</li>
+          <li>No screen time, no manual entries, nothing to miss</li>
+          <li>Same entries, same risk control, fully hands-off</li>
+          <li>This is how you get results closest to the live track record above</li>
+        </ul>
+        <a class="wbtn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">CONNECT &amp; COPY AUTOMATICALLY &rarr;</a>
+        <div class="price">Open account &middot; enter code uKdrW9fs &middot; message us to connect</div>
+      </div>
+      <div class="way manual">
+        <span class="tagpill">Try it free &middot; 7 days</span>
+        <h3>Trade the signals yourself</h3>
+        <div class="sub">You place the trades manually</div>
+        <ul>
+          <li>Get the system&rsquo;s live signals in your members area</li>
+          <li>Place the trades yourself, in your own time</li>
+          <li>Full control over every entry and exit</li>
+          <li><b>7-day free trial</b> &mdash; see the signals before you pay</li>
+          <li>After the trial, continue for 99 USDT / month</li>
+        </ul>
+        <a class="wbtn" href="/signup">START 7-DAY FREE TRIAL &rarr;</a>
+        <div class="price">Free for 7 days, then 99 USDT / month. Cancel anytime.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="join">
   <div class="wrap">
     <div class="sec-head">
       <div class="tag">Get connected</div>

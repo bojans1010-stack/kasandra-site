@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasandra · Create Account</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060912;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--accent:#00d4ff;--green:#00ff88;--red:#ff3366;--amber:#ffaa00;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px 20px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
+.box{position:relative;background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;padding:38px 34px;width:440px;max-width:100%;box-shadow:0 0 40px rgba(0,212,255,.08)}
+.brand{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.35);text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+.brand .dot{width:9px;height:9px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:24px}
+.row{display:flex;gap:12px}
+.row>div{flex:1}
+label{display:block;font-size:11px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin:13px 0 6px}
+input,select{width:100%;padding:12px 13px;border-radius:9px;border:1px solid var(--border);background:#0a0e16;color:var(--text);font-family:var(--mono);font-size:14px}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+select{cursor:pointer}
+button{width:100%;margin-top:22px;padding:14px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer;transition:all .2s}
+button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35)}
+.err{color:var(--red);font-size:12px;min-height:16px;margin-top:12px;text-align:center}
+.alt{text-align:center;font-size:13px;color:var(--text-2);margin-top:20px}
+.alt a{color:var(--accent);text-decoration:none}
+.back{position:absolute;top:-34px;left:0;font-size:12px;color:var(--dim);text-decoration:none}
+.back:hover{color:var(--accent)}
+.vtnote{background:rgba(0,212,255,.05);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:22px;font-size:12px;color:var(--text-2);line-height:1.7}
+.vtnote b{color:var(--accent)}
+.vtnote .code{background:rgba(0,212,255,.12);border:1px dashed rgba(0,212,255,.5);padding:1px 8px;border-radius:5px;color:var(--accent);font-weight:700}
+</style></head><body>
+<div class="box">
+<a href="/" class="back">&larr; back to site</a>
+<div class="brand"><span class="dot"></span>KASANDRA</div>
+<div class="sub">Create Account</div>
+
+<div class="row">
+  <div><label>First name</label><input id="first" type="text" placeholder="First" autofocus></div>
+  <div><label>Last name</label><input id="last" type="text" placeholder="Last"></div>
+</div>
+<label>Email</label>
+<input id="email" type="email" placeholder="you@email.com">
+<div class="row">
+  <div><label>Country</label>
+    <select id="country">
+      <option value="">Select...</option>
+      <option>North Macedonia</option><option>Serbia</option><option>Croatia</option><option>Bosnia and Herzegovina</option>
+      <option>Montenegro</option><option>Slovenia</option><option>Bulgaria</option><option>Greece</option><option>Albania</option>
+      <option>Germany</option><option>Austria</option><option>Switzerland</option><option>Italy</option><option>United Kingdom</option>
+      <option>United States</option><option>United Arab Emirates</option><option>Turkey</option><option>Other</option>
+    </select>
+  </div>
+  <div><label>Phone</label><input id="phone" type="tel" placeholder="+389..."></div>
+</div>
+<label>Password</label>
+<input id="pw" type="password" placeholder="at least 6 characters" onkeydown="if(event.key==='Enter')go()">
+<button onclick="go()">CREATE ACCOUNT</button>
+<div class="err" id="err"></div>
+
+<div class="vtnote">
+  <b>Next step after signing up:</b> to actually trade the system, you open your own <b>VT Markets</b> account using our invite code <span class="code">uKdrW9fs</span>, then message us on Telegram. Full instructions are shown inside your members area.
+</div>
+
+<div class="alt">Already a member? <a href="/login">Log in</a></div>
+</div>
+<script>
+async function go(){
+  const payload={
+    first_name:document.getElementById('first').value,
+    last_name:document.getElementById('last').value,
+    email:document.getElementById('email').value,
+    country:document.getElementById('country').value,
+    phone:document.getElementById('phone').value,
+    password:document.getElementById('pw').value
+  };
+  const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d=await r.json();
+  if(d.ok){location.href='/connect';}else{document.getElementById('err').textContent=d.error||'could not create account';}
+}
+</script></body></html>

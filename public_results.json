@@ -1,0 +1,342 @@
+{
+  "updated": "2026-06-07 00:52 CEST",
+  "since": "Jun 02 2026",
+  "total": 37,
+  "wins": 28,
+  "win_rate": 76,
+  "trades": [
+    {
+      "date": "Jun 05",
+      "time": "20:39",
+      "side": "BUY",
+      "entry": 4336.5,
+      "exit": 4341.35,
+      "pts": 4.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "11:18",
+      "side": "BUY",
+      "entry": 4429.75,
+      "exit": 4432.01,
+      "pts": 2.3,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "07:42",
+      "side": "BUY",
+      "entry": 4439.44,
+      "exit": 4446.57,
+      "pts": 7.1,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "07:30",
+      "side": "BUY",
+      "entry": 4444.27,
+      "exit": 4446.79,
+      "pts": 2.5,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "06:50",
+      "side": "BUY",
+      "entry": 4447.07,
+      "exit": 4447.06,
+      "pts": -0.0,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 05",
+      "time": "06:26",
+      "side": "BUY",
+      "entry": 4450.28,
+      "exit": 4452.54,
+      "pts": 2.3,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "06:25",
+      "side": "BUY",
+      "entry": 4452.54,
+      "exit": 4454.93,
+      "pts": 2.4,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "05:12",
+      "side": "BUY",
+      "entry": 4455.11,
+      "exit": 4462.14,
+      "pts": 7.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "05:00",
+      "side": "BUY",
+      "entry": 4461.3,
+      "exit": 4463.39,
+      "pts": 2.1,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "03:28",
+      "side": "SELL",
+      "entry": 4480.0,
+      "exit": 4465.62,
+      "pts": 14.4,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "03:10",
+      "side": "BUY",
+      "entry": 4475.07,
+      "exit": 4476.95,
+      "pts": 1.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "01:45",
+      "side": "SELL",
+      "entry": 4474.96,
+      "exit": 4472.8,
+      "pts": 2.2,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 05",
+      "time": "00:01",
+      "side": "SELL",
+      "entry": 4482.76,
+      "exit": 4479.18,
+      "pts": 3.6,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 04",
+      "time": "23:00",
+      "side": "SELL",
+      "entry": 4480.0,
+      "exit": 4479.98,
+      "pts": 0.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 04",
+      "time": "22:21",
+      "side": "SELL",
+      "entry": 4474.85,
+      "exit": 4476.49,
+      "pts": -1.6,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 04",
+      "time": "22:21",
+      "side": "SELL",
+      "entry": 4475.16,
+      "exit": 4475.51,
+      "pts": -0.4,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 04",
+      "time": "22:20",
+      "side": "SELL",
+      "entry": 4474.85,
+      "exit": 4475.53,
+      "pts": -0.7,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 04",
+      "time": "22:20",
+      "side": "SELL",
+      "entry": 4475.14,
+      "exit": 4475.53,
+      "pts": -0.4,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 04",
+      "time": "21:43",
+      "side": "SELL",
+      "entry": 4481.84,
+      "exit": 4479.96,
+      "pts": 1.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 04",
+      "time": "17:15",
+      "side": "SELL",
+      "entry": 4493.79,
+      "exit": 4492.04,
+      "pts": 1.8,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 04",
+      "time": "10:13",
+      "side": "SELL",
+      "entry": 4477.02,
+      "exit": 4473.52,
+      "pts": 3.5,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 04",
+      "time": "10:01",
+      "side": "SELL",
+      "entry": 4481.46,
+      "exit": 4480.35,
+      "pts": 1.1,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "15:26",
+      "side": "BUY",
+      "entry": 4455.5,
+      "exit": 4457.77,
+      "pts": 2.3,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "15:23",
+      "side": "BUY",
+      "entry": 4457.77,
+      "exit": 4460.24,
+      "pts": 2.5,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "14:15",
+      "side": "BUY",
+      "entry": 4450.77,
+      "exit": 4446.0,
+      "pts": -4.8,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 03",
+      "time": "14:12",
+      "side": "BUY",
+      "entry": 4453.5,
+      "exit": 4446.0,
+      "pts": -7.5,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 03",
+      "time": "14:11",
+      "side": "BUY",
+      "entry": 4455.76,
+      "exit": 4446.0,
+      "pts": -9.8,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 03",
+      "time": "12:27",
+      "side": "BUY",
+      "entry": 4458.07,
+      "exit": 4459.76,
+      "pts": 1.7,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "11:46",
+      "side": "BUY",
+      "entry": 4455.98,
+      "exit": 4457.93,
+      "pts": 2.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "06:25",
+      "side": "BUY",
+      "entry": 4464.46,
+      "exit": 4474.38,
+      "pts": 9.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "05:41",
+      "side": "SELL",
+      "entry": 4495.31,
+      "exit": 4482.8,
+      "pts": 12.5,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "05:40",
+      "side": "SELL",
+      "entry": 4493.68,
+      "exit": 4482.8,
+      "pts": 10.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "05:40",
+      "side": "SELL",
+      "entry": 4491.67,
+      "exit": 4482.8,
+      "pts": 8.9,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "04:28",
+      "side": "BUY",
+      "entry": 4463.26,
+      "exit": 4475.0,
+      "pts": 11.7,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "04:28",
+      "side": "BUY",
+      "entry": 4462.8,
+      "exit": 4475.0,
+      "pts": 12.2,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 03",
+      "time": "04:28",
+      "side": "BUY",
+      "entry": 4466.01,
+      "exit": 4475.0,
+      "pts": 9.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 02",
+      "time": "12:13",
+      "side": "BUY",
+      "entry": 4541.09,
+      "exit": 4539.35,
+      "pts": -1.7,
+      "result": "LOSS"
+    }
+  ]
+}

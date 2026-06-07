@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasandra · Connect</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060912;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--border-soft:rgba(0,212,255,.08);--accent:#00d4ff;--green:#00ff88;--amber:#ffaa00;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;padding:40px 20px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.brand{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.35);display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px}
+.brand .dot{width:9px;height:9px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}
+.hd{text-align:center;margin-bottom:36px}
+.hd h1{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:18px}
+.hd p{color:var(--text-2);margin-top:10px;font-size:14px}
+.welcome-badge{display:inline-block;background:rgba(0,255,136,.1);border:1px solid var(--green);color:var(--green);font-size:11px;letter-spacing:1.5px;padding:5px 14px;border-radius:20px;text-transform:uppercase;margin-top:10px}
+.step{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:14px;padding:26px 28px;margin-bottom:16px;position:relative;display:flex;gap:20px;align-items:flex-start}
+.step .num{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:16px;box-shadow:0 0 16px rgba(0,212,255,.2)}
+.step h3{font-family:var(--display);font-size:19px;font-weight:600;margin-bottom:8px}
+.step p{color:var(--text-2);font-size:14px;line-height:1.6}
+.btn{display:inline-block;margin-top:14px;padding:12px 22px;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;border-radius:9px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.04em;text-decoration:none;transition:all .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35)}
+.code{display:inline-flex;align-items:center;gap:10px;margin-top:12px;padding:10px 16px;background:rgba(0,212,255,.08);border:1px dashed rgba(0,212,255,.5);border-radius:9px;font-size:16px;color:var(--accent);font-weight:700;letter-spacing:1px;cursor:pointer}
+.code:hover{background:rgba(0,212,255,.16)}
+.code .cp{font-size:10px;color:var(--dim);letter-spacing:1px}
+.tg{color:var(--accent);text-decoration:none;font-weight:600;border-bottom:1px solid rgba(0,212,255,.4)}
+.review{background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.3);border-radius:12px;padding:22px 26px;margin-top:24px;text-align:center}
+.review h3{font-family:var(--display);color:var(--amber);font-size:17px;margin-bottom:8px}
+.review p{color:var(--text-2);font-size:13.5px;line-height:1.6}
+.continue{display:block;width:100%;margin-top:24px;padding:15px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--accent);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer;text-align:center;text-decoration:none}
+.continue:hover{background:rgba(0,212,255,.06);border-color:var(--accent)}
+.copied{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 24px;border-radius:30px;font-weight:600;font-size:14px;opacity:0;transition:opacity .3s;z-index:100;pointer-events:none}
+.copied.show{opacity:1}
+</style></head><body>
+<div class="wrap">
+  <div class="hd">
+    <div class="brand"><span class="dot"></span>KASANDRA</div>
+    <div class="welcome-badge">Account created</div>
+    <h1>One more step to go live</h1>
+    <p>Your account is ready. To start trading the system, connect through VT Markets below.</p>
+  </div>
+
+  <div class="step">
+    <div class="num">1</div>
+    <div>
+      <h3>Open your VT Markets account</h3>
+      <p>Open a live trading account through our partner link. It takes a few minutes and your funds stay in your own name with the broker.</p>
+      <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank">OPEN VT MARKETS ACCOUNT &rarr;</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">2</div>
+    <div>
+      <h3>Enter the invite code</h3>
+      <p>During signup, enter our invite code so your account is linked to Kasandra. Tap to copy it.</p>
+      <div class="code" onclick="copyCode()"><span class="cp">CODE</span> uKdrW9fs &#10696;</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">3</div>
+    <div>
+      <h3>Message us on Telegram</h3>
+      <p>Once your account is open and funded, message <a class="tg" href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> on Telegram so we can verify and connect you.</p>
+    </div>
+  </div>
+
+  <div class="review">
+    <h3>What happens next</h3>
+    <p>After you message us and we verify your VT account, we approve your access. Once approved, your members dashboard unlocks with the live signals and full results. You can log in any time to check your status.</p>
+  </div>
+
+  <a class="continue" href="/members">CONTINUE TO MY DASHBOARD &rarr;</a>
+</div>
+<div class="copied" id="copied">Code copied &#10003;</div>
+<script>
+function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
+</script></body></html>

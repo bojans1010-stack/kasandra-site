@@ -1,0 +1,7 @@
+﻿admin_pw.txt
+members.json
+server.log
+server_err.log
+server_backup.py
+__pycache__/
+*.pyc

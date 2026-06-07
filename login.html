@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasandra · Login</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060912;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--accent:#00d4ff;--green:#00ff88;--red:#ff3366;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
+.box{position:relative;background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;padding:40px 34px;width:360px;box-shadow:0 0 40px rgba(0,212,255,.08)}
+.brand{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.35);text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+.brand .dot{width:9px;height:9px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:28px}
+label{display:block;font-size:11px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:9px;border:1px solid var(--border);background:#0a0e16;color:var(--text);font-family:var(--mono);font-size:14px}
+input:focus{outline:none;border-color:var(--accent)}
+button{width:100%;margin-top:24px;padding:14px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer;transition:all .2s}
+button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35)}
+.err{color:var(--red);font-size:12px;min-height:16px;margin-top:12px;text-align:center}
+.alt{text-align:center;font-size:13px;color:var(--text-2);margin-top:22px}
+.alt a{color:var(--accent);text-decoration:none}
+.back{position:absolute;top:-34px;left:0;font-size:12px;color:var(--dim);text-decoration:none}
+.back:hover{color:var(--accent)}
+</style></head><body>
+<div class="box">
+<a href="/" class="back">&larr; back to site</a>
+<div class="brand"><span class="dot"></span>KASANDRA</div>
+<div class="sub">Member Login</div>
+<label>Email</label>
+<input id="email" type="email" placeholder="you@email.com" autofocus onkeydown="if(event.key==='Enter')document.getElementById('pw').focus()">
+<label>Password</label>
+<input id="pw" type="password" placeholder="your password" onkeydown="if(event.key==='Enter')go()">
+<button onclick="go()">LOG IN</button>
+<div class="err" id="err"></div>
+<div class="alt">No account yet? <a href="/signup">Create one</a></div>
+</div>
+<script>
+async function go(){
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('pw').value;
+  const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const d=await r.json();
+  if(d.ok){location.href='/members';}else{document.getElementById('err').textContent=d.error||'login failed';}
+}
+</script></body></html>

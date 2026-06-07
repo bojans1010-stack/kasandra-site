@@ -231,6 +231,30 @@ def signout(k_session: str = Cookie(None)):
     _SESSIONS.pop(k_session, None)
     resp = JSONResponse({"ok": True}); resp.delete_cookie("k_session"); return resp
 
+@app.post("/api/change_password")
+async def change_password(request: Request, k_session: str = Cookie(None)):
+    """Logged-in member changes their own password. Requires current password."""
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "not logged in"}, status_code=401)
+    body = await request.json()
+    cur = body.get("current") or ""
+    new = (body.get("new") or "").strip()
+    u = _get_member(email)
+    if not u or _hash(cur, u["salt"]) != u["pw"]:
+        return JSONResponse({"ok": False, "error": "Current password is wrong"})
+    if len(new) < 6:
+        return JSONResponse({"ok": False, "error": "New password must be at least 6 characters"})
+    salt = secrets.token_hex(8)
+    new_hash = _hash(new, salt)
+    if _USE_DB:
+        conn = _db(); c = conn.cursor()
+        c.execute("UPDATE members SET salt=%s, pw=%s WHERE email=%s", (salt, new_hash, email))
+        conn.commit(); c.close(); conn.close()
+    else:
+        m = _load_file(); m[email]["salt"] = salt; m[email]["pw"] = new_hash; _save_file(m)
+    return {"ok": True, "msg": "Password changed"}
+
 @app.get("/api/me")
 def me(k_session: str = Cookie(None)):
     email = _session_email(k_session)

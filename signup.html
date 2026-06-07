@@ -25,44 +25,50 @@ button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35
 .alt a{color:var(--accent);text-decoration:none}
 .back{position:absolute;top:-34px;left:0;font-size:12px;color:var(--dim);text-decoration:none}
 .back:hover{color:var(--accent)}
+.langtog{display:inline-flex;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.langtog button{width:auto;margin:0;background:transparent;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;box-shadow:none}
+.langtog button.active{background:var(--accent);color:var(--bg)}
+.langtog button:hover{transform:none;box-shadow:none}
 .vtnote{background:rgba(0,212,255,.05);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:22px;font-size:12px;color:var(--text-2);line-height:1.7}
 .vtnote b{color:var(--accent)}
 .vtnote .code{background:rgba(0,212,255,.12);border:1px dashed rgba(0,212,255,.5);padding:1px 8px;border-radius:5px;color:var(--accent);font-weight:700}
 </style></head><body>
 <div class="box">
-<a href="/" class="back">&larr; back to site</a>
+<a href="/" class="back" data-i18n="auth.back">&larr; back to site</a>
 <div class="brand"><span class="dot"></span>KASANDRA</div>
-<div class="sub">Create Account</div>
+<div class="sub" data-i18n="auth.signupTitle">Create Account</div>
 
 <div class="row">
-  <div><label>First name</label><input id="first" type="text" placeholder="First" autofocus></div>
-  <div><label>Last name</label><input id="last" type="text" placeholder="Last"></div>
+  <div><label data-i18n="auth.first">First name</label><input id="first" type="text" autofocus></div>
+  <div><label data-i18n="auth.last">Last name</label><input id="last" type="text"></div>
 </div>
-<label>Email</label>
+<label data-i18n="auth.email">Email</label>
 <input id="email" type="email" placeholder="you@email.com">
 <div class="row">
-  <div><label>Country</label>
+  <div><label data-i18n="auth.country">Country</label>
     <select id="country">
-      <option value="">Select...</option>
+      <option value="" data-i18n="auth.countrySel">Select...</option>
       <option>North Macedonia</option><option>Serbia</option><option>Croatia</option><option>Bosnia and Herzegovina</option>
       <option>Montenegro</option><option>Slovenia</option><option>Bulgaria</option><option>Greece</option><option>Albania</option>
       <option>Germany</option><option>Austria</option><option>Switzerland</option><option>Italy</option><option>United Kingdom</option>
       <option>United States</option><option>United Arab Emirates</option><option>Turkey</option><option>Other</option>
     </select>
   </div>
-  <div><label>Phone</label><input id="phone" type="tel" placeholder="+389..."></div>
+  <div><label data-i18n="auth.phone">Phone</label><input id="phone" type="tel" placeholder="+389..."></div>
 </div>
-<label>Password</label>
-<input id="pw" type="password" placeholder="at least 6 characters" onkeydown="if(event.key==='Enter')go()">
-<button onclick="go()">CREATE ACCOUNT</button>
+<label data-i18n="auth.password">Password</label>
+<input id="pw" type="password" onkeydown="if(event.key==='Enter')go()">
+<button onclick="go()" data-i18n="auth.create">CREATE ACCOUNT</button>
 <div class="err" id="err"></div>
 
-<div class="vtnote">
-  <b>Next step after signing up:</b> to actually trade the system, you open your own <b>VT Markets</b> account using our invite code <span class="code">uKdrW9fs</span>, then message us on Telegram. Full instructions are shown inside your members area.
+<div class="vtnote" data-i18n="auth.vtNote">
+  Next step after signing up: to actually trade the system, you open your own VT Markets account using our invite code uKdrW9fs, then message us on Telegram. Full instructions are shown inside your members area.
 </div>
 
-<div class="alt">Already a member? <a href="/login">Log in</a></div>
+<div class="alt"><span data-i18n="auth.haveAccount">Already a member?</span> <a href="/login" data-i18n="auth.loginLink">Log in</a></div>
+<div style="text-align:center;margin-top:16px"><span class="langtog"><button data-lang-btn="en" onclick="kSetLang('en')">EN</button><button data-lang-btn="mk" onclick="kSetLang('mk')">МК</button></span></div>
 </div>
+<script src="/i18n.js"></script>
 <script>
 async function go(){
   const payload={

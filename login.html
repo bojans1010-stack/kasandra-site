@@ -22,19 +22,25 @@ button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35
 .alt a{color:var(--accent);text-decoration:none}
 .back{position:absolute;top:-34px;left:0;font-size:12px;color:var(--dim);text-decoration:none}
 .back:hover{color:var(--accent)}
+.langtog{display:inline-flex;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.langtog button{width:auto;margin:0;background:transparent;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;box-shadow:none}
+.langtog button.active{background:var(--accent);color:var(--bg)}
+.langtog button:hover{transform:none;box-shadow:none}
 </style></head><body>
 <div class="box">
-<a href="/" class="back">&larr; back to site</a>
+<a href="/" class="back" data-i18n="auth.back">&larr; back to site</a>
 <div class="brand"><span class="dot"></span>KASANDRA</div>
-<div class="sub">Member Login</div>
-<label>Email</label>
+<div class="sub" data-i18n="auth.loginTitle">Member Login</div>
+<label data-i18n="auth.email">Email</label>
 <input id="email" type="email" placeholder="you@email.com" autofocus onkeydown="if(event.key==='Enter')document.getElementById('pw').focus()">
-<label>Password</label>
-<input id="pw" type="password" placeholder="your password" onkeydown="if(event.key==='Enter')go()">
-<button onclick="go()">LOG IN</button>
+<label data-i18n="auth.password">Password</label>
+<input id="pw" type="password" onkeydown="if(event.key==='Enter')go()">
+<button onclick="go()" data-i18n="auth.login">LOG IN</button>
 <div class="err" id="err"></div>
-<div class="alt">No account yet? <a href="/signup">Create one</a></div>
+<div class="alt"><span data-i18n="auth.noAccount">No account yet?</span> <a href="/signup" data-i18n="auth.createOne">Create one</a></div>
+<div style="text-align:center;margin-top:18px"><span class="langtog"><button data-lang-btn="en" onclick="kSetLang('en')">EN</button><button data-lang-btn="mk" onclick="kSetLang('mk')">МК</button></span></div>
 </div>
+<script src="/i18n.js"></script>
 <script>
 async function go(){
   const email=document.getElementById('email').value;

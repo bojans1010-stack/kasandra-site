@@ -326,12 +326,219 @@ const TRANSLATIONS = {
     "mem.expiredP1": "Твојот бесплатен пробен период / претплата заврши. За да продолжиш да ги гледаш сигналите и резултатите во живо, продолжи за {price} USDT / месечно.",
     "mem.expiredP2pre": "Пиши му на",
     "mem.expiredP2post": "на Telegram за да платиш и да го реактивираш пристапот."
+  },
+  sr: {
+    "nav.how": "Kako funkcioniše",
+    "nav.trades": "Trgovine uživo",
+    "nav.join": "Pridruži se",
+    "nav.login": "Prijava za članove",
+    "hero.eyebrow": "Kasandra Technologies",
+    "hero.h1a": "Automatizovano ",
+    "hero.h1gold": "zlato",
+    "hero.h1b": " trgovanje,",
+    "hero.h1c": "izgrađeno na ",
+    "hero.h1transp": "transparentnosti",
+    "hero.lead": "Sistem uživo, zasnovan na pravilima, koji trguje XAU/USD na VT Markets. Bez preterivanja, bez skrivenih brojki. Svaka trgovina, svaki rezultat, prikazan tačno onako kako se dogodio.",
+    "hero.btnHow": "KAKO FUNKCIONIŠE",
+    "hero.btnTrades": "Pogledaj sve trgovine",
+    "stat.return": "Prinos",
+    "stat.since": "od juna 2026",
+    "stat.winrate": "Stopa uspeha",
+    "stat.livetrades": "trgovine uživo",
+    "stat.maxdd": "Maks. pad",
+    "stat.worstdip": "najgori pad",
+    "stat.trades": "Trgovine",
+    "stat.counting": "i sve više",
+    "transp.tag": "Zašto Kasandra",
+    "transp.h2": "Brojke su dokaz.",
+    "transp.sub": "Većina servisa za signale vam pokazuje snimke ekrana. Mi vam pokazujemo svaku trgovinu, datiranu od dana kada je sistem počeo da radi uživo, uključujući i padove.",
+    "transp.c1h": "Stvarni, datirani rezultati",
+    "transp.c1p": "Performanse se prate od tačnog dana kada je sistem počeo da trguje uživo. Nikada ne resetujemo sat da bismo sakrili loš period.",
+    "transp.c2h": "Prikazani padovi",
+    "transp.c2p": "Objavljujemo najgori pad, ne samo najbolju nedelju. Vidite celu sliku rizika pre nego što se uopšte povežete.",
+    "transp.c3h": "Pravila, ne emocije",
+    "transp.c3p": "Fiksna strategija sa strogim ograničenjima rizika. Disciplina jednog ulaza, čvrsti stopovi, bez osvetničkog trgovanja, bez martingala.",
+    "transp.moneyh": "Vaš novac nikada ne dolazi kod nas",
+    "transp.moneyp": "Mi ne držimo, ne upravljamo niti imamo pristup vašim sredstvima. Sve se nalazi na vašem sopstvenom VT Markets nalogu, na vaše ime, pod vašom kontrolom — možete podići u svakom trenutku. Kasandra samo obezbeđuje tehnologiju koja vas povezuje sa strategijom. Nikada ne tražimo vaše depozite, i nikada ih ne bismo mogli pomeriti.",
+    "trades.tag": "Potpuna transparentnost",
+    "trades.h2": "Svaka trgovina koju napravimo.",
+    "trades.sub": "Ovo je zapis uživo direktno sa naloga. Ulaz, smer, rezultat. Ažurira se kako sistem trguje.",
+    "trades.log": "DNEVNIK TRGOVINA UŽIVO",
+    "trades.thDate": "Datum",
+    "trades.thTime": "Vreme",
+    "trades.thSide": "Strana",
+    "trades.thEntry": "Ulaz",
+    "trades.thExit": "Izlaz",
+    "trades.thPoints": "Poeni",
+    "trades.thResult": "Rezultat",
+    "trades.showAll": "Prikaži sve trgovine",
+    "trades.showLess": "Prikaži manje",
+    "trades.loading": "učitavanje trgovina uživo...",
+    "trades.foot": "{wins} dobijenih / {losses} izgubljenih · {wr}% stopa uspeha · nalog uživo",
+    "trades.updated": "ažurirano {t}",
+    "how.tag": "Kako funkcioniše",
+    "how.h2": "Jedan sistem. Dva načina korišćenja.",
+    "how.intro": "Kasandra koristi jedinstven sistem zasnovan na pravilima za zlato (XAU/USD). Čita tržište 24 sata i reaguje samo kada se njegovi uslovi poklope, sa fiksnim rizikom na svakoj trgovini — čvrsti stopovi, jedan ulaz, bez martingala, bez osvetničkog trgovanja. Možete pustiti sistem da trguje za vas automatski, ili uzeti njegove signale i trgovati sami. Mi nikada ne diramo niti držimo vaš novac. Trgujete preko vašeg sopstvenog VT Markets naloga — vaša sredstva ostaju na vaše ime, kod brokera, pod vašom kontrolom u svakom trenutku. Mi jednostavno obezbeđujemo tehnologiju koja vas povezuje sa strategijom.",
+    "how.bestTag": "Najbolji rezultati · bez angažovanja",
+    "how.bestH": "Automatsko kopi-trgovanje",
+    "how.bestSub": "Sistem trguje na vašem nalogu umesto vas",
+    "how.bestL1": "Povežite vaš VT Markets nalog sa našim automatskim kopi-trgovanjem",
+    "how.bestL2": "Svaka trgovina koju sistem napravi automatski se kopira na vaš nalog",
+    "how.bestL3": "Bez sedenja pred ekranom, bez ručnih ulaza, ništa ne propuštate",
+    "how.bestL4": "Isti ulazi, ista kontrola rizika, potpuno bez angažovanja",
+    "how.bestL5": "Ovako dobijate rezultate najbliže zapisu uživo iznad",
+    "how.bestBtn": "POVEŽI I KOPIRAJ AUTOMATSKI →",
+    "how.bestPrice": "Otvori nalog · unesi kod uKdrW9fs · piši nam za povezivanje",
+    "how.manualTag": "Probaj besplatno · 7 dana",
+    "how.manualH": "Trguj signale sam",
+    "how.manualSub": "Vi postavljate trgovine ručno",
+    "how.manualL1": "Dobijaj signale uživo od sistema u svojoj članskoj zoni",
+    "how.manualL2": "Postavljaj trgovine sam, u svoje vreme",
+    "how.manualL3": "Potpuna kontrola nad svakim ulazom i izlazom",
+    "how.manualL4": "7-dnevni besplatan probni period — vidi signale pre nego što platiš",
+    "how.manualL5": "Nakon probnog perioda, nastavi za 99 USDT / mesečno",
+    "how.manualBtn": "ZAPOČNI 7-DNEVNI BESPLATAN PERIOD →",
+    "how.manualPrice": "Besplatno 7 dana, zatim 99 USDT / mesečno. Otkaži u svakom trenutku.",
+    "join.tag": "Poveži se",
+    "join.h2": "Tri koraka za pridruživanje.",
+    "join.sub": "Trgujete preko vašeg sopstvenog VT Markets naloga. Vaša sredstva ostaju na vaše ime, kod regulisanog brokera.",
+    "join.s1ic": "Otvori nalog",
+    "join.s1h": "Kreiraj svoj VT Markets nalog",
+    "join.s1p": "Otvori nalog uživo preko našeg partnerskog linka ispod. Traje nekoliko minuta.",
+    "join.s1btn": "OTVORI VT NALOG →",
+    "join.s2ic": "Unesi kod",
+    "join.s2h": "Iskoristi kod za poziv",
+    "join.s2p": "Tokom registracije, unesi naš kod za poziv da bi tvoj nalog bio povezan sa Kasandrom. Dodirni za kopiranje.",
+    "join.s3ic": "Poveži se",
+    "join.s3h": "Piši nam za aktiviranje",
+    "join.s3p": "Kada je tvoj nalog otvoren i napunjen, kontaktiraj nas na Telegramu da te povežemo i započnemo.",
+    "cta.h2": "Trguj sa sistemom koji pokazuje svoj rad.",
+    "cta.p": "Otvori nalog, unesi kod, piši nam. To je sve.",
+    "cta.btn": "ZAPOČNI SA VT MARKETS →",
+    "disc.title": "Izjava o riziku.",
+    "disc.body": "Trgovanje devizama, zlatom i CFD-ovima nosi visok nivo rizika i možda nije pogodno za sve investitore. Prethodni rezultati nisu pokazatelj budućih rezultata. Prikazane brojke o performansama su sa naloga uživo od navedenog datuma i uključuju i dobitke i gubitke; rezultati variraju i možete izgubiti deo ili ceo uloženi kapital. Kasandra Technologies nije licencirani finansijski savetnik i ništa na ovoj stranici ne predstavlja finansijski savet. Trgujete preko vašeg sopstvenog naloga kod VT Markets, brokera treće strane, i vaša sredstva ostaju pod vašom kontrolom. Možemo dobiti partnersku naknadu kada otvorite nalog preko našeg linka. Trgujte samo sa kapitalom koji možete priuštiti da izgubite.",
+    "foot.how": "Kako funkcioniše",
+    "foot.trades": "Trgovine uživo",
+    "foot.login": "Prijava za članove",
+    "foot.contact": "Kontakt",
+    "copied": "Kod kopiran ✓",
+    "auth.loginTitle": "Prijava za članove",
+    "auth.signupTitle": "Kreiraj nalog",
+    "auth.back": "← nazad na sajt",
+    "auth.email": "Email",
+    "auth.password": "Lozinka",
+    "auth.login": "PRIJAVI SE",
+    "auth.create": "KREIRAJ NALOG",
+    "auth.noAccount": "Još nemaš nalog?",
+    "auth.createOne": "Kreiraj nalog",
+    "auth.haveAccount": "Već si član?",
+    "auth.loginLink": "Prijavi se",
+    "auth.first": "Ime",
+    "auth.last": "Prezime",
+    "auth.country": "Država",
+    "auth.countrySel": "Izaberi...",
+    "auth.phone": "Telefon",
+    "auth.pwHint": "najmanje 6 znakova",
+    "auth.vtNote": "Sledeći korak nakon registracije: da bi trgovao sistemom, otvaraš svoj VT Markets nalog koristeći naš kod za poziv uKdrW9fs, zatim nam pišeš na Telegramu. Kompletna uputstva su prikazana u tvojoj članskoj zoni.",
+    "conn.badge": "Nalog kreiran",
+    "conn.h1": "Još jedan korak do aktiviranja",
+    "conn.sub": "Tvoj nalog je spreman. Da bi počeo da trguješ sistemom, poveži se preko VT Markets ispod.",
+    "conn.s1h": "Otvori svoj VT Markets nalog",
+    "conn.s1p": "Otvori nalog za trgovanje uživo preko našeg partnerskog linka. Traje nekoliko minuta i tvoja sredstva ostaju na tvoje ime kod brokera.",
+    "conn.s1btn": "OTVORI VT MARKETS NALOG →",
+    "conn.s2h": "Unesi kod za poziv",
+    "conn.s2p": "Tokom registracije, unesi naš kod za poziv da bi tvoj nalog bio povezan sa Kasandrom. Dodirni za kopiranje.",
+    "conn.s3h": "Piši nam na Telegramu",
+    "conn.s3p": "Kada je tvoj nalog otvoren i napunjen, piši @vanja_milanov na Telegramu da te potvrdimo i povežemo.",
+    "conn.nexth": "Šta sledi",
+    "conn.nextp": "Nakon što nam pišeš i potvrdimo tvoj VT nalog, započinjemo tvoj 7-dnevni besplatan probni period. Kada bude aktivan, tvoja članska kontrolna tabla se otključava sa signalima uživo i kompletnim rezultatima. Možeš se prijaviti u svakom trenutku da proveriš status.",
+    "conn.continue": "NASTAVI KA MOJOJ TABLI →",
+    "mem.signout": "Odjavi se",
+    "mem.welcome": "Dobrodošao,",
+    "mem.intro": "Performanse uživo Kasandra sistema za zlato. Samo za čitanje. Ažurira se kako sistem trguje.",
+    "mem.kReturn": "Prinos / jun 2026",
+    "mem.kWin": "Stopa uspeha",
+    "mem.kDD": "Maks. pad",
+    "mem.kTrades": "Ukupno trgovina",
+    "mem.connNotYet": "Još nisi povezan? Započni ovde.",
+    "mem.connStep1": "Otvori VT Markets nalog preko našeg partnerskog linka",
+    "mem.connStep2pre": "Unesi kod za poziv",
+    "mem.connStep2post": "tokom registracije",
+    "mem.connStep3pre": "Piši",
+    "mem.connStep3post": "na Telegramu da se povežeš",
+    "mem.connBtn": "OTVORI VT MARKETS NALOG →",
+    "mem.logTitle": "DNEVNIK TRGOVINA UŽIVO",
+    "mem.reviewH": "Nalog se pregleda",
+    "mem.reviewP": "Hvala na registraciji. Završi VT Markets korake ispod i piši nam na Telegramu. Kada potvrdimo tvoj nalog započinjemo tvoj 7-dnevni besplatan probni period, i signali uživo se ovde automatski otključavaju.",
+    "mem.trialBanner": "Besplatan probni period aktivan — još {days} dana. Nakon toga je {price} USDT / mesečno za nastavak.",
+    "mem.activeBanner": "Pretplata aktivna — još {days} dana.",
+    "mem.expiredH": "Tvoj pristup je istekao",
+    "mem.expiredP1": "Tvoj besplatan probni period / pretplata je istekla. Da bi nastavio da vidiš signale i rezultate uživo, nastavi za {price} USDT / mesečno.",
+    "mem.expiredP2pre": "Piši",
+    "mem.expiredP2post": "na Telegramu da platiš i reaktiviraš svoj pristup."
   }
 };
 
-function kGetLang(){ return localStorage.getItem('k_lang') || 'en'; }
+// === language registry: add a new language here and in TRANSLATIONS above ===
+const LANGS = [
+  { code: "en", label: "English",  short: "EN" },
+  { code: "mk", label: "Македонски", short: "МК" },
+  { code: "sr", label: "Srpski / Hrvatski", short: "SR" }
+];
+
+function kGetLang(){
+  const l = localStorage.getItem('k_lang') || 'en';
+  return TRANSLATIONS[l] ? l : 'en';
+}
 function kSetLang(l){ localStorage.setItem('k_lang', l); kApplyLang(l); }
 function kT(key){ const l=kGetLang(); return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || (TRANSLATIONS.en[key]) || key; }
+
+function kBuildDropdowns(){
+  document.querySelectorAll('[data-lang-dropdown]').forEach(host=>{
+    if(host.dataset.kBuilt) return;
+    host.dataset.kBuilt = "1";
+    host.classList.add('klang');
+    const cur = LANGS.find(x=>x.code===kGetLang()) || LANGS[0];
+    host.innerHTML =
+      '<button type="button" class="klang-btn" aria-haspopup="listbox" aria-expanded="false">'
+      + '<span class="klang-cur">'+cur.short+'</span><span class="klang-arrow">\u25BE</span></button>'
+      + '<ul class="klang-menu" role="listbox">'
+      + LANGS.map(x=>'<li role="option" data-code="'+x.code+'" class="klang-opt'+(x.code===cur.code?' sel':'')+'">'+x.label+'</li>').join('')
+      + '</ul>';
+    const btn = host.querySelector('.klang-btn');
+    const menu = host.querySelector('.klang-menu');
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const open = host.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open?'true':'false');
+    });
+    menu.querySelectorAll('.klang-opt').forEach(opt=>{
+      opt.addEventListener('click', e=>{
+        e.stopPropagation();
+        kSetLang(opt.getAttribute('data-code'));
+        host.classList.remove('open');
+        btn.setAttribute('aria-expanded','false');
+      });
+    });
+  });
+  // close any open dropdown when clicking elsewhere
+  document.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-lang-dropdown].open').forEach(h=>{
+      h.classList.remove('open');
+      const b=h.querySelector('.klang-btn'); if(b) b.setAttribute('aria-expanded','false');
+    });
+  });
+}
+
+function kSyncDropdowns(lang){
+  const cur = LANGS.find(x=>x.code===lang) || LANGS[0];
+  document.querySelectorAll('[data-lang-dropdown]').forEach(host=>{
+    const c = host.querySelector('.klang-cur'); if(c) c.textContent = cur.short;
+    host.querySelectorAll('.klang-opt').forEach(o=>{
+      o.classList.toggle('sel', o.getAttribute('data-code')===lang);
+    });
+  });
+}
 
 function kApplyLang(lang){
   document.documentElement.lang = lang;
@@ -345,12 +552,12 @@ function kApplyLang(lang){
     const val = (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || (TRANSLATIONS.en[key]);
     if(val !== undefined) el.innerHTML = val;
   });
-  // update the toggle buttons' active state
+  // legacy button toggles (if any remain)
   document.querySelectorAll('[data-lang-btn]').forEach(b=>{
     b.classList.toggle('active', b.getAttribute('data-lang-btn')===lang);
   });
-  // let page-specific code react (e.g. re-render dynamic content)
+  kSyncDropdowns(lang);
   document.dispatchEvent(new CustomEvent('langchange',{detail:{lang}}));
 }
 
-document.addEventListener('DOMContentLoaded',()=>kApplyLang(kGetLang()));
+document.addEventListener('DOMContentLoaded',()=>{ kBuildDropdowns(); kApplyLang(kGetLang()); });

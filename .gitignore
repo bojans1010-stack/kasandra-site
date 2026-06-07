@@ -5,3 +5,7 @@ server_err.log
 server_backup.py
 __pycache__/
 *.pyc
+
+node_modules/
+package-lock.json
+package.json

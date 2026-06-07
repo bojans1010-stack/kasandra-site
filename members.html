@@ -108,6 +108,16 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .sigcard .meta{margin-top:10px;font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap}
 .sig-empty{padding:34px 22px;text-align:center;color:var(--dim);font-size:13px;line-height:1.7}
 .sig-disc{padding:0 22px 16px;font-size:10.5px;color:var(--dim);line-height:1.6}
+/* signal history (track record) */
+.oc{font-weight:700;font-size:10px;padding:3px 9px;border-radius:5px;letter-spacing:.05em;white-space:nowrap}
+.oc.TP3{background:rgba(0,255,136,.18);color:var(--green)}
+.oc.TP2{background:rgba(0,255,136,.12);color:var(--green)}
+.oc.TP1{background:rgba(0,212,255,.14);color:var(--accent)}
+.oc.BE{background:rgba(120,130,150,.18);color:var(--text-2)}
+.oc.SL{background:rgba(255,51,102,.14);color:var(--red)}
+.hist-sum{display:flex;gap:8px;flex-wrap:wrap;padding:12px 22px;border-bottom:1px solid var(--border-soft);font-size:11px;color:var(--dim)}
+.hist-sum .hs{background:rgba(255,255,255,.04);border-radius:14px;padding:4px 11px}
+.hist-sum .hs b{color:var(--text)}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
@@ -127,6 +137,12 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="sig-list" id="sig-list"></div>
     <div class="sig-disc" data-i18n="mem.sigDisc">Signals are generated automatically by the Kasandra gold system. Each level is support (BUY) or resistance (SELL) with a fixed stop and a TP ladder. Not financial advice &mdash; trade your own risk.</div>
   </div>
+  <div class="panel" id="histpanel" style="display:none">
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div class="upd" id="hist-upd"></div></div>
+    <div class="hist-sum" id="hist-sum"></div>
+    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th></tr></thead>
+    <tbody id="hist-body"></tbody></table>
+  </div>
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
@@ -143,7 +159,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
-<script src="/i18n.js?v=4"></script>
+<script src="/i18n.js?v=5"></script>
 <script>
 function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
@@ -235,6 +251,36 @@ async function loadSignals(){
       '</div>'+
       '<div class="meta">'+(types?'<span>'+types+'</span>':'')+(dist?'<span>'+dist+'</span>':'')+'</div>'+
     '</div>';
+  }).join('');
+  renderHistory(d.history||[]);
+}
+
+function renderHistory(hist){
+  const panel=document.getElementById('histpanel');
+  if(!hist || !hist.length){ panel.style.display='none'; return; }
+  panel.style.display='block';
+  // newest first
+  const rows=hist.slice().reverse();
+  // summary counts
+  const cnt={TP3:0,TP2:0,TP1:0,BE:0,SL:0};
+  rows.forEach(r=>{ if(cnt[r.outcome]!=null) cnt[r.outcome]++; });
+  const wins=cnt.TP1+cnt.TP2+cnt.TP3+cnt.BE;  // BE = no loss, counts as a non-loser
+  const total=rows.length;
+  const wr=total?Math.round(wins/total*100):0;
+  document.getElementById('hist-sum').innerHTML=
+    '<span class="hs">'+kT('mem.histTotal')+' <b>'+total+'</b></span>'+
+    '<span class="hs">'+kT('mem.histWR')+' <b>'+wr+'%</b></span>'+
+    '<span class="hs">TP3 <b>'+cnt.TP3+'</b></span>'+
+    '<span class="hs">TP2 <b>'+cnt.TP2+'</b></span>'+
+    '<span class="hs">TP1 <b>'+cnt.TP1+'</b></span>'+
+    '<span class="hs">BE <b>'+cnt.BE+'</b></span>'+
+    '<span class="hs">SL <b>'+cnt.SL+'</b></span>';
+  document.getElementById('hist-body').innerHTML=rows.map(r=>{
+    const dt=(r.closed_utc||'').replace('T',' ').replace('Z','').slice(5,16); // MM-DD HH:MM
+    const ocLabel={TP3:kT('mem.ocTP3'),TP2:kT('mem.ocTP2'),TP1:kT('mem.ocTP1'),BE:kT('mem.ocBE'),SL:kT('mem.ocSL')}[r.outcome]||r.outcome;
+    return '<tr><td class="date">'+dt+'</td><td class="side '+r.side+'">'+r.side+'</td>'+
+      '<td>'+r.zone_low+'-'+r.zone_high+'</td><td class="date">'+(r.risk||'')+'</td>'+
+      '<td><span class="oc '+r.outcome+'">'+ocLabel+'</span></td></tr>';
   }).join('');
 }
 load();

@@ -293,6 +293,8 @@ async def ingest_signals(request: Request):
     except Exception:
         return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
     # only keep the safe public fields; never trust arbitrary keys
+    hist = body.get("history") or []
+    if not isinstance(hist, list): hist = []
     safe = {
         "generated_utc": body.get("generated_utc"),
         "price": body.get("price"),
@@ -300,6 +302,7 @@ async def ingest_signals(request: Request):
         "news_status": body.get("news_status"),
         "next_event": body.get("next_event"),
         "signals": body.get("signals") or [],
+        "history": hist[-100:],
     }
     try:
         json.dump(safe, open(SIGNALS_FILE, "w", encoding="utf-8"), indent=2)

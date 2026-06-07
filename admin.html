@@ -64,12 +64,12 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
   <div class="counts">
     <div class="count p"><div class="v" id="c-pending">0</div><div class="l">Pending</div></div>
-    <div class="count a"><div class="v" id="c-approved">0</div><div class="l">Approved</div></div>
+    <div class="count a"><div class="v" id="c-approved">0</div><div class="l">Active</div></div>
     <div class="count"><div class="v" id="c-total">0</div><div class="l">Total Members</div></div>
   </div>
   <div class="tbl">
     <table>
-      <thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Phone</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+      <thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Phone</th><th>Joined</th><th>Access</th><th>Action</th></tr></thead>
       <tbody id="mbody"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">loading...</td></tr></tbody>
     </table>
   </div>
@@ -93,20 +93,22 @@ async function loadMembers(){
   if(r.status===401){document.getElementById('gate').style.display='flex';document.getElementById('panel').style.display='none';return;}
   const d=await r.json();
   document.getElementById('c-pending').textContent=d.pending;
-  document.getElementById('c-approved').textContent=d.approved;
+  document.getElementById('c-approved').textContent=d.active;
   document.getElementById('c-total').textContent=d.members.length;
   const body=document.getElementById('mbody');
   if(!d.members.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">No members yet</td></tr>';return;}
   body.innerHTML=d.members.map(m=>{
     const name=(m.first_name+' '+m.last_name).trim()||'-';
-    let action='';
-    if(m.status==='approved'){action='<button class="act revoke" onclick="setStatus(\''+m.email+'\',\'pending\')">Revoke</button>';}
-    else{action='<button class="act approve" onclick="setStatus(\''+m.email+'\',\'approved\')">Approve</button>';}
-    return '<tr><td>'+name+'</td><td class="muted">'+m.email+'</td><td>'+(m.country||'-')+'</td><td class="muted">'+(m.phone||'-')+'</td><td class="muted">'+(m.joined||'-')+'</td><td><span class="badge '+m.status+'">'+m.status+'</span></td><td>'+action+'</td></tr>';
+    let badge='',action='';
+    if(m.access_label==='trial'){badge='<span class="badge approved">trial &middot; '+m.days_left+'d</span>';action='<button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';}
+    else if(m.access_label==='active'){badge='<span class="badge approved">paid &middot; '+m.days_left+'d</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';}
+    else if(m.access_label==='expired'){badge='<span class="badge rejected">expired</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button>';}
+    else {badge='<span class="badge pending">pending</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'approve_trial\')">Start 7-day trial</button>';}
+    return '<tr><td>'+name+'</td><td class="muted">'+m.email+'</td><td>'+(m.country||'-')+'</td><td class="muted">'+(m.phone||'-')+'</td><td class="muted">'+(m.joined||'-')+'</td><td>'+badge+'</td><td>'+action+'</td></tr>';
   }).join('');
 }
-async function setStatus(email,status){
-  await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,status})});
+async function act(email,action){
+  await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action})});
   loadMembers();
 }
 // try to load straight away in case admin session already active

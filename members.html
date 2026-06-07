@@ -91,26 +91,43 @@ async function load(){
   const u=await me.json();
   document.getElementById('who').textContent=u.email;
   document.getElementById('name').textContent=u.name||'member';
-  if(u.status!=='approved'){
-    // pending / under review: hide signals, show review notice
-    document.querySelector('.kpis').style.display='none';
-    document.querySelector('.panel').style.display='none';
+  const price=u.price_usdt||99;
+
+  if(u.has_access){
+    // ACTIVE (trial or paid) - show a status banner + the signals
     const c=document.querySelector('.connect');
-    c.insertAdjacentHTML('beforebegin','<div id="review-box" style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; Account under review</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">Thanks for signing up. Complete the VT Markets steps below and message us on Telegram. Once we verify your account we will approve your access, and the live signals and results will unlock here automatically.</p></div>');
+    let bannerColor=u.access_label==='trial'?'rgba(0,212,255,.07)':'rgba(0,255,136,.07)';
+    let bannerBorder=u.access_label==='trial'?'rgba(0,212,255,.35)':'rgba(0,255,136,.35)';
+    let txt=u.access_label==='trial'
+      ? '&#9201; Free trial active &mdash; '+u.days_left+' day'+(u.days_left===1?'':'s')+' left. After that it is '+price+' USDT / month to continue.'
+      : '&#10003; Subscription active &mdash; '+u.days_left+' day'+(u.days_left===1?'':'s')+' left.';
+    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
+    const r=await fetch('/api/results');
+    if(r.status!==200){return;}
+    const d=await r.json();
+    document.getElementById('k-win').textContent=(d.win_rate||0)+'%';
+    document.getElementById('k-tr').textContent=d.total||0;
+    document.getElementById('upd').textContent='updated '+(d.updated||'');
+    const list=d.trades||[];
+    document.getElementById('body').innerHTML=list.map(t=>{
+      const cc=t.pts>=0?'pos':'neg';const p=(t.pts>=0?'+':'')+t.pts;
+      return '<tr><td class="date">'+t.date+'</td><td class="date">'+t.time+'</td><td class="side '+t.side+'">'+t.side+'</td><td>'+t.entry+'</td><td>'+t.exit+'</td><td class="pts '+cc+'">'+p+'</td><td><span class="res '+t.result+'">'+t.result+'</span></td></tr>';
+    }).join('');
     return;
   }
-  // approved: load the signals + results
-  const r=await fetch('/api/results');
-  if(r.status!==200){return;}
-  const d=await r.json();
-  document.getElementById('k-win').textContent=(d.win_rate||0)+'%';
-  document.getElementById('k-tr').textContent=d.total||0;
-  document.getElementById('upd').textContent='updated '+(d.updated||'');
-  const list=d.trades||[];
-  document.getElementById('body').innerHTML=list.map(t=>{
-    const c=t.pts>=0?'pos':'neg';const p=(t.pts>=0?'+':'')+t.pts;
-    return '<tr><td class="date">'+t.date+'</td><td class="date">'+t.time+'</td><td class="side '+t.side+'">'+t.side+'</td><td>'+t.entry+'</td><td>'+t.exit+'</td><td class="pts '+c+'">'+p+'</td><td><span class="res '+t.result+'">'+t.result+'</span></td></tr>';
-  }).join('');
+
+  // NO ACCESS - hide signals, show the right message
+  document.querySelector('.kpis').style.display='none';
+  document.querySelector('.panel').style.display='none';
+  const c=document.querySelector('.connect');
+
+  if(u.access_label==='expired'){
+    // trial/subscription ended -> pay screen
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">Your access has ended</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">Your free trial / subscription period is over. To keep seeing the live signals and results, continue for <b style="color:var(--accent)">'+price+' USDT / month</b>.</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">Message <a href="https://t.me/vanja_milanov" target="_blank" style="color:var(--accent);font-weight:600">@vanja_milanov</a> on Telegram to pay and reactivate your access.</p></div>');
+  } else {
+    // pending review
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; Account under review</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">Thanks for signing up. Complete the VT Markets steps below and message us on Telegram. Once we verify your account we start your 7 day free trial, and the live signals unlock here automatically.</p></div>');
+  }
 }
 load();
 </script></body></html>

@@ -41,7 +41,11 @@ def _init_db():
         country TEXT, phone TEXT,
         salt TEXT, pw TEXT,
         status TEXT DEFAULT 'pending',
+        access_until DOUBLE PRECISION DEFAULT 0,
+        plan TEXT DEFAULT 'none',
         joined TEXT)""")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS access_until DOUBLE PRECISION DEFAULT 0")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'none'")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -56,11 +60,12 @@ def _get_member(email):
 def _put_member(email, rec):
     if _USE_DB:
         conn = _db(); cur = conn.cursor()
-        cur.execute("""INSERT INTO members(email,first_name,last_name,name,country,phone,salt,pw,status,joined)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        cur.execute("""INSERT INTO members(email,first_name,last_name,name,country,phone,salt,pw,status,access_until,plan,joined)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             ON CONFLICT(email) DO UPDATE SET status=EXCLUDED.status""",
             (email, rec["first_name"], rec["last_name"], rec["name"], rec["country"],
-             rec["phone"], rec["salt"], rec["pw"], rec["status"], rec["joined"]))
+             rec["phone"], rec["salt"], rec["pw"], rec["status"],
+             rec.get("access_until", 0), rec.get("plan", "none"), rec["joined"]))
         conn.commit(); cur.close(); conn.close()
         return
     m = _load_file(); m[email] = rec; _save_file(m)
@@ -73,6 +78,45 @@ def _set_status(email, status):
         return
     m = _load_file()
     if email in m: m[email]["status"] = status; _save_file(m)
+
+TRIAL_DAYS = 7
+MONTH_DAYS = 30
+PRICE_USDT = 99
+
+def _grant_access(email, days, plan):
+    """Extend a member's access by `days` from now (or from their current expiry if still active)."""
+    now = time.time()
+    cur_until = 0
+    rec = _get_member(email)
+    if rec:
+        try: cur_until = float(rec.get("access_until") or 0)
+        except Exception: cur_until = 0
+    base = cur_until if cur_until > now else now
+    new_until = base + days * 86400
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("UPDATE members SET status='approved', access_until=%s, plan=%s WHERE email=%s",
+                    (new_until, plan, email))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        m = _load_file()
+        if email in m:
+            m[email]["status"] = "approved"; m[email]["access_until"] = new_until; m[email]["plan"] = plan
+            _save_file(m)
+    return new_until
+
+def _access_state(rec):
+    """Return (has_access_bool, label, days_left) for a member record."""
+    if not rec or rec.get("status") != "approved":
+        return (False, "pending", 0)
+    now = time.time()
+    try: until = float(rec.get("access_until") or 0)
+    except Exception: until = 0
+    if until <= now:
+        return (False, "expired", 0)
+    days_left = int((until - now) / 86400) + 1
+    plan = rec.get("plan", "none")
+    return (True, "trial" if plan == "trial" else "active", days_left)
 
 def _all_members():
     if _USE_DB:
@@ -189,16 +233,20 @@ def me(k_session: str = Cookie(None)):
     email = _session_email(k_session)
     if not email: return JSONResponse({"ok": False}, status_code=401)
     u = _get_member(email) or {}
+    has_access, label, days_left = _access_state(u)
     return {"ok": True, "email": email, "name": u.get("name", ""),
-            "status": u.get("status", "pending"), "joined": u.get("joined", "")}
+            "status": u.get("status", "pending"), "joined": u.get("joined", ""),
+            "has_access": has_access, "access_label": label, "days_left": days_left,
+            "price_usdt": PRICE_USDT}
 
 @app.get("/api/results")
 def results(k_session: str = Cookie(None)):
     email = _session_email(k_session)
     if not email: return JSONResponse({"error": "members only"}, status_code=401)
     u = _get_member(email) or {}
-    if u.get("status") != "approved":
-        return JSONResponse({"error": "account pending approval"}, status_code=403)
+    has_access, label, days_left = _access_state(u)
+    if not has_access:
+        return JSONResponse({"error": label}, status_code=403)
     if not os.path.exists(RESULTS_FILE):
         return {"trades": [], "total": 0, "win_rate": 0}
     return json.load(open(RESULTS_FILE, encoding="utf-8"))
@@ -229,14 +277,17 @@ def admin_members(k_admin: str = Cookie(None)):
     members = _all_members()
     out = []
     for email, u in members.items():
+        has_access, label, days_left = _access_state(u)
         out.append({"email": email, "first_name": u.get("first_name", ""),
                     "last_name": u.get("last_name", ""), "country": u.get("country", ""),
                     "phone": u.get("phone", ""), "status": u.get("status", "pending"),
+                    "access_label": label, "days_left": days_left, "plan": u.get("plan", "none"),
                     "joined": u.get("joined", "")})
     out.sort(key=lambda x: (x["status"] != "pending", x["joined"]))
     return {"ok": True, "members": out,
             "pending": sum(1 for m in out if m["status"] == "pending"),
-            "approved": sum(1 for m in out if m["status"] == "approved")}
+            "active": sum(1 for m in out if m["access_label"] in ("trial", "active")),
+            "expired": sum(1 for m in out if m["access_label"] == "expired")}
 
 @app.post("/api/admin/set_status")
 async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
@@ -244,13 +295,19 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return JSONResponse({"error": "admin only"}, status_code=401)
     body = await request.json()
     email = (body.get("email") or "").strip().lower()
-    status = body.get("status")
-    if status not in ("approved", "pending", "rejected"):
-        return JSONResponse({"ok": False, "error": "bad status"})
+    action = body.get("action")
     if not _get_member(email):
         return JSONResponse({"ok": False, "error": "no such member"})
-    _set_status(email, status)
-    return {"ok": True, "email": email, "status": status}
+    if action == "approve_trial":
+        _grant_access(email, TRIAL_DAYS, "trial")
+        return {"ok": True, "email": email, "msg": "7-day trial started"}
+    elif action == "extend_month":
+        _grant_access(email, MONTH_DAYS, "paid")
+        return {"ok": True, "email": email, "msg": "30 days added (paid)"}
+    elif action == "revoke":
+        _set_status(email, "pending")
+        return {"ok": True, "email": email, "msg": "access revoked"}
+    return JSONResponse({"ok": False, "error": "bad action"})
 
 @app.get("/")
 def home(): return FileResponse(os.path.join(SITE, "index.html"))

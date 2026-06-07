@@ -363,6 +363,23 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
     elif action == "revoke":
         _set_status(email, "pending")
         return {"ok": True, "email": email, "msg": "access revoked"}
+    elif action == "reset_password":
+        newpw = (body.get("new_password") or "").strip()
+        if len(newpw) < 6:
+            return JSONResponse({"ok": False, "error": "new password must be at least 6 characters"})
+        rec = _get_member(email)
+        salt = secrets.token_hex(8)
+        rec["salt"] = salt
+        rec["pw"] = _hash(newpw, salt)
+        _put_member(email, rec)
+        # _put_member's UPSERT only updates status on conflict; force the pw/salt write directly
+        if _USE_DB:
+            conn = _db(); cur = conn.cursor()
+            cur.execute("UPDATE members SET salt=%s, pw=%s WHERE email=%s", (salt, rec["pw"], email))
+            conn.commit(); cur.close(); conn.close()
+        else:
+            m = _load_file(); m[email]["salt"] = salt; m[email]["pw"] = rec["pw"]; _save_file(m)
+        return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
 @app.get("/")

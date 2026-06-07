@@ -105,7 +105,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
-<script src="/i18n.js?v=2"></script>
+<script src="/i18n.js?v=3"></script>
 <script>
 function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
@@ -133,7 +133,7 @@ async function load(){
     document.getElementById('upd').textContent=kT('trades.updated').replace('{t}',d.updated||'');
     const list=d.trades||[];
     document.getElementById('body').innerHTML=list.map(t=>{
-      const cc=t.pts>=0?'pos':'neg';const p=(t.pts>=0?'+':'')+t.pts;
+      const cc=t.pips>=0?'pos':'neg';const p=(t.pips>=0?'+':'')+t.pips;
       return '<tr><td class="date">'+t.date+'</td><td class="date">'+t.time+'</td><td class="side '+t.side+'">'+t.side+'</td><td>'+t.entry+'</td><td>'+t.exit+'</td><td class="pts '+cc+'">'+p+'</td><td><span class="res '+t.result+'">'+t.result+'</span></td></tr>';
     }).join('');
     return;

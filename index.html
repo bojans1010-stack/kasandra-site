@@ -374,7 +374,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 
 <div class="copied" id="copied">Code copied &#10003;</div>
 
-<script src="/i18n.js?v=2"></script>
+<script src="/i18n.js?v=3"></script>
 <script>
 function copyCode(){
   navigator.clipboard.writeText('uKdrW9fs').then(()=>{
@@ -387,8 +387,8 @@ function renderTrades(){
   const body=document.getElementById('trades-body');
   const list=showingAll?allTrades:allTrades.slice(0,10);
   body.innerHTML=list.map(t=>{
-    const ptsCls=t.pts>=0?'pos':'neg';
-    const ptsTxt=(t.pts>=0?'+':'')+t.pts;
+    const ptsCls=t.pips>=0?'pos':'neg';
+    const ptsTxt=(t.pips>=0?'+':'')+t.pips;
     return '<tr>'+
       '<td class="date">'+t.date+'</td>'+
       '<td class="date">'+t.time+'</td>'+

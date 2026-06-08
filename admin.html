@@ -8,8 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;font-size:14px}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
-.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 22px}
-/* login gate */
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 22px}
 #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .box{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;padding:38px 34px;width:340px;box-shadow:0 0 40px rgba(0,212,255,.08)}
 .brand{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.35);text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
@@ -19,40 +18,66 @@ input{width:100%;padding:13px;border-radius:9px;border:1px solid var(--border);b
 input:focus{outline:none;border-color:var(--accent)}
 button.go{width:100%;margin-top:16px;padding:13px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer}
 .err{color:var(--red);font-size:12px;min-height:16px;margin-top:10px;text-align:center}
-/* panel */
-#panel{display:none;padding:30px 0}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+#panel{display:none;padding:26px 0 60px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
 .top .brand{justify-content:flex-start;margin:0}
 .signout{font-size:12px;color:var(--dim);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:7px;cursor:pointer}
 .signout:hover{color:var(--accent);border-color:var(--accent)}
-.counts{display:flex;gap:14px;margin-bottom:20px}
-.count{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:10px;padding:16px 22px;flex:1;text-align:center}
-.count .v{font-family:var(--display);font-size:28px;font-weight:700}
-.count.p .v{color:var(--amber)}.count.a .v{color:var(--green)}
-.count .l{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:6px}
-.tbl{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:12px;overflow:hidden}
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--border-soft)}
+.tab{padding:11px 20px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
+.tab:hover{color:var(--text-2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.view{display:none}
+.view.active{display:block}
+/* stat cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.card{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:11px;padding:16px 18px}
+.card .v{font-family:var(--display);font-size:26px;font-weight:700}
+.card .l{font-size:10px;letter-spacing:1.3px;color:var(--dim);text-transform:uppercase;margin-top:5px}
+.card.green .v{color:var(--green)}.card.red .v{color:var(--red)}.card.amber .v{color:var(--amber)}.card.accent .v{color:var(--accent)}
+/* section */
+.section{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.section .h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border-soft)}
+.section .h .t{font-family:var(--display);font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:9px;font-size:14px}
+.section .h .t .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.section .h .meta{font-size:11px;color:var(--dim)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:12px 18px;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border-soft);font-weight:500}
-td{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.03)}
+th{text-align:left;padding:11px 16px;font-size:10px;letter-spacing:1.3px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border-soft);font-weight:500}
+td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.03)}
 tr:hover td{background:rgba(0,212,255,.03)}
+.side.BUY{color:var(--green);font-weight:700}.side.SELL{color:var(--red);font-weight:700}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.res{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px}
+.res.WIN{background:rgba(0,255,136,.12);color:var(--green)}.res.LOSS{background:rgba(255,51,102,.12);color:var(--red)}
+.oc{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.04em}
+.oc.TP3{background:rgba(0,255,136,.18);color:var(--green)}.oc.TP2{background:rgba(0,255,136,.12);color:var(--green)}
+.oc.TP1{background:rgba(0,212,255,.14);color:var(--accent)}.oc.BE{background:rgba(120,130,150,.18);color:var(--text-2)}.oc.SL{background:rgba(255,51,102,.14);color:var(--red)}
 .badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase}
 .badge.pending{background:rgba(255,170,0,.12);color:var(--amber)}
-.badge.approved{background:rgba(0,255,136,.12);color:var(--green)}
-.badge.rejected{background:rgba(255,51,102,.12);color:var(--red)}
-.act{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;font-family:var(--mono);margin-right:6px}
-.act.approve{border-color:var(--green);color:var(--green)}
-.act.approve:hover{background:rgba(0,255,136,.1)}
-.act.revoke{border-color:var(--dim);color:var(--dim)}
-.act.revoke:hover{border-color:var(--red);color:var(--red)}
+.badge.trial{background:rgba(0,212,255,.14);color:var(--accent)}
+.badge.active{background:rgba(0,255,136,.12);color:var(--green)}
+.badge.expired{background:rgba(255,51,102,.12);color:var(--red)}
+.act{padding:6px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;font-family:var(--mono);margin:2px 4px 2px 0}
+.act.approve{border-color:var(--green);color:var(--green)}.act.approve:hover{background:rgba(0,255,136,.1)}
+.act.revoke{border-color:var(--dim);color:var(--dim)}.act.revoke:hover{border-color:var(--red);color:var(--red)}
+.act.neutral{border-color:var(--accent);color:var(--accent)}.act.neutral:hover{background:rgba(0,212,255,.08)}
 .muted{color:var(--dim);font-size:12px}
+.search{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-soft)}
+.search input{text-align:left;letter-spacing:normal;padding:9px 12px;font-size:13px;flex:1;max-width:320px}
+.filterbtn{font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--dim);cursor:pointer;font-family:var(--mono)}
+.filterbtn.on{border-color:var(--accent);color:var(--accent)}
+.empty{text-align:center;color:var(--dim);padding:30px}
+.market-bar{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border-soft);font-size:12px;align-items:center}
+.chip{background:rgba(255,255,255,.04);border:1px solid var(--border-soft);border-radius:16px;padding:4px 11px;color:var(--text-2)}
+.chip b{color:var(--text)}.chip.bull b{color:var(--green)}.chip.bear b{color:var(--red)}
 @media(max-width:760px){
-  .wrap{padding:0 14px}
-  .counts{flex-wrap:wrap}
-  .count{min-width:90px}
-  .tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{min-width:680px}
-  th,td{padding:10px 12px;font-size:12px}
-  .act{display:block;width:100%;margin:3px 0}
+  .wrap{padding:0 12px}
+  .section{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:640px}
+  th,td{padding:9px 11px;font-size:12px}
+  .act{display:inline-block}
+  .tab{padding:10px 14px;font-size:11px}
 }
 </style></head><body>
 
@@ -71,20 +96,60 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="brand"><span class="dot"></span>KASANDRA <span style="color:var(--dim);font-size:12px;letter-spacing:1px;margin-left:8px">ADMIN</span></div>
     <a class="signout" onclick="adminSignout()">Sign out</a>
   </div>
-  <div class="counts">
-    <div class="count p"><div class="v" id="c-pending">0</div><div class="l">Pending</div></div>
-    <div class="count a"><div class="v" id="c-approved">0</div><div class="l">Active</div></div>
-    <div class="count"><div class="v" id="c-total">0</div><div class="l">Total Members</div></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
   </div>
-  <div class="tbl">
-    <table>
-      <thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Phone</th><th>Joined</th><th>Access</th><th>Action</th></tr></thead>
-      <tbody id="mbody"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">loading...</td></tr></tbody>
-    </table>
+
+  <!-- ============ OVERVIEW ============ -->
+  <div class="view active" id="view-overview">
+    <div class="cards" id="ov-cards"></div>
+
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot"></span>LIVE SIGNALS</div><div class="meta" id="ov-sig-meta"></div></div>
+      <div class="market-bar" id="ov-market"></div>
+      <table><thead><tr><th>Side</th><th>Zone</th><th>SL</th><th>TP1</th><th>TP2</th><th>TP3</th><th>Risk</th></tr></thead>
+      <tbody id="ov-sig-body"><tr><td colspan="7" class="empty">loading...</td></tr></tbody></table>
+    </div>
+
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot"></span>SIGNAL HISTORY</div><div class="meta" id="ov-hist-meta"></div></div>
+      <table><thead><tr><th>Closed</th><th>Side</th><th>Zone</th><th>Risk</th><th>Outcome</th></tr></thead>
+      <tbody id="ov-hist-body"><tr><td colspan="5" class="empty">no resolved signals yet</td></tr></tbody></table>
+    </div>
+
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot"></span>TRADE RESULTS</div><div class="meta" id="ov-res-meta"></div></div>
+      <table><thead><tr><th>Date</th><th>Time</th><th>Side</th><th>Entry</th><th>Exit</th><th>Pips</th><th>Result</th></tr></thead>
+      <tbody id="ov-res-body"><tr><td colspan="7" class="empty">loading...</td></tr></tbody></table>
+    </div>
   </div>
+
+  <!-- ============ USER MANAGEMENT ============ -->
+  <div class="view" id="view-members">
+    <div class="cards" id="mem-cards"></div>
+    <div class="section">
+      <div class="search">
+        <input id="mem-search" placeholder="Search name, email, country..." oninput="renderMembers()">
+        <button class="filterbtn on" data-f="all" onclick="setFilter('all')">All</button>
+        <button class="filterbtn" data-f="pending" onclick="setFilter('pending')">Pending</button>
+        <button class="filterbtn" data-f="trial" onclick="setFilter('trial')">Trial</button>
+        <button class="filterbtn" data-f="active" onclick="setFilter('active')">Paid</button>
+        <button class="filterbtn" data-f="expired" onclick="setFilter('expired')">Expired</button>
+      </div>
+      <table>
+        <thead><tr><th>Member</th><th>Contact</th><th>Country</th><th>Status</th><th>Plan</th><th>Expires</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="mbody"><tr><td colspan="8" class="empty">loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
 </div></div>
 
 <script>
+let MEMBERS=[], FILTER='all';
+
 async function adminLogin(){
   const pw=document.getElementById('apw').value;
   const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
@@ -92,43 +157,127 @@ async function adminLogin(){
   if(d.ok){showPanel();}else{document.getElementById('aerr').textContent=d.error||'wrong password';}
 }
 async function adminSignout(){await fetch('/api/admin/signout',{method:'POST'});location.reload();}
-async function showPanel(){
+function showPanel(){
   document.getElementById('gate').style.display='none';
   document.getElementById('panel').style.display='block';
+  loadOverview();
   loadMembers();
 }
+function switchTab(t){
+  document.getElementById('tab-overview').classList.toggle('active',t==='overview');
+  document.getElementById('tab-members').classList.toggle('active',t==='members');
+  document.getElementById('view-overview').classList.toggle('active',t==='overview');
+  document.getElementById('view-members').classList.toggle('active',t==='members');
+}
+
+// ---------- OVERVIEW ----------
+async function loadOverview(){
+  const r=await fetch('/api/admin/overview');
+  if(r.status===401){gate();return;}
+  const d=await r.json();
+  // cards
+  const res=d.results||{}, ms=d.member_stats||{}, hs=d.history_stats||{};
+  document.getElementById('ov-cards').innerHTML=
+    card('accent',res.total||0,'Total Trades')+
+    card('green',(res.win_rate||0)+'%','Win Rate')+
+    card('accent',(res.roi_pct!=null?res.roi_pct+'%':(hs.hit_rate+'%')),res.roi_pct!=null?'ROI':'Signal Hit Rate')+
+    card('green',ms.active||0,'Active Members')+
+    card('amber',ms.pending||0,'Pending')+
+    card('green','$'+(ms.mrr_usdt||0),'MRR (USDT)');
+  // market bar
+  const mk=d.market||{};
+  let mb='';
+  if(mk.price!=null) mb+='<span class="chip">Price <b>'+mk.price+'</b></span>';
+  if(mk.trend){const tc=mk.trend==='BULL'?'bull':(mk.trend==='BEAR'?'bear':'');mb+='<span class="chip '+tc+'">Trend <b>'+mk.trend+'</b></span>';}
+  if(mk.news_status) mb+='<span class="chip">News <b>'+mk.news_status+'</b></span>';
+  if(mk.next_event) mb+='<span class="chip">Next <b>'+mk.next_event+'</b></span>';
+  if(mk.stale) mb+='<span class="chip" style="color:var(--amber)">feed paused (market closed)</span>';
+  document.getElementById('ov-market').innerHTML=mb||'<span class="muted">no market data</span>';
+  // live signals
+  const sigs=d.signals||[];
+  document.getElementById('ov-sig-meta').textContent=sigs.length+' active';
+  document.getElementById('ov-sig-body').innerHTML = sigs.length? sigs.map(s=>
+    '<tr><td class="side '+s.side+'">'+s.side+'</td><td>'+s.zone_low+'-'+s.zone_high+'</td><td class="neg">'+s.sl+'</td><td class="pos">'+s.tp1+'</td><td class="pos">'+s.tp2+'</td><td class="pos">'+s.tp3+'</td><td>'+(s.risk||'')+'</td></tr>'
+  ).join('') : '<tr><td colspan="7" class="empty">no active signals right now</td></tr>';
+  // history
+  const hist=(d.history||[]).slice().reverse();
+  document.getElementById('ov-hist-meta').innerHTML = hs.total? ('TP3 '+hs.TP3+' · TP2 '+hs.TP2+' · TP1 '+hs.TP1+' · BE '+hs.BE+' · SL '+hs.SL+' · hit '+hs.hit_rate+'%') : '';
+  document.getElementById('ov-hist-body').innerHTML = hist.length? hist.map(h=>{
+    const dt=(h.closed_utc||'').replace('T',' ').replace('Z','').slice(5,16);
+    return '<tr><td class="muted">'+dt+'</td><td class="side '+h.side+'">'+h.side+'</td><td>'+h.zone_low+'-'+h.zone_high+'</td><td class="muted">'+(h.risk||'')+'</td><td><span class="oc '+h.outcome+'">'+h.outcome+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">no resolved signals yet</td></tr>';
+  // results
+  const trades=(res.trades||[]).slice(0,30);
+  document.getElementById('ov-res-meta').textContent = res.updated? ('updated '+res.updated) : '';
+  document.getElementById('ov-res-body').innerHTML = trades.length? trades.map(t=>{
+    const cc=t.pips>=0?'pos':'neg';const p=(t.pips>=0?'+':'')+t.pips;
+    return '<tr><td class="muted">'+t.date+'</td><td class="muted">'+t.time+'</td><td class="side '+t.side+'">'+t.side+'</td><td>'+t.entry+'</td><td>'+t.exit+'</td><td class="'+cc+'">'+p+'</td><td><span class="res '+t.result+'">'+t.result+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">no trades yet</td></tr>';
+}
+function card(cls,v,l){return '<div class="card '+cls+'"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+
+// ---------- USER MANAGEMENT ----------
 async function loadMembers(){
   const r=await fetch('/api/admin/members');
-  if(r.status===401){document.getElementById('gate').style.display='flex';document.getElementById('panel').style.display='none';return;}
+  if(r.status===401){gate();return;}
   const d=await r.json();
-  document.getElementById('c-pending').textContent=d.pending;
-  document.getElementById('c-approved').textContent=d.active;
-  document.getElementById('c-total').textContent=d.members.length;
+  MEMBERS=d.members||[];
+  document.getElementById('mem-cards').innerHTML=
+    card('accent',MEMBERS.length,'Total Members')+
+    card('amber',d.pending||0,'Pending')+
+    card('green',d.active||0,'Active (trial+paid)')+
+    card('red',d.expired||0,'Expired');
+  renderMembers();
+}
+function setFilter(f){FILTER=f;document.querySelectorAll('.filterbtn').forEach(b=>b.classList.toggle('on',b.dataset.f===f));renderMembers();}
+function renderMembers(){
+  const q=(document.getElementById('mem-search').value||'').toLowerCase();
+  let list=MEMBERS.filter(m=>{
+    if(FILTER==='pending'&&m.access_label!=='pending')return false;
+    if(FILTER==='trial'&&m.access_label!=='trial')return false;
+    if(FILTER==='active'&&m.access_label!=='active')return false;
+    if(FILTER==='expired'&&m.access_label!=='expired')return false;
+    if(q){const hay=(m.first_name+' '+m.last_name+' '+m.email+' '+(m.country||'')+' '+(m.phone||'')).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
   const body=document.getElementById('mbody');
-  if(!d.members.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">No members yet</td></tr>';return;}
-  body.innerHTML=d.members.map(m=>{
+  if(!list.length){body.innerHTML='<tr><td colspan="8" class="empty">No members match</td></tr>';return;}
+  body.innerHTML=list.map(m=>{
     const name=(m.first_name+' '+m.last_name).trim()||'-';
-    let badge='',action='';
-    if(m.access_label==='trial'){badge='<span class="badge approved">trial &middot; '+m.days_left+'d</span>';action='<button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';}
-    else if(m.access_label==='active'){badge='<span class="badge approved">paid &middot; '+m.days_left+'d</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';}
-    else if(m.access_label==='expired'){badge='<span class="badge rejected">expired</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button>';}
-    else {badge='<span class="badge pending">pending</span>';action='<button class="act approve" onclick="act(\''+m.email+'\',\'approve_trial\')">Start 7-day trial</button>';}
-    action+='<button class="act revoke" onclick="resetPw(\''+m.email+'\')">Reset password</button>';
-    return '<tr><td>'+name+'</td><td class="muted">'+m.email+'</td><td>'+(m.country||'-')+'</td><td class="muted">'+(m.phone||'-')+'</td><td class="muted">'+(m.joined||'-')+'</td><td>'+badge+'</td><td>'+action+'</td></tr>';
+    const lbl=m.access_label;
+    let badge='<span class="badge '+lbl+'">'+(lbl==='active'?'paid':lbl)+(m.days_left?(' · '+m.days_left+'d'):'')+'</span>';
+    let plan=m.plan&&m.plan!=='none'?m.plan:'-';
+    let act='';
+    if(lbl==='pending') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'approve_trial\')">Start 7-day trial</button>';
+    else if(lbl==='trial') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';
+    else if(lbl==='active') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';
+    else if(lbl==='expired') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button>';
+    act+='<button class="act neutral" onclick="resetPw(\''+m.email+'\')">Reset pw</button>';
+    return '<tr>'+
+      '<td><div>'+name+'</div><div class="muted">'+m.email+'</div></td>'+
+      '<td class="muted">'+(m.phone||'-')+'</td>'+
+      '<td>'+(m.country||'-')+'</td>'+
+      '<td>'+badge+'</td>'+
+      '<td class="muted">'+plan+'</td>'+
+      '<td class="muted">'+(m.access_until||'-')+'</td>'+
+      '<td class="muted">'+(m.joined||'-')+'</td>'+
+      '<td>'+act+'</td></tr>';
   }).join('');
 }
 async function act(email,action){
   await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action})});
-  loadMembers();
+  loadMembers();loadOverview();
 }
 async function resetPw(email){
   const np=prompt('New password for '+email+' (min 6 chars):');
   if(np===null) return;
-  if(np.length<6){ alert('Password must be at least 6 characters'); return; }
+  if(np.length<6){alert('Password must be at least 6 characters');return;}
   const r=await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action:'reset_password',new_password:np})});
   const d=await r.json();
-  alert(d.ok ? ('Password reset for '+email) : (d.error||'error'));
+  alert(d.ok?('Password reset for '+email):(d.error||'error'));
 }
-// try to load straight away in case admin session already active
-loadMembers().then(()=>{ if(document.getElementById('panel').style.display!=='block'){ fetch('/api/admin/members').then(r=>{if(r.status===200)showPanel();}); } });
+function gate(){document.getElementById('gate').style.display='flex';document.getElementById('panel').style.display='none';}
+
+// auto-resume if admin session already active
+fetch('/api/admin/overview').then(r=>{if(r.status===200)showPanel();});
 </script></body></html>

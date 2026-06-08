@@ -359,13 +359,17 @@ def admin_members(k_admin: str = Cookie(None)):
         return JSONResponse({"error": "admin only"}, status_code=401)
     members = _all_members()
     out = []
+    now = time.time()
     for email, u in members.items():
         has_access, label, days_left = _access_state(u)
+        try: until = float(u.get("access_until") or 0)
+        except Exception: until = 0
+        until_str = time.strftime("%Y-%m-%d", time.gmtime(until)) if until > 0 else ""
         out.append({"email": email, "first_name": u.get("first_name", ""),
                     "last_name": u.get("last_name", ""), "country": u.get("country", ""),
                     "phone": u.get("phone", ""), "status": u.get("status", "pending"),
                     "access_label": label, "days_left": days_left, "plan": u.get("plan", "none"),
-                    "joined": u.get("joined", "")})
+                    "joined": u.get("joined", ""), "access_until": until_str})
     out.sort(key=lambda x: (x["status"] != "pending", x["joined"]))
     return {"ok": True, "members": out,
             "pending": sum(1 for m in out if m["status"] == "pending"),
@@ -452,6 +456,57 @@ async def ingest_results(request: Request):
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     return {"ok": True, "total": safe["total"]}
+
+@app.get("/api/admin/overview")
+def admin_overview(k_admin: str = Cookie(None)):
+    """Everything the admin needs to see at a glance, no member account needed:
+    trade results + stats, live signals, signal history, and member counts."""
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    out = {"ok": True}
+    # --- trade results ---
+    results = {"trades": [], "total": 0, "win_rate": 0}
+    if os.path.exists(RESULTS_FILE):
+        try: results = json.load(open(RESULTS_FILE, encoding="utf-8"))
+        except Exception: pass
+    out["results"] = results
+    # --- live signals + history ---
+    sig = {"signals": [], "history": [], "price": None, "trend": None,
+           "news_status": None, "next_event": None, "generated_utc": None, "stale": True}
+    if os.path.exists(SIGNALS_FILE):
+        try:
+            sig = json.load(open(SIGNALS_FILE, encoding="utf-8"))
+            age = time.time() - os.path.getmtime(SIGNALS_FILE)
+            sig["stale"] = age > 1200
+        except Exception: pass
+    out["signals"] = sig.get("signals", [])
+    out["history"] = sig.get("history", [])
+    out["market"] = {"price": sig.get("price"), "trend": sig.get("trend"),
+                     "news_status": sig.get("news_status"), "next_event": sig.get("next_event"),
+                     "stale": sig.get("stale", True), "generated_utc": sig.get("generated_utc")}
+    # --- history outcome stats ---
+    hist = sig.get("history", []) or []
+    cnt = {"TP3": 0, "TP2": 0, "TP1": 0, "BE": 0, "SL": 0}
+    for h in hist:
+        o = h.get("outcome")
+        if o in cnt: cnt[o] += 1
+    wins = cnt["TP1"] + cnt["TP2"] + cnt["TP3"] + cnt["BE"]
+    htotal = len(hist)
+    out["history_stats"] = {**cnt, "total": htotal,
+                            "hit_rate": round(wins / htotal * 100) if htotal else 0}
+    # --- member counts ---
+    members = _all_members()
+    pend = act = exp = trial = paid = 0
+    for u in members.values():
+        has, label, _ = _access_state(u)
+        if label == "pending": pend += 1
+        elif label == "trial": trial += 1; act += 1
+        elif label == "active": paid += 1; act += 1
+        elif label == "expired": exp += 1
+    out["member_stats"] = {"total": len(members), "pending": pend, "active": act,
+                           "trial": trial, "paid": paid, "expired": exp,
+                           "mrr_usdt": paid * PRICE_USDT}
+    return out
 
 @app.get("/public_results.json")
 def pub_results(): return FileResponse(RESULTS_FILE)

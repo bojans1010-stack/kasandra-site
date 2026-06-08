@@ -1,10 +1,130 @@
 {
-  "updated": "2026-06-07 00:52 CEST",
+  "updated": "2026-06-08 09:10 CEST",
   "since": "Jun 02 2026",
-  "total": 37,
-  "wins": 28,
+  "total": 49,
+  "wins": 37,
   "win_rate": 76,
   "trades": [
+    {
+      "date": "Jun 08",
+      "time": "06:30",
+      "side": "BUY",
+      "entry": 4307.49,
+      "exit": 4303.77,
+      "pts": -3.7,
+      "pips": -37.2,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 08",
+      "time": "06:30",
+      "side": "BUY",
+      "entry": 4311.5,
+      "exit": 4303.77,
+      "pts": -7.7,
+      "pips": -77.3,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 08",
+      "time": "06:28",
+      "side": "BUY",
+      "entry": 4313.77,
+      "exit": 4303.77,
+      "pts": -10.0,
+      "pips": -100.0,
+      "result": "LOSS"
+    },
+    {
+      "date": "Jun 08",
+      "time": "06:21",
+      "side": "BUY",
+      "entry": 4314.21,
+      "exit": 4315.61,
+      "pts": 1.4,
+      "pips": 14.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "05:28",
+      "side": "SELL",
+      "entry": 4352.5,
+      "exit": 4349.99,
+      "pts": 2.5,
+      "pips": 25.1,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "05:25",
+      "side": "SELL",
+      "entry": 4349.99,
+      "exit": 4347.39,
+      "pts": 2.6,
+      "pips": 26.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "05:01",
+      "side": "SELL",
+      "entry": 4344.83,
+      "exit": 4342.77,
+      "pts": 2.1,
+      "pips": 20.6,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "04:45",
+      "side": "SELL",
+      "entry": 4337.99,
+      "exit": 4336.41,
+      "pts": 1.6,
+      "pips": 15.8,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "04:13",
+      "side": "SELL",
+      "entry": 4333.55,
+      "exit": 4331.19,
+      "pts": 2.4,
+      "pips": 23.6,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "03:05",
+      "side": "BUY",
+      "entry": 4311.5,
+      "exit": 4316.84,
+      "pts": 5.3,
+      "pips": 53.4,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "03:02",
+      "side": "BUY",
+      "entry": 4311.5,
+      "exit": 4323.0,
+      "pts": 11.5,
+      "pips": 115.0,
+      "result": "WIN"
+    },
+    {
+      "date": "Jun 08",
+      "time": "03:02",
+      "side": "BUY",
+      "entry": 4312.21,
+      "exit": 4319.12,
+      "pts": 6.9,
+      "pips": 69.1,
+      "result": "WIN"
+    },
     {
       "date": "Jun 05",
       "time": "20:39",
@@ -12,8 +132,8 @@
       "entry": 4336.5,
       "exit": 4341.35,
       "pts": 4.9,
-      "result": "WIN",
-      "pips": 49.0
+      "pips": 48.5,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -22,8 +142,8 @@
       "entry": 4429.75,
       "exit": 4432.01,
       "pts": 2.3,
-      "result": "WIN",
-      "pips": 23.0
+      "pips": 22.6,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -32,8 +152,8 @@
       "entry": 4439.44,
       "exit": 4446.57,
       "pts": 7.1,
-      "result": "WIN",
-      "pips": 71.0
+      "pips": 71.3,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -42,8 +162,8 @@
       "entry": 4444.27,
       "exit": 4446.79,
       "pts": 2.5,
-      "result": "WIN",
-      "pips": 25.0
+      "pips": 25.2,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -52,8 +172,8 @@
       "entry": 4447.07,
       "exit": 4447.06,
       "pts": -0.0,
-      "result": "LOSS",
-      "pips": -0.0
+      "pips": -0.1,
+      "result": "LOSS"
     },
     {
       "date": "Jun 05",
@@ -62,8 +182,8 @@
       "entry": 4450.28,
       "exit": 4452.54,
       "pts": 2.3,
-      "result": "WIN",
-      "pips": 23.0
+      "pips": 22.6,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -72,8 +192,8 @@
       "entry": 4452.54,
       "exit": 4454.93,
       "pts": 2.4,
-      "result": "WIN",
-      "pips": 24.0
+      "pips": 23.9,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -82,8 +202,8 @@
       "entry": 4455.11,
       "exit": 4462.14,
       "pts": 7.0,
-      "result": "WIN",
-      "pips": 70.0
+      "pips": 70.3,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -92,8 +212,8 @@
       "entry": 4461.3,
       "exit": 4463.39,
       "pts": 2.1,
-      "result": "WIN",
-      "pips": 21.0
+      "pips": 20.9,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -102,8 +222,8 @@
       "entry": 4480.0,
       "exit": 4465.62,
       "pts": 14.4,
-      "result": "WIN",
-      "pips": 144.0
+      "pips": 143.8,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -112,8 +232,8 @@
       "entry": 4475.07,
       "exit": 4476.95,
       "pts": 1.9,
-      "result": "WIN",
-      "pips": 19.0
+      "pips": 18.8,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -122,8 +242,8 @@
       "entry": 4474.96,
       "exit": 4472.8,
       "pts": 2.2,
-      "result": "WIN",
-      "pips": 22.0
+      "pips": 21.6,
+      "result": "WIN"
     },
     {
       "date": "Jun 05",
@@ -132,8 +252,8 @@
       "entry": 4482.76,
       "exit": 4479.18,
       "pts": 3.6,
-      "result": "WIN",
-      "pips": 36.0
+      "pips": 35.8,
+      "result": "WIN"
     },
     {
       "date": "Jun 04",
@@ -142,8 +262,8 @@
       "entry": 4480.0,
       "exit": 4479.98,
       "pts": 0.0,
-      "result": "WIN",
-      "pips": 0.0
+      "pips": 0.2,
+      "result": "WIN"
     },
     {
       "date": "Jun 04",
@@ -152,8 +272,8 @@
       "entry": 4474.85,
       "exit": 4476.49,
       "pts": -1.6,
-      "result": "LOSS",
-      "pips": -16.0
+      "pips": -16.4,
+      "result": "LOSS"
     },
     {
       "date": "Jun 04",
@@ -162,8 +282,8 @@
       "entry": 4475.16,
       "exit": 4475.51,
       "pts": -0.4,
-      "result": "LOSS",
-      "pips": -4.0
+      "pips": -3.5,
+      "result": "LOSS"
     },
     {
       "date": "Jun 04",
@@ -172,8 +292,8 @@
       "entry": 4474.85,
       "exit": 4475.53,
       "pts": -0.7,
-      "result": "LOSS",
-      "pips": -7.0
+      "pips": -6.8,
+      "result": "LOSS"
     },
     {
       "date": "Jun 04",
@@ -182,8 +302,8 @@
       "entry": 4475.14,
       "exit": 4475.53,
       "pts": -0.4,
-      "result": "LOSS",
-      "pips": -4.0
+      "pips": -3.9,
+      "result": "LOSS"
     },
     {
       "date": "Jun 04",
@@ -192,8 +312,8 @@
       "entry": 4481.84,
       "exit": 4479.96,
       "pts": 1.9,
-      "result": "WIN",
-      "pips": 19.0
+      "pips": 18.8,
+      "result": "WIN"
     },
     {
       "date": "Jun 04",
@@ -202,8 +322,8 @@
       "entry": 4493.79,
       "exit": 4492.04,
       "pts": 1.8,
-      "result": "WIN",
-      "pips": 18.0
+      "pips": 17.5,
+      "result": "WIN"
     },
     {
       "date": "Jun 04",
@@ -212,8 +332,8 @@
       "entry": 4477.02,
       "exit": 4473.52,
       "pts": 3.5,
-      "result": "WIN",
-      "pips": 35.0
+      "pips": 35.0,
+      "result": "WIN"
     },
     {
       "date": "Jun 04",
@@ -222,8 +342,8 @@
       "entry": 4481.46,
       "exit": 4480.35,
       "pts": 1.1,
-      "result": "WIN",
-      "pips": 11.0
+      "pips": 11.1,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -232,8 +352,8 @@
       "entry": 4455.5,
       "exit": 4457.77,
       "pts": 2.3,
-      "result": "WIN",
-      "pips": 23.0
+      "pips": 22.7,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -242,8 +362,8 @@
       "entry": 4457.77,
       "exit": 4460.24,
       "pts": 2.5,
-      "result": "WIN",
-      "pips": 25.0
+      "pips": 24.7,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -252,8 +372,8 @@
       "entry": 4450.77,
       "exit": 4446.0,
       "pts": -4.8,
-      "result": "LOSS",
-      "pips": -48.0
+      "pips": -47.7,
+      "result": "LOSS"
     },
     {
       "date": "Jun 03",
@@ -262,8 +382,8 @@
       "entry": 4453.5,
       "exit": 4446.0,
       "pts": -7.5,
-      "result": "LOSS",
-      "pips": -75.0
+      "pips": -75.0,
+      "result": "LOSS"
     },
     {
       "date": "Jun 03",
@@ -272,8 +392,8 @@
       "entry": 4455.76,
       "exit": 4446.0,
       "pts": -9.8,
-      "result": "LOSS",
-      "pips": -98.0
+      "pips": -97.6,
+      "result": "LOSS"
     },
     {
       "date": "Jun 03",
@@ -282,8 +402,8 @@
       "entry": 4458.07,
       "exit": 4459.76,
       "pts": 1.7,
-      "result": "WIN",
-      "pips": 17.0
+      "pips": 16.9,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -292,8 +412,8 @@
       "entry": 4455.98,
       "exit": 4457.93,
       "pts": 2.0,
-      "result": "WIN",
-      "pips": 20.0
+      "pips": 19.5,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -302,8 +422,8 @@
       "entry": 4464.46,
       "exit": 4474.38,
       "pts": 9.9,
-      "result": "WIN",
-      "pips": 99.0
+      "pips": 99.2,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -312,8 +432,8 @@
       "entry": 4495.31,
       "exit": 4482.8,
       "pts": 12.5,
-      "result": "WIN",
-      "pips": 125.0
+      "pips": 125.1,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -322,8 +442,8 @@
       "entry": 4493.68,
       "exit": 4482.8,
       "pts": 10.9,
-      "result": "WIN",
-      "pips": 109.0
+      "pips": 108.8,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -332,8 +452,8 @@
       "entry": 4491.67,
       "exit": 4482.8,
       "pts": 8.9,
-      "result": "WIN",
-      "pips": 89.0
+      "pips": 88.7,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -342,8 +462,8 @@
       "entry": 4463.26,
       "exit": 4475.0,
       "pts": 11.7,
-      "result": "WIN",
-      "pips": 117.0
+      "pips": 117.4,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -352,8 +472,8 @@
       "entry": 4462.8,
       "exit": 4475.0,
       "pts": 12.2,
-      "result": "WIN",
-      "pips": 122.0
+      "pips": 122.0,
+      "result": "WIN"
     },
     {
       "date": "Jun 03",
@@ -362,8 +482,8 @@
       "entry": 4466.01,
       "exit": 4475.0,
       "pts": 9.0,
-      "result": "WIN",
-      "pips": 90.0
+      "pips": 89.9,
+      "result": "WIN"
     },
     {
       "date": "Jun 02",
@@ -372,8 +492,8 @@
       "entry": 4541.09,
       "exit": 4539.35,
       "pts": -1.7,
-      "result": "LOSS",
-      "pips": -17.0
+      "pips": -17.4,
+      "result": "LOSS"
     }
   ]
 }

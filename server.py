@@ -422,6 +422,37 @@ def health():
 @app.get("/")
 def home(): return FileResponse(os.path.join(SITE, "index.html"))
 
+@app.post("/api/ingest_results")
+async def ingest_results(request: Request):
+    """One-way push of the public results snapshot from the PC. Protected by INGEST_TOKEN.
+    Writes public_results.json so both the homepage and members results update with no redeploy."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled (no token set)"}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    trades = body.get("trades")
+    if not isinstance(trades, list):
+        return JSONResponse({"ok": False, "error": "trades must be a list"}, status_code=400)
+    safe = {
+        "trades": trades,
+        "total": body.get("total", len(trades)),
+        "win_rate": body.get("win_rate", 0),
+        "updated": body.get("updated", ""),
+    }
+    # carry through any extra display fields the homepage uses, but only known keys
+    for k in ("roi_pct", "max_dd", "period"):
+        if k in body:
+            safe[k] = body[k]
+    try:
+        json.dump(safe, open(RESULTS_FILE, "w", encoding="utf-8"), indent=2)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "total": safe["total"]}
+
 @app.get("/public_results.json")
 def pub_results(): return FileResponse(RESULTS_FILE)
 

@@ -85,7 +85,8 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="box">
     <div class="brand"><span class="dot"></span>KASANDRA</div>
     <div class="sub">Admin Access</div>
-    <input id="apw" type="password" placeholder="admin password" autofocus onkeydown="if(event.key==='Enter')adminLogin()">
+    <input id="aemail" type="email" placeholder="email (or leave blank for master)" style="text-align:left;letter-spacing:normal;margin-bottom:10px" onkeydown="if(event.key==='Enter')adminLogin()">
+    <input id="apw" type="password" placeholder="password" autofocus onkeydown="if(event.key==='Enter')adminLogin()">
     <button class="go" onclick="adminLogin()">ENTER</button>
     <div class="err" id="aerr"></div>
   </div>
@@ -152,7 +153,13 @@ let MEMBERS=[], FILTER='all';
 
 async function adminLogin(){
   const pw=document.getElementById('apw').value;
-  const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  const email=(document.getElementById('aemail').value||'').trim();
+  let r;
+  if(email){
+    r=await fetch('/api/admin/login_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+  } else {
+    r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  }
   const d=await r.json();
   if(d.ok){showPanel();}else{document.getElementById('aerr').textContent=d.error||'wrong password';}
 }
@@ -246,6 +253,7 @@ function renderMembers(){
     const name=(m.first_name+' '+m.last_name).trim()||'-';
     const lbl=m.access_label;
     let badge='<span class="badge '+lbl+'">'+(lbl==='active'?'paid':lbl)+(m.days_left?(' · '+m.days_left+'d'):'')+'</span>';
+    if(m.is_admin) badge+=' <span class="badge" style="background:rgba(0,212,255,.18);color:var(--accent)">ADMIN</span>';
     let plan=m.plan&&m.plan!=='none'?m.plan:'-';
     let act='';
     if(lbl==='pending') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'approve_trial\')">Start 7-day trial</button>';
@@ -253,6 +261,8 @@ function renderMembers(){
     else if(lbl==='active') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';
     else if(lbl==='expired') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button>';
     act+='<button class="act neutral" onclick="resetPw(\''+m.email+'\')">Reset pw</button>';
+    if(m.is_admin) act+='<button class="act revoke" onclick="toggleAdmin(\''+m.email+'\',false)">Remove admin</button>';
+    else act+='<button class="act neutral" onclick="toggleAdmin(\''+m.email+'\',true)">Make admin</button>';
     return '<tr>'+
       '<td><div>'+name+'</div><div class="muted">'+m.email+'</div></td>'+
       '<td class="muted">'+(m.phone||'-')+'</td>'+
@@ -275,6 +285,13 @@ async function resetPw(email){
   const r=await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action:'reset_password',new_password:np})});
   const d=await r.json();
   alert(d.ok?('Password reset for '+email):(d.error||'error'));
+}
+async function toggleAdmin(email,make){
+  const verb=make?'GIVE admin access to':'REMOVE admin access from';
+  if(!confirm(verb+' '+email+'?')) return;
+  const r=await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action:make?'make_admin':'remove_admin'})});
+  const d=await r.json();
+  if(d.ok){loadMembers();}else{alert(d.error||'error');}
 }
 function gate(){document.getElementById('gate').style.display='flex';document.getElementById('panel').style.display='none';}
 

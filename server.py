@@ -49,6 +49,7 @@ def _init_db():
         joined TEXT)""")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS access_until DOUBLE PRECISION DEFAULT 0")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'none'")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -174,6 +175,12 @@ def _is_admin(tok):
     if time.time() > exp:
         _ADMIN_SESSIONS.pop(tok, None); return False
     return True
+
+def _member_is_admin(rec):
+    """True if a member account is flagged as admin."""
+    if not rec: return False
+    v = rec.get("is_admin")
+    return v is True or v == 1 or str(v).lower() == "true"
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -348,6 +355,22 @@ async def admin_login(request: Request):
         return resp
     return JSONResponse({"ok": False, "error": "wrong password"})
 
+@app.post("/api/admin/login_user")
+async def admin_login_user(request: Request):
+    """Admin login via a member's own email + password, if their account is_admin."""
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    pw = body.get("password") or ""
+    u = _get_member(email)
+    if not u or _hash(pw, u["salt"]) != u["pw"]:
+        return JSONResponse({"ok": False, "error": "wrong email or password"})
+    if not _member_is_admin(u):
+        return JSONResponse({"ok": False, "error": "this account is not an admin"})
+    tok = _new_admin_session()
+    resp = JSONResponse({"ok": True})
+    resp.set_cookie("k_admin", tok, httponly=True, max_age=86400, samesite="lax")
+    return resp
+
 @app.post("/api/admin/signout")
 def admin_signout(k_admin: str = Cookie(None)):
     _ADMIN_SESSIONS.pop(k_admin, None)
@@ -369,7 +392,8 @@ def admin_members(k_admin: str = Cookie(None)):
                     "last_name": u.get("last_name", ""), "country": u.get("country", ""),
                     "phone": u.get("phone", ""), "status": u.get("status", "pending"),
                     "access_label": label, "days_left": days_left, "plan": u.get("plan", "none"),
-                    "joined": u.get("joined", ""), "access_until": until_str})
+                    "joined": u.get("joined", ""), "access_until": until_str,
+                    "is_admin": _member_is_admin(u)})
     out.sort(key=lambda x: (x["status"] != "pending", x["joined"]))
     return {"ok": True, "members": out,
             "pending": sum(1 for m in out if m["status"] == "pending"),
@@ -394,6 +418,16 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
     elif action == "revoke":
         _set_status(email, "pending")
         return {"ok": True, "email": email, "msg": "access revoked"}
+    elif action in ("make_admin", "remove_admin"):
+        val = (action == "make_admin")
+        if _USE_DB:
+            conn = _db(); cur = conn.cursor()
+            cur.execute("UPDATE members SET is_admin=%s WHERE email=%s", (val, email))
+            conn.commit(); cur.close(); conn.close()
+        else:
+            m = _load_file()
+            if email in m: m[email]["is_admin"] = val; _save_file(m)
+        return {"ok": True, "email": email, "msg": ("now an admin" if val else "admin removed")}
     elif action == "reset_password":
         newpw = (body.get("new_password") or "").strip()
         if len(newpw) < 6:

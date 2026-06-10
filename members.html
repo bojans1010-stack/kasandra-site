@@ -126,10 +126,18 @@ tr:hover td{background:rgba(0,212,255,.03)}
 <div class="wrap">
   <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
   <div class="kpis">
-    <div class="kpi green"><div class="v green" id="k-roi">+41.8%</div><div class="l" data-i18n="mem.kReturn">Return / Jun 2026</div></div>
-    <div class="kpi"><div class="v" id="k-win">76%</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
-    <div class="kpi red"><div class="v red" id="k-dd">-7.8%</div><div class="l" data-i18n="mem.kDD">Max Drawdown</div></div>
-    <div class="kpi"><div class="v" id="k-tr">37</div><div class="l" data-i18n="mem.kTrades">Total Trades</div></div>
+    <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Points · Signal History</div></div>
+    <div class="kpi"><div class="v" id="k-win">—</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
+    <div class="kpi red"><div class="v red" id="k-dd">—</div><div class="l" id="k-dd-l">Stops</div></div>
+    <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
+  </div>
+  <div class="panel" id="chartpanel" style="display:none">
+    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div class="upd" id="chart-upd"></div></div>
+    <div style="padding:6px;background:#070b14;position:relative">
+      <div id="kchart" style="height:480px;width:100%"></div>
+      <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
+      <img id="livechart" alt="Live Kasandra chart" style="width:100%;border-radius:8px;display:none">
+    </div>
   </div>
   <div class="panel" id="sigpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.sigTitle">LIVE GOLD SIGNALS</span></div><div class="upd" id="sig-upd"></div></div>
@@ -152,14 +160,243 @@ tr:hover td{background:rgba(0,212,255,.03)}
     </ol>
     <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="mem.connBtn">OPEN VT MARKETS ACCOUNT &rarr;</a>
   </div>
-  <div class="panel">
-    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.logTitle">LIVE TRADE LOG</span></div><div class="upd" id="upd">loading...</div></div>
-    <table><thead><tr><th data-i18n="trades.thDate">Date</th><th data-i18n="trades.thTime">Time</th><th data-i18n="trades.thSide">Side</th><th data-i18n="trades.thEntry">Entry</th><th data-i18n="trades.thExit">Exit</th><th data-i18n="trades.thPoints">Points</th><th data-i18n="trades.thResult">Result</th></tr></thead>
-    <tbody id="body"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px">loading...</td></tr></tbody></table>
-  </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script src="/i18n.js?v=6"></script>
+<script>
+// ---------- native live chart (Lightweight Charts) ----------
+let KC = null;  // {chart, candles, priceLines:[], zones:[]}
+
+class KTradeDots {
+  constructor(){ this.pts=[]; this._chart=null; this._series=null; }
+  attached(p){ this._chart=p.chart; this._series=p.series; }
+  updateAllViews(){}
+  paneViews(){
+    const self=this;
+    return [{ renderer(){ return { draw(target){
+      target.useBitmapCoordinateSpace(scope=>{
+        if(!self._chart||!self._series) return;
+        const ctx=scope.context, hr=scope.horizontalPixelRatio, vr=scope.verticalPixelRatio;
+        ctx.font=(10*vr).toFixed(0)+'px "JetBrains Mono", monospace';
+        ctx.textBaseline='middle';
+        self.pts.forEach(pt=>{
+          const x=self._chart.timeScale().timeToCoordinate(pt.t);
+          const y=self._series.priceToCoordinate(pt.p);
+          if(x==null||y==null) return;
+          const X=x*hr, Y=y*vr;
+          ctx.beginPath(); ctx.arc(X,Y,(pt.big?4.5:3)*hr,0,6.2832);
+          ctx.fillStyle=pt.color; ctx.fill();
+          if(pt.big){ ctx.lineWidth=1.2*hr; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke(); }
+          if(pt.label){
+            const w=ctx.measureText(pt.label).width;
+            const lx = pt.left ? X-w-9*hr : X+9*hr;
+            ctx.fillStyle='rgba(6,9,18,.88)';
+            ctx.fillRect(lx-4*hr, Y-8*vr, w+8*hr, 16*vr);
+            ctx.fillStyle=pt.color;
+            ctx.fillText(pt.label, lx, Y);
+          }
+        });
+      });
+    }}}}];
+  }
+}
+
+class KZoneBand {
+  constructor(low, high, color){ this.low=low; this.high=high; this.color=color; this._series=null; }
+  attached(p){ this._series = p.series; }
+  updateAllViews(){}
+  paneViews(){
+    const self = this;
+    return [{
+      renderer(){
+        return { draw(target){
+          target.useBitmapCoordinateSpace(scope=>{
+            if(!self._series) return;
+            const y1 = self._series.priceToCoordinate(self.high);
+            const y2 = self._series.priceToCoordinate(self.low);
+            if(y1==null || y2==null) return;
+            const vr = scope.verticalPixelRatio;
+            scope.context.fillStyle = self.color;
+            scope.context.fillRect(0, Math.min(y1,y2)*vr, scope.bitmapSize.width, Math.max(2, Math.abs(y2-y1)*vr));
+          });
+        }};
+      }
+    }];
+  }
+}
+
+function kchartInit(){
+  const el = document.getElementById('kchart');
+  const chart = LightweightCharts.createChart(el, {
+    layout:{ background:{type:'solid', color:'#060912'}, textColor:'#a8b2c1',
+             fontFamily:"'JetBrains Mono', monospace", fontSize:11 },
+    grid:{ vertLines:{color:'rgba(0,212,255,.04)'}, horzLines:{color:'rgba(0,212,255,.04)'} },
+    rightPriceScale:{ borderColor:'rgba(0,212,255,.18)', scaleMargins:{top:.08, bottom:.08} },
+    timeScale:{ borderColor:'rgba(0,212,255,.18)', timeVisible:true, secondsVisible:false, rightOffset:8, barSpacing:7 },
+    crosshair:{ mode:0,
+      vertLine:{ color:'rgba(0,212,255,.45)', labelBackgroundColor:'#00d4ff' },
+      horzLine:{ color:'rgba(0,212,255,.45)', labelBackgroundColor:'#00d4ff' } },
+    watermark:{ visible:true, text:'KASANDRA', color:'rgba(0,212,255,.05)',
+                fontSize:54, fontFamily:"'Space Grotesk', sans-serif" },
+    autoSize:true,
+  });
+  const candles = chart.addCandlestickSeries({
+    upColor:'#00ff88', downColor:'#ff3366',
+    borderUpColor:'#00ff88', borderDownColor:'#ff3366',
+    wickUpColor:'rgba(0,255,136,.65)', wickDownColor:'rgba(255,51,102,.65)',
+    priceLineVisible:true, priceLineColor:'#00d4ff', priceLineStyle:1,
+  });
+  const dots = new KTradeDots();
+  try{ candles.attachPrimitive(dots); }catch(e){}
+  return { chart, candles, dots, priceLines:[], zones:[], tradeLines:[] };
+}
+
+function renderKChart(d){
+  if(!d.candles || !d.candles.length || typeof LightweightCharts==='undefined'){
+    // fallback to the image feed if no candle data
+    document.getElementById('kchart').style.display='none';
+    document.getElementById('livechart').style.display='block';
+    loadChart();
+    return;
+  }
+  const panel = document.getElementById('chartpanel');
+  panel.style.display='block';
+  if(!KC) KC = kchartInit();
+  KC.candles.setData(d.candles);
+
+  // clear previous zone bands + price lines
+  KC.zones.forEach(z=>{ try{ KC.candles.detachPrimitive(z); }catch(e){} });
+  KC.priceLines.forEach(p=>{ try{ KC.candles.removePriceLine(p); }catch(e){} });
+  KC.zones = []; KC.priceLines = [];
+
+  (d.signals||[]).forEach((s,i)=>{
+    const sell = s.side==='SELL';
+    const ema = ((s.types||[])[0]||'').split(' ')[0];   // "EMA130"
+    const zoneColor = sell ? 'rgba(255,51,102,.10)' : 'rgba(0,255,136,.10)';
+    try{
+      const band = new KZoneBand(s.zone_low, s.zone_high, zoneColor);
+      KC.candles.attachPrimitive(band);
+      KC.zones.push(band);
+    }catch(e){}
+    const edge = sell ? s.zone_high : s.zone_low;
+    KC.priceLines.push(KC.candles.createPriceLine({ price: edge, color: sell?'#ff3366':'#00ff88', lineWidth: i===0?2:1, lineStyle:0, axisLabelVisible:true, title:(i===0?'▶ ':'')+(sell?'SELL':'BUY')+(ema?' '+ema:'') }));
+    if(i===0){  // full plan only for the nearest zone to keep it clean
+      KC.priceLines.push(KC.candles.createPriceLine({ price:s.sl,  color:'#ff3366', lineWidth:1, lineStyle:0, axisLabelVisible:true, title:'SL' }));
+      KC.priceLines.push(KC.candles.createPriceLine({ price:s.tp1, color:'#00d4ff', lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'TP1' }));
+      KC.priceLines.push(KC.candles.createPriceLine({ price:s.tp2, color:'#00d4ff', lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'TP2' }));
+      KC.priceLines.push(KC.candles.createPriceLine({ price:s.tp3, color:'#00d4ff', lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'TP3' }));
+    }
+  });
+
+  // trade history + open trades -> accurate waypoint paths + price-anchored dots
+  try{
+    const cs = d.candles;
+    const t0 = cs[0].time, t1 = cs[cs.length-1].time;
+    const times = cs.map(c=>c.time);
+    const snap = iso => Math.floor(Date.parse(iso)/1000/300)*300;
+    KC.tradeLines.forEach(s=>{ try{ KC.chart.removeSeries(s); }catch(e){} });
+    KC.tradeLines = [];
+    KC.candles.setMarkers([]);
+    const dots = [];
+
+    // snap a recorded time to the nearest candle that ACTUALLY touched the price
+    const refine = (iso, price) => {
+      if(!iso || price==null) return null;
+      let t = snap(iso);
+      let idx = times.findIndex(x=>x>=t);
+      if(idx<0) idx = times.length-1;
+      for(let k=0;k<=30;k++){
+        const i1 = idx-k, i2 = idx+k;
+        if(i1>=0 && cs[i1].low<=price && price<=cs[i1].high) return cs[i1].time;
+        if(k<=3 && i2<cs.length && cs[i2].low<=price && price<=cs[i2].high) return cs[i2].time;
+      }
+      return (t>=t0 && t<=t1) ? t : null;
+    };
+
+    const drawTrade = (h, isOpen) => {
+      if(h.entry==null || !h.entry_utc) return;
+      const sell = h.side==='SELL';
+      const hits = h.hits||{};
+      const wp = [];
+      const eT = refine(h.entry_utc, h.entry);
+      if(eT==null) return;
+      wp.push({ t:eT, p:h.entry });
+      [['tp1',h.tp1],['tp2',h.tp2],['tp3',h.tp3]].forEach(([k,price])=>{
+        if(hits[k] && price!=null){
+          const t = refine(hits[k], price);
+          if(t!=null) wp.push({ t, p:price, hit:k.toUpperCase() });
+        }
+      });
+      let color, dashed=false;
+      if(isOpen){ color='#ffaa00'; dashed=true;
+        wp.push({ t:t1, p:(d.price!=null?d.price:h.entry) });
+      } else if(h.outcome==='SL'){ color='#ff3366';
+        const xT = refine(h.closed_utc, h.sl); if(xT!=null) wp.push({ t:xT, p:h.sl, end:'SL' });
+      } else if(h.outcome==='TP3'){ color='#00ff88'; }
+      else { color='#00d4ff';
+        const xT = refine(h.closed_utc, h.sl); if(xT!=null) wp.push({ t:xT, p:h.sl, end:'BE/SL' });
+      }
+      // dots at exact price/time (no connecting lines)
+      dots.push({ t:eT, p:h.entry, color: isOpen?'#ffaa00':(sell?'#ff3366':'#00ff88'), big:true, left:true,
+                  label:(isOpen?'IN ':'')+(sell?'SELL ':'BUY ')+h.entry });
+      wp.forEach(p=>{
+        if(p.hit && !(p.hit==='TP3' && h.outcome==='TP3')) dots.push({ t:p.t, p:p.p, color:'#00d4ff', label:p.hit });
+        if(p.end) dots.push({ t:p.t, p:p.p, color: h.outcome==='SL'?'#ff3366':'#a8b2c1', big:true, label:p.end+' '+p.p });
+      });
+      if(!isOpen && h.outcome==='TP3'){
+        const last = wp.filter(p=>p.hit==='TP3')[0];
+        if(last) dots.push({ t:last.t, p:last.p, color:'#00ff88', big:true, label:'TP3 ✓' });
+      }
+    };
+
+    (d.history||[]).filter(h=>h.entry_utc).slice(-8).forEach(h=>drawTrade(h,false));
+    (d.open_trades||[]).forEach(h=>drawTrade(h,true));
+    KC.dots.pts = dots;
+  }catch(e){}
+
+  // legend overlay: organized card
+  const sigTop = (d.signals||[])[0];
+  let lg = '<div style="display:flex;gap:10px;align-items:baseline"><b style="color:var(--accent);letter-spacing:.08em">XAUUSD · 5M</b>'
+    + (d.price!=null ? '<b id="kchart-price" style="font-size:14px;color:var(--text)">'+d.price+'</b>' : '')
+    + (d.trend ? '<span style="font-weight:700;color:'+(d.trend==='BEAR'?'var(--red)':'var(--green)')+'">'+d.trend+'</span>' : '') + '</div>';
+  if(sigTop){
+    lg += '<div style="margin-top:3px;color:var(--text-2)">NEXT&nbsp; <b style="color:'+(sigTop.side==='SELL'?'var(--red)':'var(--green)')+'">'+sigTop.side+' '+sigTop.zone_low+'–'+sigTop.zone_high+'</b></div>'
+        + '<div style="color:var(--dim)">SL <b style="color:var(--red)">'+sigTop.sl+'</b>&nbsp;·&nbsp;TP <b style="color:var(--accent)">'+sigTop.tp1+'</b> / <b style="color:var(--accent)">'+sigTop.tp2+'</b> / <b style="color:var(--accent)">'+sigTop.tp3+'</b></div>';
+  }
+  document.getElementById('kchart-legend').innerHTML = lg;
+
+  const upd = document.getElementById('chart-upd');
+  let age = 0;
+  if(d.generated_utc){ age = Math.max(0, Math.round((Date.now()-Date.parse(d.generated_utc))/1000)); }
+  upd.innerHTML = d.stale ? '<span style="color:var(--amber)">feed paused</span>' : 'live · '+age+'s ago';
+  if(!KC.ticking){ KC.ticking = true; setInterval(pollTick, 1000); }
+}
+
+// ---------- 1-second live price tick ----------
+const KT = { bar: null };
+async function pollTick(){
+  if(!KC) return;
+  try{
+    const r = await fetch('/api/tick');
+    if(r.status!==200) return;
+    const d = await r.json();
+    if(d.price==null || (d.age!=null && d.age>15)) return;   // ignore stale ticks
+    const p = d.price;
+    const t = Math.floor(Date.now()/1000/300)*300;
+    if(!KT.bar || KT.bar.time!==t){
+      KT.bar = { time:t, open:p, high:p, low:p, close:p };
+    } else {
+      KT.bar.close = p;
+      if(p>KT.bar.high) KT.bar.high = p;
+      if(p<KT.bar.low) KT.bar.low = p;
+    }
+    try{ KC.candles.update(KT.bar); }catch(e){}
+    const el = document.getElementById('kchart-price');
+    if(el){ el.textContent = p; el.style.color = (KT.prev!=null && p<KT.prev) ? 'var(--red)' : 'var(--green)'; KT.prev = p; }
+  }catch(e){}
+}
+</script>
 <script>
 function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
@@ -190,18 +427,7 @@ async function load(){
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
     c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
     loadSignals();
-    setInterval(loadSignals, 60000);   // refresh signals every 60s
-    const r=await fetch('/api/results');
-    if(r.status!==200){return;}
-    const d=await r.json();
-    document.getElementById('k-win').textContent=(d.win_rate||0)+'%';
-    document.getElementById('k-tr').textContent=d.total||0;
-    document.getElementById('upd').textContent=kT('trades.updated').replace('{t}',d.updated||'');
-    const list=d.trades||[];
-    document.getElementById('body').innerHTML=list.map(t=>{
-      const cc=t.pips>=0?'pos':'neg';const p=(t.pips>=0?'+':'')+t.pips;
-      return '<tr><td class="date">'+t.date+'</td><td class="date">'+t.time+'</td><td class="side '+t.side+'">'+t.side+'</td><td>'+t.entry+'</td><td>'+t.exit+'</td><td class="pts '+cc+'">'+p+'</td><td><span class="res '+t.result+'">'+t.result+'</span></td></tr>';
-    }).join('');
+    setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
     return;
   }
 
@@ -215,6 +441,22 @@ async function load(){
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
 }
+async function loadChart(){
+  try{
+    const r=await fetch('/api/chart.png?t='+Date.now());
+    if(r.status!==200){return;}
+    const age=parseInt(r.headers.get('X-Chart-Age')||'0',10);
+    const blob=await r.blob();
+    const img=document.getElementById('livechart');
+    const old=img.src;
+    img.src=URL.createObjectURL(blob);
+    if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
+    document.getElementById('chartpanel').style.display='block';
+    const upd=document.getElementById('chart-upd');
+    if(age>180){ upd.innerHTML='<span style="color:var(--amber)">feed paused</span>'; }
+    else { upd.textContent='live · '+age+'s ago'; }
+  }catch(e){}
+}
 async function loadSignals(){
   let d;
   try{
@@ -224,6 +466,7 @@ async function loadSignals(){
   }catch(e){return;}
   const panel=document.getElementById('sigpanel');
   panel.style.display='block';
+  renderKChart(d);
   // context bar: price, trend, news
   const ctx=document.getElementById('sig-ctx');
   let chips='';
@@ -285,6 +528,16 @@ function renderHistory(hist){
     '<span class="hs">TP1 <b>'+cnt.TP1+'</b></span>'+
     '<span class="hs">BE <b>'+cnt.BE+'</b></span>'+
     '<span class="hs">SL <b>'+cnt.SL+'</b></span>';
+  // KPI cards: computed live from the chart system's own signal history
+  // points model: thirds at TP1/2/3, BE after TP1 (TP3 +11.7, TP2 +5, TP1 +1.7, SL -10)
+  const pts = Math.round(cnt.TP3*11.7 + cnt.TP2*5 + cnt.TP1*1.7 + cnt.SL*-10);
+  const roiEl = document.getElementById('k-roi');
+  roiEl.textContent = (pts>=0?'+':'')+pts+' pts';
+  roiEl.classList.toggle('green', pts>=0);
+  roiEl.classList.toggle('red', pts<0);
+  document.getElementById('k-win').textContent = wr+'%';
+  document.getElementById('k-dd').textContent = cnt.SL;
+  document.getElementById('k-tr').textContent = total;
   document.getElementById('hist-body').innerHTML=rows.map(r=>{
     const dt=(r.closed_utc||'').replace('T',' ').replace('Z','').slice(5,16); // MM-DD HH:MM
     const ocLabel={TP3:kT('mem.ocTP3'),TP2:kT('mem.ocTP2'),TP1:kT('mem.ocTP1'),BE:kT('mem.ocBE'),SL:kT('mem.ocSL')}[r.outcome]||r.outcome;

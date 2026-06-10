@@ -326,6 +326,10 @@ async def ingest_signals(request: Request):
     # only keep the safe public fields; never trust arbitrary keys
     hist = body.get("history") or []
     if not isinstance(hist, list): hist = []
+    candles = body.get("candles") or []
+    if not isinstance(candles, list): candles = []
+    open_trades = body.get("open_trades") or []
+    if not isinstance(open_trades, list): open_trades = []
     safe = {
         "generated_utc": body.get("generated_utc"),
         "price": body.get("price"),
@@ -334,12 +338,90 @@ async def ingest_signals(request: Request):
         "next_event": body.get("next_event"),
         "signals": body.get("signals") or [],
         "history": hist[-100:],
+        "open_trades": open_trades[:8],
+        "candles": candles[-400:],
     }
     try:
         json.dump(safe, open(SIGNALS_FILE, "w", encoding="utf-8"), indent=2)
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     return {"ok": True, "count": len(safe["signals"])}
+
+CHART_FILE = os.path.join(SITE, "live_chart.png")
+TICK_FILE = os.path.join(SITE, "tick.json")
+
+@app.post("/api/ingest_tick")
+async def ingest_tick(request: Request):
+    """High-frequency price tick from the PC. Tiny file write, shared across workers."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False}, status_code=401)
+    try:
+        body = await request.json()
+        price = float(body.get("price"))
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    try:
+        with open(TICK_FILE, "w") as f:
+            json.dump({"price": price, "t": time.time()}, f)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True}
+
+@app.get("/api/tick")
+def tick(k_session: str = Cookie(None)):
+    """Live price tick for members. Tiny payload, poll-friendly."""
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, _, _ = _access_state(u)
+    if not has_access:
+        return JSONResponse({"error": "no access"}, status_code=403)
+    try:
+        d = json.load(open(TICK_FILE))
+        return {"price": d.get("price"), "age": round(time.time() - d.get("t", 0), 1)}
+    except Exception:
+        return {"price": None, "age": None}
+
+@app.post("/api/ingest_chart")
+async def ingest_chart(request: Request):
+    """One-way push of the live chart PNG from the PC. Protected by INGEST_TOKEN.
+    SAFETY: write-only sink, image bytes only, size-capped."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled (no token set)"}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    body = await request.body()
+    if not body or len(body) > 4_000_000:
+        return JSONResponse({"ok": False, "error": "bad size"}, status_code=400)
+    if not body.startswith(b"\x89PNG"):
+        return JSONResponse({"ok": False, "error": "not a png"}, status_code=400)
+    try:
+        with open(CHART_FILE, "wb") as f:
+            f.write(body)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "bytes": len(body)}
+
+@app.get("/api/chart.png")
+def chart_png(k_session: str = Cookie(None)):
+    """Live chart image for members. Same access gate as signals."""
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, _ = _access_state(u)
+    if not has_access:
+        return JSONResponse({"error": label}, status_code=403)
+    if not os.path.exists(CHART_FILE):
+        return JSONResponse({"error": "no chart yet"}, status_code=404)
+    age = int(time.time() - os.path.getmtime(CHART_FILE))
+    resp = FileResponse(CHART_FILE, media_type="image/png")
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Chart-Age"] = str(age)
+    return resp
 
 @app.post("/api/admin/login")
 async def admin_login(request: Request):

@@ -10,3 +10,6 @@ __pycache__/
 node_modules/
 package-lock.json
 package.json
+
+live_chart.png
+tick.json

@@ -544,8 +544,14 @@ def health():
         n = -1
     return {"storage": mode, "members": n, "db_url_set": bool(DATABASE_URL)}
 
+def _page(name, media_type=None):
+    """Serve a site file with no-cache so browsers (mobile especially) always revalidate."""
+    resp = FileResponse(os.path.join(SITE, name), media_type=media_type)
+    resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return resp
+
 @app.get("/")
-def home(): return FileResponse(os.path.join(SITE, "index.html"))
+def home(): return _page("index.html")
 
 @app.post("/api/ingest_results")
 async def ingest_results(request: Request):
@@ -633,26 +639,26 @@ def admin_overview(k_admin: str = Cookie(None)):
 def pub_results(): return FileResponse(RESULTS_FILE)
 
 @app.get("/i18n.js")
-def i18n_js(): return FileResponse(os.path.join(SITE, "i18n.js"), media_type="application/javascript")
+def i18n_js(): return _page("i18n.js", media_type="application/javascript")
 
 @app.get("/login")
-def login_page(): return FileResponse(os.path.join(SITE, "login.html"))
+def login_page(): return _page("login.html")
 
 @app.get("/signup")
-def signup_page(): return FileResponse(os.path.join(SITE, "signup.html"))
+def signup_page(): return _page("signup.html")
 
 @app.get("/connect")
 def connect_page(k_session: str = Cookie(None)):
     if not _session_email(k_session): return RedirectResponse("/login")
-    return FileResponse(os.path.join(SITE, "connect.html"))
+    return _page("connect.html")
 
 @app.get("/members")
 def members_page(k_session: str = Cookie(None)):
     if not _session_email(k_session): return RedirectResponse("/login")
-    return FileResponse(os.path.join(SITE, "members.html"))
+    return _page("members.html")
 
 @app.get("/admin")
-def admin_page(): return FileResponse(os.path.join(SITE, "admin.html"))
+def admin_page(): return _page("admin.html")
 
 if __name__ == "__main__":
     import uvicorn

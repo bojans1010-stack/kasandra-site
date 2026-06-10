@@ -534,6 +534,12 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
+SITE_VERSION = "lotsim-1"   # bump on notable deploys; check at /api/version
+
+@app.get("/api/version")
+def version():
+    return {"version": SITE_VERSION}
+
 @app.get("/api/health")
 def health():
     """Non-sensitive diagnostic: which storage backend is live, and member count."""

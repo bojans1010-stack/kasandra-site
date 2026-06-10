@@ -99,6 +99,12 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .rbadge.MID{background:rgba(255,170,0,.16);color:var(--amber)}
 .rbadge.HIGH{background:rgba(255,51,102,.14);color:var(--red)}
 .rbadge.NOTRADE{background:rgba(120,130,150,.18);color:var(--dim)}
+.rbadge.ACTIVE{background:rgba(255,170,0,.18);color:var(--amber);animation:pulse 1.6s infinite}
+.rbadge.NEXT{background:rgba(0,212,255,.14);color:var(--accent)}
+.sigcard.live{border-left-color:var(--amber);border-color:rgba(255,170,0,.35);background:rgba(255,170,0,.05);box-shadow:0 0 22px rgba(255,170,0,.10)}
+.cchip{display:inline-block;font-size:10px;letter-spacing:.05em;padding:3px 9px;border-radius:10px;margin-left:6px;border:1px solid var(--border-soft);color:var(--dim);white-space:nowrap}
+.cchip.live{color:var(--amber);border-color:rgba(255,170,0,.45);background:rgba(255,170,0,.08)}
+.cchip.next{color:var(--accent);border-color:rgba(0,212,255,.35)}
 .sigcard .levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px 14px}
 .sigcard .lv{display:flex;flex-direction:column;gap:2px}
 .sigcard .lv .lk{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
@@ -132,7 +138,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
   <div class="panel" id="chartpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div class="upd" id="chart-upd"></div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
     <div style="padding:6px;background:#070b14;position:relative">
       <div id="kchart" style="height:480px;width:100%"></div>
       <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
@@ -317,7 +323,15 @@ function renderKChart(d){
     const drawTrade = (h, isOpen) => {
       if(h.entry==null || !h.entry_utc) return;
       const sell = h.side==='SELL';
-      const hits = h.hits||{};
+      const hits = Object.assign({}, h.hits||{});
+      // TP3 closes on the same candle as the final hit, so timestamps can be
+      // missing — backfill from close time; refine() snaps each to the candle
+      // that actually touched that price
+      if(!isOpen && h.outcome==='TP3'){
+        if(!hits.tp1) hits.tp1 = h.closed_utc;
+        if(!hits.tp2) hits.tp2 = h.closed_utc;
+        if(!hits.tp3) hits.tp3 = h.closed_utc;
+      }
       const wp = [];
       const eT = refine(h.entry_utc, h.entry);
       if(eT==null) return;
@@ -487,14 +501,28 @@ async function loadSignals(){
     list.innerHTML='<div class="sig-empty">'+kT('mem.sigEmpty')+'</div>';
     return;
   }
-  list.innerHTML=sigs.map(s=>{
+  // active = currently in a trade; the first non-active card is "next up"
+  const isLive = s => ((s.types||[]).join(' ')).toLowerCase().includes('in trade');
+  const firstWaitIdx = sigs.findIndex(s=>!isLive(s));
+  // status chips strip in the chart header
+  const chipsEl = document.getElementById('chart-chips');
+  if(chipsEl) chipsEl.innerHTML = sigs.map((s,i)=>{
+    const ema = ((s.types||[])[0]||'').split(' ')[0] || ('Z'+(i+1));
+    if(isLive(s)) return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
+    if(i===firstWaitIdx) return '<span class="cchip next">\u25B6 '+ema+' NEXT</span>';
+    return '<span class="cchip">\u23F3 '+ema+'</span>';
+  }).join('');
+  list.innerHTML=sigs.map((s,i)=>{
     const rb=(s.risk||'').replace(' ','').toUpperCase();      // "NO TRADE"->"NOTRADE"
     const rbTxt=s.risk||'';
+    const live=isLive(s);
+    const badge = live ? '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>'
+      : (i===firstWaitIdx ? '<span class="rbadge NEXT">\u25B6 NEXT</span>' : '');
     const types=(s.types||[]).join(' + ');
     const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips)+'p '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
-    return '<div class="sigcard '+s.side+'">'+
+    return '<div class="sigcard '+s.side+(live?' live':'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
-      '<span class="rbadge '+rb+'">'+rbTxt+'</span></div>'+
+      '<span>'+badge+' <span class="rbadge '+rb+'">'+rbTxt+'</span></span></div>'+
       '<div class="levels">'+
         '<div class="lv sl"><span class="lk">SL</span><span class="vv">'+s.sl+'</span></div>'+
         '<div class="lv tp"><span class="lk">TP1</span><span class="vv">'+s.tp1+'</span></div>'+

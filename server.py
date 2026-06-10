@@ -323,6 +323,11 @@ async def ingest_signals(request: Request):
         body = await request.json()
     except Exception:
         return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    # single-source policy: members see the NY Pipeline chart system only.
+    # The legacy engine still pushes; its payloads are acknowledged but ignored
+    # (its own processes are never touched).
+    if body.get("engine") != "nypipeline":
+        return JSONResponse({"ok": False, "error": "legacy engine payload ignored"}, status_code=409)
     # only keep the safe public fields; never trust arbitrary keys
     hist = body.get("history") or []
     if not isinstance(hist, list): hist = []

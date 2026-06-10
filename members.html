@@ -145,7 +145,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
 <div class="wrap">
   <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
   <div class="kpis">
-    <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Points · Signal History</div></div>
+    <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Pips · Signal History</div></div>
     <div class="kpi"><div class="v" id="k-win">—</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
     <div class="kpi red"><div class="v red" id="k-dd">—</div><div class="l" id="k-dd-l">Stops</div></div>
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
@@ -536,7 +536,7 @@ async function loadSignals(){
     const badge = live ? '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>'
       : (i===firstWaitIdx ? '<span class="rbadge NEXT">\u25B6 NEXT</span>' : '');
     const types=(s.types||[]).join(' + ');
-    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips)+'p '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
+    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
     return '<div class="sigcard '+s.side+(live?' live':'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
       '<span>'+badge+' <span class="rbadge '+rb+'">'+rbTxt+'</span></span></div>'+
@@ -574,10 +574,12 @@ function renderHistory(hist){
     '<span class="hs">BE <b>'+cnt.BE+'</b></span>'+
     '<span class="hs">SL <b>'+cnt.SL+'</b></span>';
   // KPI cards: computed live from the chart system's own signal history
-  // points model: thirds at TP1/2/3, BE after TP1 (TP3 +11.7, TP2 +5, TP1 +1.7, SL -10)
+  // thirds at TP1/2/3, BE after TP1 (TP3 +11.7, TP2 +5, TP1 +1.7, SL -10 points)
+  // displayed in pips: 1 point = 10 pips
   const pts = Math.round(cnt.TP3*11.7 + cnt.TP2*5 + cnt.TP1*1.7 + cnt.SL*-10);
+  const pips = pts*10;
   const roiEl = document.getElementById('k-roi');
-  roiEl.textContent = (pts>=0?'+':'')+pts+' pts';
+  roiEl.textContent = (pips>=0?'+':'')+pips+' pips';
   roiEl.classList.toggle('green', pts>=0);
   roiEl.classList.toggle('red', pts<0);
   document.getElementById('k-win').textContent = wr+'%';

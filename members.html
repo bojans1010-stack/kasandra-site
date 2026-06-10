@@ -150,6 +150,16 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi red"><div class="v red" id="k-dd">—</div><div class="l" id="k-dd-l">Stops</div></div>
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
+  <div class="panel" id="lotpanel" style="display:none">
+    <div class="ph"><div class="t"><span class="dot"></span><span>1 LOT SIMULATION</span></div><div class="upd">XAUUSD · 1.00 lot = $100 per point · partials in thirds, SL to BE after TP1</div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px">
+      <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 1 lot</div></div>
+      <div style="text-align:center"><div id="lot-avg" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--text)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Avg per signal</div></div>
+      <div style="text-align:center"><div id="lot-best" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Best signal</div></div>
+      <div style="text-align:center"><div id="lot-worst" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--red)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Worst signal</div></div>
+    </div>
+    <div class="sig-disc">Simulation of the published signals executed with a fixed 1.00 lot, partial exits in thirds at TP1/TP2/TP3 and stop moved to break-even after TP1. Spread and slippage not included. Not financial advice.</div>
+  </div>
   <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
@@ -169,7 +179,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="panel" id="histpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div class="upd" id="hist-upd"></div></div>
     <div class="hist-sum" id="hist-sum"></div>
-    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th></tr></thead>
+    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
   </div><!-- /sidecol -->
@@ -553,10 +563,38 @@ async function loadSignals(){
   renderHistory(d.history||[]);
 }
 
+// dollar result of one signal at 1.00 lot ($100/point on gold), thirds model
+function tradeUsd(r){
+  let pts;
+  if(r.entry!=null && r.sl!=null && r.tp1!=null && r.tp2!=null && r.tp3!=null){
+    const d1=Math.abs(r.tp1-r.entry), d2=Math.abs(r.tp2-r.entry), d3=Math.abs(r.tp3-r.entry), ds=Math.abs(r.sl-r.entry);
+    pts = r.outcome==='TP3' ? (d1+d2+d3)/3 : r.outcome==='TP2' ? (d1+d2)/3 : r.outcome==='TP1' ? d1/3 : r.outcome==='BE' ? 0 : -ds;
+  } else {
+    pts = ({TP3:11.7, TP2:5, TP1:1.7, BE:0, SL:-10})[r.outcome] || 0;
+  }
+  return pts*100;
+}
+const fmtUsd = v => (v<0?'-$':'+$')+Math.abs(Math.round(v)).toLocaleString('en-US');
+
 function renderHistory(hist){
   const panel=document.getElementById('histpanel');
-  if(!hist || !hist.length){ panel.style.display='none'; return; }
+  if(!hist || !hist.length){ panel.style.display='none'; document.getElementById('lotpanel').style.display='none'; return; }
   panel.style.display='block';
+  // 1 lot simulation
+  const usds = hist.map(tradeUsd);
+  const net = usds.reduce((a,b)=>a+b,0);
+  const lp = document.getElementById('lotpanel');
+  lp.style.display='block';
+  const netEl=document.getElementById('lot-net');
+  netEl.textContent = fmtUsd(net);
+  netEl.style.color = net>=0 ? 'var(--green)' : 'var(--red)';
+  const avgEl=document.getElementById('lot-avg');
+  avgEl.textContent = fmtUsd(net/usds.length);
+  avgEl.style.color = net>=0 ? 'var(--text)' : 'var(--red)';
+  const bestEl=document.getElementById('lot-best'), worstEl=document.getElementById('lot-worst');
+  const best=Math.max(...usds), worst=Math.min(...usds);
+  bestEl.textContent = fmtUsd(best);  bestEl.style.color = best>=0 ? 'var(--green)' : 'var(--red)';
+  worstEl.textContent = fmtUsd(worst); worstEl.style.color = worst>=0 ? 'var(--green)' : 'var(--red)';
   // newest first
   const rows=hist.slice().reverse();
   // summary counts
@@ -588,9 +626,11 @@ function renderHistory(hist){
   document.getElementById('hist-body').innerHTML=rows.map(r=>{
     const dt=(r.closed_utc||'').replace('T',' ').replace('Z','').slice(5,16); // MM-DD HH:MM
     const ocLabel={TP3:kT('mem.ocTP3'),TP2:kT('mem.ocTP2'),TP1:kT('mem.ocTP1'),BE:kT('mem.ocBE'),SL:kT('mem.ocSL')}[r.outcome]||r.outcome;
+    const u = tradeUsd(r);
     return '<tr><td class="date">'+dt+'</td><td class="side '+r.side+'">'+r.side+'</td>'+
       '<td>'+r.zone_low+'-'+r.zone_high+'</td><td class="date">'+(r.risk||'')+'</td>'+
-      '<td><span class="oc '+r.outcome+'">'+ocLabel+'</span></td></tr>';
+      '<td><span class="oc '+r.outcome+'">'+ocLabel+'</span></td>'+
+      '<td class="pts '+(u>=0?'pos':'neg')+'" style="font-weight:600">'+fmtUsd(u)+'</td></tr>';
   }).join('');
 }
 load();

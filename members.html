@@ -50,6 +50,19 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .connect a{color:var(--accent);text-decoration:none;font-weight:600}
 .connect .code{display:inline-block;background:rgba(0,212,255,.1);border:1px dashed rgba(0,212,255,.5);padding:2px 10px;border-radius:6px;color:var(--accent);font-weight:700;cursor:pointer}
 .btn{display:inline-block;margin-top:14px;padding:12px 24px;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;border-radius:9px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;text-decoration:none}
+/* desktop dashboard: wide grid, tall chart, sticky signal rail */
+#maingrid{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:1400px){
+  .wrap{max-width:min(1780px,95vw)}
+  .nav-in{max-width:min(1780px,95vw)}
+  #maingrid{grid-template-columns:minmax(0,2.2fr) minmax(400px,1fr);gap:20px;align-items:start;margin-bottom:20px}
+  #maingrid .panel{margin-bottom:0}
+  #sidecol{display:flex;flex-direction:column;gap:20px;position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
+  #kchart{height:calc(100vh - 320px) !important;min-height:560px;max-height:860px}
+  .kpis{grid-template-columns:repeat(4,1fr);gap:20px}
+  .kpi .v{font-size:38px}
+  .welcome h1{font-size:32px}
+}
 @media(max-width:760px){
   .wrap{padding:0 16px}
   .kpis{grid-template-columns:repeat(2,1fr)}
@@ -137,6 +150,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi red"><div class="v red" id="k-dd">—</div><div class="l" id="k-dd-l">Stops</div></div>
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
+  <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
     <div style="padding:6px;background:#070b14;position:relative">
@@ -145,6 +159,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
       <img id="livechart" alt="Live Kasandra chart" style="width:100%;border-radius:8px;display:none">
     </div>
   </div>
+  <div id="sidecol">
   <div class="panel" id="sigpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.sigTitle">LIVE GOLD SIGNALS</span></div><div class="upd" id="sig-upd"></div></div>
     <div class="sig-ctx" id="sig-ctx"></div>
@@ -157,6 +172,8 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
+  </div><!-- /sidecol -->
+  </div><!-- /maingrid -->
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>

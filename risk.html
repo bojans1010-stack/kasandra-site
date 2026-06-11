@@ -15,9 +15,18 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .brand .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green);animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .nav-right{display:flex;gap:8px;align-items:center}
-.nlink{font-size:12px;color:var(--dim);text-decoration:none;border:1px solid var(--border);padding:7px 13px;border-radius:7px;white-space:nowrap}
+.nlink{font-size:12px;color:var(--dim);text-decoration:none;border:1px solid var(--border);padding:7px 13px;border-radius:7px;white-space:nowrap;cursor:pointer}
 .nlink:hover{color:var(--accent);border-color:var(--accent)}
 .nlink.on{color:var(--accent);border-color:var(--accent)}
+.klang{position:relative;display:inline-block;font-family:var(--mono)}
+.klang-btn{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text-2);font-family:var(--mono);font-size:12px;font-weight:600;padding:7px 11px;cursor:pointer}
+.klang-btn:hover{border-color:var(--accent);color:var(--accent)}
+.klang-arrow{font-size:9px;opacity:.7}
+.klang-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:170px;list-style:none;margin:0;padding:5px;background:var(--card-hi);border:1px solid var(--border);border-radius:9px;box-shadow:0 12px 34px rgba(0,0,0,.45);opacity:0;visibility:hidden;transform:translateY(-6px);transition:all .16s;z-index:200}
+.klang.open .klang-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.klang-opt{padding:9px 12px;border-radius:6px;font-size:12.5px;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.klang-opt:hover{background:rgba(0,212,255,.10);color:var(--accent)}
+.klang-opt.sel{color:var(--accent);background:rgba(0,212,255,.06)}
 .hero{padding:40px 0 14px}
 .hero .tag{display:inline-block;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;border:1px solid var(--border);border-radius:20px;padding:5px 13px;margin-bottom:16px}
 .hero h1{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.15}
@@ -29,7 +38,6 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .ph .t .ic{font-size:18px}
 .ph .d{color:var(--dim);font-size:12px;margin-top:5px}
 .body{padding:18px 22px 22px}
-/* calculator */
 .calc-in{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
 @media(max-width:640px){.calc-in{grid-template-columns:1fr}}
 label{font-size:10px;letter-spacing:1.3px;color:var(--dim);text-transform:uppercase;display:block;margin-bottom:8px}
@@ -55,21 +63,18 @@ input:focus{outline:none;border-color:var(--accent)}
 .note.warn{background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.3);color:#ffd9a0}
 .note.ok{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);color:#a8f0c8}
 .note b{color:#fff}
-/* table */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:10px 14px;font-size:10px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border-soft)}
 td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03)}
 tr:hover td{background:rgba(0,212,255,.03)}
 .lot{font-family:var(--display);font-weight:700;color:var(--accent)}
 td.cap{font-family:var(--display);font-weight:600}
-/* survival meter */
 .meter{height:14px;border-radius:8px;background:#0a0f1a;border:1px solid var(--border-soft);overflow:hidden;margin:14px 0 8px}
 .meter .fill{height:100%;border-radius:8px;transition:.4s;background:linear-gradient(90deg,var(--green),var(--accent))}
 .streakrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
 .dot8{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#0a0f1a;border:1px solid var(--border-soft);color:var(--dim)}
 .dot8.surv{border-color:rgba(0,255,136,.4);color:var(--green);background:rgba(0,255,136,.05)}
 .dot8.dead{border-color:rgba(255,51,102,.4);color:var(--red);background:rgba(255,51,102,.05)}
-/* signal example + steps */
 .sigex{display:grid;grid-template-columns:auto 1fr;gap:18px;margin-bottom:20px}
 @media(max-width:640px){.sigex{grid-template-columns:1fr}}
 .sigex-card{background:#0a0f1a;border:1px solid var(--border);border-left:3px solid var(--red);border-radius:11px;padding:16px 18px;min-width:200px;font-size:14px;line-height:1.9}
@@ -87,7 +92,6 @@ td.cap{font-family:var(--display);font-weight:600}
 .steps li:last-child{border:none}
 .steps li b{color:var(--text)}
 .steps .sn{flex:0 0 28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(0,212,255,.18),rgba(0,212,255,.05));color:var(--accent);font-family:var(--display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
-/* edu cards */
 .edu{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:640px){.edu{grid-template-columns:1fr}}
 .ecard{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border-soft);border-radius:12px;padding:20px}
@@ -95,14 +99,13 @@ td.cap{font-family:var(--display);font-weight:600}
 .ecard h3{font-family:var(--display);font-size:15px;margin-bottom:8px;color:var(--accent)}
 .ecard p{color:var(--text-2);font-size:13px;line-height:1.7}
 .ecard p b{color:var(--text)}
-/* projector */
 .proj-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
 input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
 .projout{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .projout .pc{background:#0a0f1a;border:1px solid var(--border-soft);border-radius:11px;padding:16px;text-align:center}
 .projout .pc .v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--green)}
 .projout .pc .l{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-top:6px}
-/* rules */
+.sech{font-family:var(--display);font-size:16px;letter-spacing:.05em;color:var(--accent);text-transform:uppercase;margin:6px 0 12px}
 .rules{list-style:none}
 .rules li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:14px;line-height:1.5;color:var(--text-2)}
 .rules li:last-child{border:none}
@@ -115,23 +118,24 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
   <div class="nav-right">
-    <a class="nlink" href="/members">← Dashboard</a>
-    <a class="nlink on" href="/risk">Risk Management</a>
-    <a class="nlink" onclick="signout()">Sign out</a>
+    <span data-lang-dropdown></span>
+    <a class="nlink" href="/members" data-rk="nav.dash">← Dashboard</a>
+    <a class="nlink on" href="/risk" data-rk="nav.risk">Risk Management</a>
+    <a class="nlink" onclick="signout()" data-rk="nav.signout">Sign out</a>
   </div>
 </div></nav>
 
 <div class="wrap">
   <div class="hero">
-    <span class="tag">Survive first · profit second</span>
-    <h1>Risk Management is the <b>real edge.</b></h1>
-    <p>A great system loses money in reckless hands, and a modest system compounds a fortune in disciplined ones. This page shows you exactly how much to trade per signal — so a bad week never ends your account, and a good month actually counts.</p>
+    <span class="tag" data-rk="hero.tag">Survive first · profit second</span>
+    <h1 data-rkh="hero.h1">Risk Management is the <b>real edge.</b></h1>
+    <p data-rk="hero.p">A great system loses money in reckless hands...</p>
   </div>
 
   <!-- HOW TO TAKE A SIGNAL -->
   <div class="panel">
-    <div class="ph"><div class="t"><span class="ic">📩</span> How to Take a Signal</div>
-      <div class="d">Every Kasandra signal arrives in the same format. Execution is boring on purpose — boring is what makes it work.</div></div>
+    <div class="ph"><div class="t"><span class="ic">📩</span> <span data-rk="howto.t">How to Take a Signal</span></div>
+      <div class="d" data-rk="howto.d"></div></div>
     <div class="body">
       <div class="sigex">
         <div class="sigex-card">
@@ -140,52 +144,52 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
           <div class="se-line tp">✔️ TP1 <b>4082.6</b></div>
           <div class="se-line tp">✔️ TP2 <b>4077.6</b></div>
           <div class="se-line tp">✔️ TP3 <b>4067.6</b></div>
-          <div class="se-line tp">✔️ TP4 <b>OPEN</b> · runner</div>
+          <div class="se-line tp">✔️ TP4 <b>OPEN</b> · <span data-rk="se.runner">runner</span></div>
         </div>
         <div class="sigex-read">
-          <div class="ser"><span class="k">Direction</span> BUY = buy / SELL = sell. Match it exactly.</div>
-          <div class="ser"><span class="k">Entry</span> the price (or zone) to get in. Price often wicks into it.</div>
-          <div class="ser"><span class="k">SL</span> your stop. ~10 points. This caps the loss — always set it.</div>
-          <div class="ser"><span class="k">TP1·2·3</span> take a third off at each. TP4 is the open runner.</div>
+          <div class="ser"><span class="k" data-rk="read.dir.k">Direction</span> <span data-rk="read.dir.v"></span></div>
+          <div class="ser"><span class="k" data-rk="read.entry.k">Entry</span> <span data-rk="read.entry.v"></span></div>
+          <div class="ser"><span class="k">SL</span> <span data-rk="read.sl.v"></span></div>
+          <div class="ser"><span class="k">TP1·2·3</span> <span data-rk="read.tp.v"></span></div>
         </div>
       </div>
       <ol class="steps">
-        <li><span class="sn">1</span><div><b>Size it first.</b> Use the calculator below to get your lot for this account. Never eyeball the size — that decision is made before you click, not after.</div></li>
-        <li><span class="sn">2</span><div><b>Enter at or inside the zone.</b> Price usually dips into the entry area. Get in there — or split into up to <b>3 small entries</b> across the zone to average a better price. If price already ran far past the entry, let it go.</div></li>
-        <li><span class="sn">3</span><div><b>Attach SL and TPs immediately.</b> The moment you enter, set the stop and the take-profits on the order. Never "watch it manually." The stop is the strategy, not a suggestion.</div></li>
-        <li><span class="sn">4</span><div><b>Bank TP1, then go risk-free.</b> When price hits TP1, close a third and <b>move your stop to break-even (entry)</b>. From here the trade cannot lose — worst case is zero.</div></li>
-        <li><span class="sn">5</span><div><b>Trail the rest to TP2, TP3, and the runner.</b> Take another third at TP2, another at TP3. Let the final piece (TP4) ride for the big moves with the stop trailing behind.</div></li>
-        <li><span class="sn">6</span><div><b>Missed it? Skip it.</b> If you weren't there in time, do <b>not</b> chase a signal that already left. Forcing a bad entry costs more than missing a good one. The next signal is always coming.</div></li>
-        <li><span class="sn">7</span><div><b>When the system is quiet, stay quiet.</b> "No setups / filtered" means the market isn't offering a good trade right now. That silence protects you — don't invent trades to fill the boredom.</div></li>
+        <li><span class="sn">1</span><div data-rkh="step.1"></div></li>
+        <li><span class="sn">2</span><div data-rkh="step.2"></div></li>
+        <li><span class="sn">3</span><div data-rkh="step.3"></div></li>
+        <li><span class="sn">4</span><div data-rkh="step.4"></div></li>
+        <li><span class="sn">5</span><div data-rkh="step.5"></div></li>
+        <li><span class="sn">6</span><div data-rkh="step.6"></div></li>
+        <li><span class="sn">7</span><div data-rkh="step.7"></div></li>
       </ol>
-      <div class="note ok" style="margin-top:4px">✓ Take <b>every</b> qualifying signal the same mechanical way, at the same risk. The edge is in the repetition — one disciplined trade, a hundred times, not one hero trade.</div>
+      <div class="note ok" data-rkh="howto.ok" style="margin-top:4px"></div>
     </div>
   </div>
 
   <!-- CALCULATOR -->
   <div class="panel">
-    <div class="ph"><div class="t"><span class="ic">🧮</span> Position Size Calculator</div>
-      <div class="d">Enter your account size, pick your risk comfort. Every Kasandra signal uses a ~10 point (100 pip) stop.</div></div>
+    <div class="ph"><div class="t"><span class="ic">🧮</span> <span data-rk="calc.t">Position Size Calculator</span></div>
+      <div class="d" data-rk="calc.d"></div></div>
     <div class="body">
       <div class="calc-in">
         <div>
-          <label>Your account capital (USD)</label>
+          <label data-rk="calc.cap">Your account capital (USD)</label>
           <div class="capwrap"><span>$</span><input type="number" id="cap" value="1000" min="50" step="50" oninput="calc()"></div>
         </div>
         <div>
-          <label>Risk per signal</label>
+          <label data-rk="calc.riskper">Risk per signal</label>
           <div class="risk-tabs">
-            <div class="rtab cons" data-r="0.5" onclick="setRisk(0.5)"><div class="rn">0.5%</div><div class="rp">Conservative</div></div>
-            <div class="rtab on" data-r="1" onclick="setRisk(1)"><div class="rn">1%</div><div class="rp">Moderate</div></div>
-            <div class="rtab aggr" data-r="2" onclick="setRisk(2)"><div class="rn">2%</div><div class="rp">Aggressive</div></div>
+            <div class="rtab cons" data-r="0.5" onclick="setRisk(0.5)"><div class="rn">0.5%</div><div class="rp" data-rk="risk.cons">Conservative</div></div>
+            <div class="rtab on" data-r="1" onclick="setRisk(1)"><div class="rn">1%</div><div class="rp" data-rk="risk.mod">Moderate</div></div>
+            <div class="rtab aggr" data-r="2" onclick="setRisk(2)"><div class="rn">2%</div><div class="rp" data-rk="risk.aggr">Aggressive</div></div>
           </div>
         </div>
       </div>
       <div class="out">
-        <div class="ocard"><div class="v" id="o-lot">0.01</div><div class="l">Recommended Lot</div></div>
-        <div class="ocard"><div class="v" id="o-risk">$10</div><div class="l">Risk / Signal</div></div>
-        <div class="ocard"><div class="v" id="o-eff">1.0%</div><div class="l">Effective Risk</div></div>
-        <div class="ocard"><div class="v" id="o-max">3.0%</div><div class="l">Max (3 open)</div></div>
+        <div class="ocard"><div class="v" id="o-lot">0.01</div><div class="l" data-rk="out.lot">Recommended Lot</div></div>
+        <div class="ocard"><div class="v" id="o-risk">$10</div><div class="l" data-rk="out.risk">Risk / Signal</div></div>
+        <div class="ocard"><div class="v" id="o-eff">1.0%</div><div class="l" data-rk="out.eff">Effective Risk</div></div>
+        <div class="ocard"><div class="v" id="o-max">3.0%</div><div class="l" data-rk="out.max">Max (3 open)</div></div>
       </div>
       <div class="note" id="o-note"></div>
     </div>
@@ -193,130 +197,300 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
 
   <!-- SURVIVAL -->
   <div class="panel">
-    <div class="ph"><div class="t"><span class="ic">🛡️</span> Losing Streak Survival</div>
-      <div class="d">No system wins every time. Our 2-year backtest's worst run was 5 stops in a row — plan to survive 8. How many can your size absorb?</div></div>
+    <div class="ph"><div class="t"><span class="ic">🛡️</span> <span data-rk="surv.t">Losing Streak Survival</span></div>
+      <div class="d" data-rk="surv.d"></div></div>
     <div class="body">
-      <div style="display:flex;justify-content:space-between;font-size:13px"><span class="dim" style="color:var(--dim)">straight stops before −20% account</span><b id="surv-n" style="font-family:var(--display);font-size:18px;color:var(--green)">20</b></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--dim)" data-rk="surv.label">straight stops before −20% account</span><b id="surv-n" style="font-family:var(--display);font-size:18px;color:var(--green)">20</b></div>
       <div class="meter"><div class="fill" id="surv-fill" style="width:100%"></div></div>
       <div class="streakrow" id="surv-row"></div>
       <div class="note ok" id="surv-note"></div>
     </div>
   </div>
 
-  <!-- REFERENCE TABLE -->
+  <!-- REFERENCE -->
   <div class="panel">
-    <div class="ph"><div class="t"><span class="ic">📋</span> Quick Reference</div>
-      <div class="d">Recommended lot at 1% risk per signal. Minimum tradable lot is 0.01.</div></div>
+    <div class="ph"><div class="t"><span class="ic">📋</span> <span data-rk="ref.t">Quick Reference</span></div>
+      <div class="d" data-rk="ref.d"></div></div>
     <div class="body" style="padding-top:8px">
-      <table><thead><tr><th>Capital</th><th>Lot</th><th>Risk / signal</th><th>Max (3 open)</th></tr></thead>
+      <table><thead><tr><th data-rk="th.cap">Capital</th><th data-rk="th.lot">Lot</th><th data-rk="th.risk">Risk / signal</th><th data-rk="th.max">Max (3 open)</th></tr></thead>
       <tbody id="ref-body"></tbody></table>
     </div>
   </div>
 
-  <!-- EDUCATION -->
-  <div style="margin:6px 0 12px"><div style="font-family:var(--display);font-size:16px;letter-spacing:.05em;color:var(--accent);text-transform:uppercase">The principles</div></div>
+  <!-- PRINCIPLES -->
+  <div class="sech" data-rk="principles.h">The principles</div>
   <div class="edu">
-    <div class="ecard"><div class="ei">🎯</div><h3>The 1% rule</h3><p>Risk a small, fixed slice of your account on each signal — <b>1% is the professional standard</b>. At 1%, you'd need 100 losing trades in a row to blow up. That never happens with an 80% win-rate system. This single habit is why pros survive decades.</p></div>
-    <div class="ecard"><div class="ei">🔁</div><h3>Losing streaks are normal</h3><p>Even at 80% win rate, streaks of 3–5 losses happen regularly, and 8 will happen eventually. <b>Size so 8 straight stops still leaves you trading.</b> The traders who blow up aren't wrong more often — they're sized too big when the inevitable streak arrives.</p></div>
-    <div class="ecard"><div class="ei">⚖️</div><h3>Max 3 positions · no overlap</h3><p>Kasandra never holds more than <b>3 trades at once</b>, and skips signals within 15 points of an open one. This caps your worst-case exposure. When sizing, remember: 3 open trades = 3× your single-signal risk if they all stop together.</p></div>
-    <div class="ecard"><div class="ei">🍌</div><h3>Move stop to break-even</h3><p>When a trade hits TP1, move the stop to entry. From that moment <b>the trade can't lose</b> — worst case is zero. This is built into every signal and it's why our partial-win trades rarely turn into full losses.</p></div>
-    <div class="ecard"><div class="ei">📰</div><h3>Respect spread & news</h3><p>Wide spread and high-impact news (CPI, NFP, FOMC) can spike price through a stop. The system already filters compressed, low-momentum tape — and you should <b>size down or sit out around red-flag news</b>. Surviving the spike matters more than catching it.</p></div>
-    <div class="ecard"><div class="ei">📈</div><h3>Scale with equity, not hope</h3><p>Start at the size your capital justifies. When the account grows, <b>your fixed-% lot grows with it automatically</b> — that's compounding. Never jump to bigger lots after a win out of excitement, or after a loss to "win it back." Let the math size you.</p></div>
+    <div class="ecard"><div class="ei">🎯</div><h3 data-rk="edu1.t">The 1% rule</h3><p data-rkh="edu1.b"></p></div>
+    <div class="ecard"><div class="ei">🔁</div><h3 data-rk="edu2.t">Losing streaks are normal</h3><p data-rkh="edu2.b"></p></div>
+    <div class="ecard"><div class="ei">⚖️</div><h3 data-rk="edu3.t">Max 3 positions · no overlap</h3><p data-rkh="edu3.b"></p></div>
+    <div class="ecard"><div class="ei">🍌</div><h3 data-rk="edu4.t">Move stop to break-even</h3><p data-rkh="edu4.b"></p></div>
+    <div class="ecard"><div class="ei">📰</div><h3 data-rk="edu5.t">Respect spread & news</h3><p data-rkh="edu5.b"></p></div>
+    <div class="ecard"><div class="ei">📈</div><h3 data-rk="edu6.t">Scale with equity, not hope</h3><p data-rkh="edu6.b"></p></div>
   </div>
 
   <!-- PROJECTOR -->
   <div class="panel" style="margin-top:22px">
-    <div class="ph"><div class="t"><span class="ic">🚀</span> The Power of Consistency</div>
-      <div class="d">Small, steady months compound hard. Drag the slider to a <i>conservative</i> monthly target and watch what discipline builds over a year.</div></div>
+    <div class="ph"><div class="t"><span class="ic">🚀</span> <span data-rk="proj.t">The Power of Consistency</span></div>
+      <div class="d" data-rk="proj.d"></div></div>
     <div class="body">
       <div class="proj-row">
-        <label style="margin:0">Monthly target</label>
+        <label style="margin:0" data-rk="proj.monthly">Monthly target</label>
         <input type="range" id="mret" min="3" max="30" value="10" oninput="proj()">
         <b id="mret-v" style="font-family:var(--display);color:var(--accent);font-size:16px;min-width:48px;text-align:right">10%</b>
       </div>
       <div class="projout">
-        <div class="pc"><div class="v" id="p3">—</div><div class="l">In 3 months</div></div>
-        <div class="pc"><div class="v" id="p6">—</div><div class="l">In 6 months</div></div>
-        <div class="pc"><div class="v" id="p12">—</div><div class="l">In 12 months</div></div>
+        <div class="pc"><div class="v" id="p3">—</div><div class="l" data-rk="proj.m3">In 3 months</div></div>
+        <div class="pc"><div class="v" id="p6">—</div><div class="l" data-rk="proj.m6">In 6 months</div></div>
+        <div class="pc"><div class="v" id="p12">—</div><div class="l" data-rk="proj.m12">In 12 months</div></div>
       </div>
-      <div class="note warn" style="margin-top:16px">Illustration of compounding only — <b>not a promise</b>. Real returns vary month to month, some are negative, and past performance never guarantees the future. The point isn't the number, it's that <b>staying alive and consistent beats swinging big.</b></div>
+      <div class="note warn" data-rkh="proj.note" style="margin-top:16px"></div>
     </div>
   </div>
 
   <!-- GOLDEN RULES -->
   <div class="panel">
-    <div class="ph"><div class="t"><span class="ic">⭐</span> Kasandra's Golden Rules</div></div>
+    <div class="ph"><div class="t"><span class="ic">⭐</span> <span data-rk="rules.t">Kasandra's Golden Rules</span></div></div>
     <div class="body">
       <ol class="rules">
-        <li><span class="n">1</span><span><b>Never risk more than 1–2% per signal.</b> If a single loss hurts emotionally, you're too big.</span></li>
-        <li><span class="n">2</span><span><b>Always use the stop.</b> Every signal has one. No "I'll watch it manually." The stop is the strategy.</span></li>
-        <li><span class="n">3</span><span><b>Take partials and move to break-even.</b> Bank TP1, protect the rest. Greed gives profits back.</span></li>
-        <li><span class="n">4</span><span><b>Max 3 trades open.</b> More positions ≠ more profit, just more correlated risk.</span></li>
-        <li><span class="n">5</span><span><b>Survive the bad week.</b> Your only job in a drawdown is to still be here for the recovery.</span></li>
-        <li><span class="n">6</span><span><b>Let the account grow you.</b> Scale size with equity, never with emotion.</span></li>
+        <li><span class="n">1</span><span data-rkh="rule.1"></span></li>
+        <li><span class="n">2</span><span data-rkh="rule.2"></span></li>
+        <li><span class="n">3</span><span data-rkh="rule.3"></span></li>
+        <li><span class="n">4</span><span data-rkh="rule.4"></span></li>
+        <li><span class="n">5</span><span data-rkh="rule.5"></span></li>
+        <li><span class="n">6</span><span data-rkh="rule.6"></span></li>
       </ol>
     </div>
   </div>
 
-  <div class="quote">"Take care of the downside, and the upside takes care of itself."<span class="by">— THE FIRST RULE OF EVERY TRADER WHO LASTED</span></div>
+  <div class="quote"><span data-rk="quote.t">"Take care of the downside, and the upside takes care of itself."</span><span class="by" data-rk="quote.by">— THE FIRST RULE OF EVERY TRADER WHO LASTED</span></div>
 
-  <div class="disc">Educational risk-management guidance only. Position-size outputs are illustrative calculations based on a fixed ~10-point stop and the risk percentage you select, not personalised financial advice. Trading leveraged products carries a high risk of loss. You are solely responsible for your own decisions and position sizing. Past and simulated performance does not guarantee future results. Not financial advice — trade your own risk.</div>
+  <div class="disc" data-rk="disc"></div>
 </div>
 
+<script src="/i18n.js?v=6"></script>
 <script>
+const RT={
+en:{
+"nav.dash":"← Dashboard","nav.risk":"Risk Management","nav.signout":"Sign out",
+"hero.tag":"Survive first · profit second",
+"hero.h1":"Risk Management is the <b>real edge.</b>",
+"hero.p":"A great system loses money in reckless hands, and a modest system compounds a fortune in disciplined ones. This page shows you exactly how much to trade per signal — so a bad week never ends your account, and a good month actually counts.",
+"howto.t":"How to Take a Signal",
+"howto.d":"Every Kasandra signal arrives in the same format. Execution is boring on purpose — boring is what makes it work.",
+"se.runner":"runner",
+"read.dir.k":"Direction","read.dir.v":"BUY = buy / SELL = sell. Match it exactly.",
+"read.entry.k":"Entry","read.entry.v":"the price (or zone) to get in. Price often wicks into it.",
+"read.sl.v":"your stop. ~10 points. This caps the loss — always set it.",
+"read.tp.v":"take a third off at each. TP4 is the open runner.",
+"step.1":"<b>Size it first.</b> Use the calculator below to get your lot for this account. Never eyeball the size — that decision is made before you click, not after.",
+"step.2":"<b>Enter at or inside the zone.</b> Price usually dips into the entry area. Get in there — or split into up to <b>3 small entries</b> across the zone to average a better price. If price already ran far past the entry, let it go.",
+"step.3":"<b>Attach SL and TPs immediately.</b> The moment you enter, set the stop and the take-profits on the order. Never watch it manually. The stop is the strategy, not a suggestion.",
+"step.4":"<b>Bank TP1, then go risk-free.</b> When price hits TP1, close a third and <b>move your stop to break-even (entry)</b>. From here the trade cannot lose — worst case is zero.",
+"step.5":"<b>Trail the rest to TP2, TP3, and the runner.</b> Take another third at TP2, another at TP3. Let the final piece (TP4) ride for the big moves with the stop trailing behind.",
+"step.6":"<b>Missed it? Skip it.</b> If you were not there in time, do <b>not</b> chase a signal that already left. Forcing a bad entry costs more than missing a good one. The next signal is always coming.",
+"step.7":"<b>When the system is quiet, stay quiet.</b> No setups / filtered means the market is not offering a good trade right now. That silence protects you — do not invent trades to fill the boredom.",
+"howto.ok":"✓ Take <b>every</b> qualifying signal the same mechanical way, at the same risk. The edge is in the repetition — one disciplined trade, a hundred times, not one hero trade.",
+"calc.t":"Position Size Calculator",
+"calc.d":"Enter your account size, pick your risk comfort. Every Kasandra signal uses a ~10 point (100 pip) stop.",
+"calc.cap":"Your account capital (USD)","calc.riskper":"Risk per signal",
+"risk.cons":"Conservative","risk.mod":"Moderate","risk.aggr":"Aggressive",
+"out.lot":"Recommended Lot","out.risk":"Risk / Signal","out.eff":"Effective Risk","out.max":"Max (3 open)",
+"note.small":"⚠️ The minimum lot is <b>0.01</b>, so on a small account each signal risks <b>{eff}%</b> — more than your {rp}% target. That is normal for accounts under ~$1,000; just know a stop bites harder here. Many traders grow a micro account to $1,000+ before relaxing.",
+"note.high":"⚠️ At <b>{eff}% per signal</b> a short losing streak hurts fast. Consider the conservative setting or a smaller lot until the account grows.",
+"note.ok":"✓ Healthy sizing. A single stop costs <b>{risk}</b> ({eff}%), and even three open trades stopping together is just <b>{max}%</b> of your account. This is how you last.",
+"surv.t":"Losing Streak Survival",
+"surv.d":"No system wins every time. Our 2-year backtest worst run was 5 stops in a row — plan to survive 8. How many can your size absorb?",
+"surv.label":"straight stops before −20% account",
+"surv.ok":"✓ Your account absorbs <b>{n} straight losses</b> before a −20% drawdown — well past the worst streak we have ever recorded. You are built to survive.",
+"surv.mid":"⚠️ You can take <b>{n} straight stops</b> before −20%. That covers the typical bad run but not a rare extreme. A slightly smaller lot buys peace of mind.",
+"surv.low":"⚠️ Only <b>{n} straight stops</b> to −20% — too tight. The backtest alone had a 5-loss streak. Size down before a streak finds you.",
+"ref.t":"Quick Reference","ref.d":"Recommended lot at 1% risk per signal. Minimum tradable lot is 0.01.",
+"th.cap":"Capital","th.lot":"Lot","th.risk":"Risk / signal","th.max":"Max (3 open)",
+"principles.h":"The principles",
+"edu1.t":"The 1% rule","edu1.b":"Risk a small, fixed slice of your account on each signal — <b>1% is the professional standard</b>. At 1%, you would need 100 losing trades in a row to blow up. That never happens with an 80% win-rate system. This single habit is why pros survive decades.",
+"edu2.t":"Losing streaks are normal","edu2.b":"Even at 80% win rate, streaks of 3–5 losses happen regularly, and 8 will happen eventually. <b>Size so 8 straight stops still leaves you trading.</b> The traders who blow up are not wrong more often — they are sized too big when the inevitable streak arrives.",
+"edu3.t":"Max 3 positions · no overlap","edu3.b":"Kasandra never holds more than <b>3 trades at once</b>, and skips signals within 15 points of an open one. This caps your worst-case exposure. When sizing, remember: 3 open trades = 3× your single-signal risk if they all stop together.",
+"edu4.t":"Move stop to break-even","edu4.b":"When a trade hits TP1, move the stop to entry. From that moment <b>the trade cannot lose</b> — worst case is zero. This is built into every signal and it is why our partial-win trades rarely turn into full losses.",
+"edu5.t":"Respect spread & news","edu5.b":"Wide spread and high-impact news (CPI, NFP, FOMC) can spike price through a stop. The system already filters compressed, low-momentum tape — and you should <b>size down or sit out around red-flag news</b>. Surviving the spike matters more than catching it.",
+"edu6.t":"Scale with equity, not hope","edu6.b":"Start at the size your capital justifies. When the account grows, <b>your fixed-% lot grows with it automatically</b> — that is compounding. Never jump to bigger lots after a win out of excitement, or after a loss to win it back. Let the math size you.",
+"proj.t":"The Power of Consistency",
+"proj.d":"Small, steady months compound hard. Drag the slider to a conservative monthly target and watch what discipline builds over a year.",
+"proj.monthly":"Monthly target","proj.m3":"In 3 months","proj.m6":"In 6 months","proj.m12":"In 12 months",
+"proj.note":"Illustration of compounding only — <b>not a promise</b>. Real returns vary month to month, some are negative, and past performance never guarantees the future. The point is not the number, it is that <b>staying alive and consistent beats swinging big.</b>",
+"rules.t":"Kasandra's Golden Rules",
+"rule.1":"<b>Never risk more than 1–2% per signal.</b> If a single loss hurts emotionally, you are too big.",
+"rule.2":"<b>Always use the stop.</b> Every signal has one. No watching it manually. The stop is the strategy.",
+"rule.3":"<b>Take partials and move to break-even.</b> Bank TP1, protect the rest. Greed gives profits back.",
+"rule.4":"<b>Max 3 trades open.</b> More positions ≠ more profit, just more correlated risk.",
+"rule.5":"<b>Survive the bad week.</b> Your only job in a drawdown is to still be here for the recovery.",
+"rule.6":"<b>Let the account grow you.</b> Scale size with equity, never with emotion.",
+"quote.t":"\"Take care of the downside, and the upside takes care of itself.\"",
+"quote.by":"— THE FIRST RULE OF EVERY TRADER WHO LASTED",
+"disc":"Educational risk-management guidance only. Position-size outputs are illustrative calculations based on a fixed ~10-point stop and the risk percentage you select, not personalised financial advice. Trading leveraged products carries a high risk of loss. You are solely responsible for your own decisions and position sizing. Past and simulated performance does not guarantee future results. Not financial advice — trade your own risk."
+},
+mk:{
+"nav.dash":"← Контролна табла","nav.risk":"Управување со ризик","nav.signout":"Одјави се",
+"hero.tag":"Прво преживеј · потоа профитирај",
+"hero.h1":"Управувањето со ризик е <b>вистинската предност.</b>",
+"hero.p":"Одличен систем губи пари во невнимателни раце, а скромен систем создава богатство во дисциплинирани. Оваа страница ти покажува точно колку да тргуваш по сигнал — за лоша недела никогаш да не ти ја уништи сметката, а добар месец навистина да се исплати.",
+"howto.t":"Како да земеш сигнал",
+"howto.d":"Секој Kasandra сигнал доаѓа во ист формат. Извршувањето е намерно досадно — досадното е тоа што функционира.",
+"se.runner":"тркач",
+"read.dir.k":"Насока","read.dir.v":"BUY = купи / SELL = продај. Совпадни точно.",
+"read.entry.k":"Влез","read.entry.v":"цената (или зоната) за влез. Цената често зафаќа во неа.",
+"read.sl.v":"твојот стоп. ~10 поени. Ја ограничува загубата — секогаш постави го.",
+"read.tp.v":"земи третина на секоја. TP4 е отворениот тркач.",
+"step.1":"<b>Прво димензионирај.</b> Користи го калкулаторот подолу за да го добиеш твојот лот за оваа сметка. Никогаш не проценувај одоколу — таа одлука се носи пред да кликнеш, не потоа.",
+"step.2":"<b>Влези во или внатре во зоната.</b> Цената обично се спушта во зоната на влез. Влези таму — или подели на најмногу <b>3 мали влеза</b> низ зоната за подобра просечна цена. Ако цената веќе отишла далеку од влезот, остави ја.",
+"step.3":"<b>Веднаш постави SL и TP.</b> Во моментот кога влегуваш, постави го стопот и целите на налогот. Никогаш не гледај рачно. Стопот е стратегијата, не предлог.",
+"step.4":"<b>Заклучи TP1, потоа без ризик.</b> Кога цената ќе допре TP1, затвори третина и <b>помести го стопот на нула (влез)</b>. Оттука трговијата не може да изгуби — најлошо е нула.",
+"step.5":"<b>Води го остатокот до TP2, TP3 и тркачот.</b> Земи уште третина на TP2, уште една на TP3. Остави го последниот дел (TP4) да оди за големите движења со стоп што го следи.",
+"step.6":"<b>Пропушти? Прескокни.</b> Ако не си бил навреме, <b>не</b> бркај сигнал што веќе заминал. Принудниот лош влез чини повеќе од пропуштен добар. Следниот сигнал секогаш доаѓа.",
+"step.7":"<b>Кога системот молчи, молчи и ти.</b> Нема поставки / филтрирано значи дека пазарот не нуди добра трговија сега. Тоа молчење те штити — не измислувај трговии од досада.",
+"howto.ok":"✓ Земи го <b>секој</b> квалификуван сигнал на ист механички начин, со ист ризик. Предноста е во повторувањето — една дисциплинирана трговија, сто пати, не една херојска.",
+"calc.t":"Калкулатор за големина на позиција",
+"calc.d":"Внеси ја големината на сметката, избери го нивото на ризик. Секој Kasandra сигнал користи стоп од ~10 поени (100 пипови).",
+"calc.cap":"Капитал на сметката (USD)","calc.riskper":"Ризик по сигнал",
+"risk.cons":"Конзервативен","risk.mod":"Умерен","risk.aggr":"Агресивен",
+"out.lot":"Препорачан лот","out.risk":"Ризик / сигнал","out.eff":"Ефективен ризик","out.max":"Макс (3 отворени)",
+"note.small":"⚠️ Минималниот лот е <b>0.01</b>, па на мала сметка секој сигнал ризикува <b>{eff}%</b> — повеќе од твојата цел од {rp}%. Тоа е нормално за сметки под ~$1.000; само знај дека стоп тука боли посилно. Многу трговци ја израснуваат микро сметката до $1.000+ пред да се опуштат.",
+"note.high":"⚠️ Со <b>{eff}% по сигнал</b> краток губитнички низ боли брзо. Размисли за конзервативната поставка или помал лот додека сметката не порасне.",
+"note.ok":"✓ Здраво димензионирање. Еден стоп чини <b>{risk}</b> ({eff}%), а дури и три отворени трговии што стопираат заедно се само <b>{max}%</b> од сметката. Вака опстануваш.",
+"surv.t":"Преживување на губитнички низ",
+"surv.d":"Ниту еден систем не победува секогаш. Најлошиот период во нашиот 2-годишен бектест беше 5 стопови по ред — планирај да преживееш 8. Колку може да издржи твојата големина?",
+"surv.label":"последователни стопови пред −20% од сметката",
+"surv.ok":"✓ Твојата сметка апсорбира <b>{n} последователни загуби</b> пред −20% пад — далеку над најлошиот низ што сме го забележале. Изграден си да преживееш.",
+"surv.mid":"⚠️ Можеш да издржиш <b>{n} последователни стопови</b> пред −20%. Тоа го покрива типичниот лош период, но не и редок екстрем. Малку помал лот носи спокој.",
+"surv.low":"⚠️ Само <b>{n} последователни стопови</b> до −20% — претесно. Само бектестот имаше низ од 5 загуби. Намали го лотот пред низот да те најде.",
+"ref.t":"Брза референца","ref.d":"Препорачан лот при 1% ризик по сигнал. Минимален лот за тргување е 0.01.",
+"th.cap":"Капитал","th.lot":"Лот","th.risk":"Ризик / сигнал","th.max":"Макс (3 отворени)",
+"principles.h":"Принципите",
+"edu1.t":"Правилото за 1%","edu1.b":"Ризикувај мал, фиксен дел од сметката на секој сигнал — <b>1% е професионалниот стандард</b>. При 1%, ќе ти требаат 100 губитнички трговии по ред за да пропаднеш. Тоа никогаш не се случува со систем со 80% успешност. Оваа единствена навика е причината пробите да опстануваат со децении.",
+"edu2.t":"Губитничките низи се нормални","edu2.b":"Дури и со 80% успешност, низи од 3–5 загуби се случуваат редовно, а 8 ќе се случи на крајот. <b>Димензионирај така што 8 стопови по ред сè уште да те остават да тргуваш.</b> Трговците што пропаѓаат не грешат почесто — туку се преголеми кога неизбежниот низ ќе дојде.",
+"edu3.t":"Макс 3 позиции · без преклопување","edu3.b":"Kasandra никогаш не држи повеќе од <b>3 трговии истовремено</b> и прескокнува сигнали во рамки на 15 поени од отворена. Ова ја ограничува изложеноста во најлош случај. При димензионирање запомни: 3 отворени трговии = 3× ризикот од еден сигнал ако сите стопираат заедно.",
+"edu4.t":"Помести го стопот на нула","edu4.b":"Кога трговијата ќе допре TP1, помести го стопот на влез. Од тој момент <b>трговијата не може да изгуби</b> — најлошо е нула. Ова е вградено во секој сигнал и затоа нашите делумно добитнички трговии ретко стануваат целосни загуби.",
+"edu5.t":"Почитувај го спредот и вестите","edu5.b":"Широк спред и силни вести (CPI, NFP, FOMC) можат да ја шибнат цената низ стопот. Системот веќе филтрира збиен пазар со слаб моментум — а ти треба <b>да намалиш или да изостанеш околу важни вести</b>. Преживувањето на шилото е поважно од фаќањето.",
+"edu6.t":"Скалирај со капиталот, не со надеж","edu6.b":"Почни со големината што ја оправдува твојот капитал. Кога сметката расте, <b>твојот фиксен % лот расте автоматски со неа</b> — тоа е сложување. Никогаш не скокај на поголеми лотови по добивка од возбуда, или по загуба за да вратиш. Дозволи математиката да те димензионира.",
+"proj.t":"Моќта на доследноста",
+"proj.d":"Мали, стабилни месеци силно се сложуваат. Повлечи го лизгачот до конзервативна месечна цел и види што гради дисциплината во текот на година.",
+"proj.monthly":"Месечна цел","proj.m3":"За 3 месеци","proj.m6":"За 6 месеци","proj.m12":"За 12 месеци",
+"proj.note":"Само илустрација на сложување — <b>не ветување</b>. Реалните приноси варираат од месец до месец, некои се негативни, а минатите резултати никогаш не ја гарантираат иднината. Поентата не е бројот, туку дека <b>да останеш во игра и доследен победува над големите облози.</b>",
+"rules.t":"Златните правила на Kasandra",
+"rule.1":"<b>Никогаш не ризикувај повеќе од 1–2% по сигнал.</b> Ако една загуба боли емотивно, преголем си.",
+"rule.2":"<b>Секогаш користи стоп.</b> Секој сигнал има. Без гледање рачно. Стопот е стратегијата.",
+"rule.3":"<b>Земај делумни и помести на нула.</b> Заклучи TP1, заштити го остатокот. Алчноста ги враќа профитите.",
+"rule.4":"<b>Макс 3 отворени трговии.</b> Повеќе позиции ≠ повеќе профит, само повеќе корелиран ризик.",
+"rule.5":"<b>Преживеј ја лошата недела.</b> Твојата единствена задача во пад е сè уште да си тука за закрепнувањето.",
+"rule.6":"<b>Дозволи сметката да те израсне.</b> Скалирај ја големината со капиталот, никогаш со емоции.",
+"quote.t":"„Грижи се за надолната страна, а нагорната ќе се погрижи за себе.“",
+"quote.by":"— ПРВОТО ПРАВИЛО НА СЕКОЈ ТРГОВЕЦ ШТО ОПСТАНАЛ",
+"disc":"Само едукативни насоки за управување со ризик. Резултатите за големина на позиција се илустративни пресметки засновани на фиксен стоп од ~10 поени и процентот ризик што го избираш, не персонализиран финансиски совет. Тргувањето со ливериџ производи носи висок ризик од загуба. Ти си единствено одговорен за твоите одлуки и димензионирање. Минатите и симулираните резултати не ја гарантираат иднината. Не е финансиски совет — тргуваш на сопствен ризик."
+},
+sr:{
+"nav.dash":"← Kontrolna tabla","nav.risk":"Upravljanje rizikom","nav.signout":"Odjavi se",
+"hero.tag":"Prvo preživi · zatim profitiraj",
+"hero.h1":"Upravljanje rizikom je <b>prava prednost.</b>",
+"hero.p":"Odličan sistem gubi novac u nepažljivim rukama, a skroman sistem stvara bogatstvo u disciplinovanim. Ova stranica ti pokazuje tačno koliko da trguješ po signalu — da loša nedelja nikada ne uništi tvoj nalog, a dobar mesec zaista da se isplati.",
+"howto.t":"Kako uzeti signal",
+"howto.d":"Svaki Kasandra signal dolazi u istom formatu. Izvršenje je namerno dosadno — dosadno je ono što funkcioniše.",
+"se.runner":"nastavak",
+"read.dir.k":"Smer","read.dir.v":"BUY = kupi / SELL = prodaj. Uskladi tačno.",
+"read.entry.k":"Ulaz","read.entry.v":"cena (ili zona) za ulaz. Cena često zađe u nju.",
+"read.sl.v":"tvoj stop. ~10 poena. Ograničava gubitak — uvek ga postavi.",
+"read.tp.v":"uzmi trećinu na svakoj. TP4 je otvoreni nastavak.",
+"step.1":"<b>Prvo dimenzioniši.</b> Koristi kalkulator ispod da dobiješ svoj lot za ovaj nalog. Nikada ne procenjuj odoka — ta odluka se donosi pre nego što klikneš, ne posle.",
+"step.2":"<b>Uđi na ili unutar zone.</b> Cena obično zađe u zonu ulaza. Uđi tu — ili podeli na najviše <b>3 mala ulaza</b> kroz zonu za bolju prosečnu cenu. Ako je cena već otišla daleko od ulaza, pusti je.",
+"step.3":"<b>Odmah postavi SL i TP.</b> Onog trenutka kad uđeš, postavi stop i ciljeve na nalogu. Nikada ne gledaj ručno. Stop je strategija, ne predlog.",
+"step.4":"<b>Zaključaj TP1, pa bez rizika.</b> Kada cena dotakne TP1, zatvori trećinu i <b>pomeri stop na nulu (ulaz)</b>. Odavde pozicija ne može da izgubi — najgore je nula.",
+"step.5":"<b>Vodi ostatak do TP2, TP3 i nastavka.</b> Uzmi još trećinu na TP2, još jednu na TP3. Pusti poslednji deo (TP4) da ide za velike pokrete sa stopom koji prati.",
+"step.6":"<b>Propustio? Preskoči.</b> Ako nisi bio na vreme, <b>ne</b> juri signal koji je već otišao. Forsiranje lošeg ulaza košta više od propuštenog dobrog. Sledeći signal uvek dolazi.",
+"step.7":"<b>Kad sistem ćuti, ćuti i ti.</b> Nema postavki / filtrirano znači da tržište trenutno ne nudi dobru trgovinu. Ta tišina te štiti — ne izmišljaj trgovine iz dosade.",
+"howto.ok":"✓ Uzmi <b>svaki</b> kvalifikovani signal na isti mehanički način, uz isti rizik. Prednost je u ponavljanju — jedna disciplinovana trgovina, sto puta, ne jedna herojska.",
+"calc.t":"Kalkulator veličine pozicije",
+"calc.d":"Unesi veličinu naloga, izaberi nivo rizika. Svaki Kasandra signal koristi stop od ~10 poena (100 pipova).",
+"calc.cap":"Kapital naloga (USD)","calc.riskper":"Rizik po signalu",
+"risk.cons":"Konzervativan","risk.mod":"Umeren","risk.aggr":"Agresivan",
+"out.lot":"Preporučeni lot","out.risk":"Rizik / signal","out.eff":"Efektivni rizik","out.max":"Maks (3 otvorene)",
+"note.small":"⚠️ Minimalni lot je <b>0.01</b>, pa na malom nalogu svaki signal rizikuje <b>{eff}%</b> — više od tvog cilja od {rp}%. To je normalno za naloge ispod ~$1.000; samo znaj da stop ovde boli jače. Mnogi trgovci uzgoje mikro nalog do $1.000+ pre nego što se opuste.",
+"note.high":"⚠️ Sa <b>{eff}% po signalu</b> kratak gubitnički niz brzo boli. Razmotri konzervativno podešavanje ili manji lot dok nalog ne poraste.",
+"note.ok":"✓ Zdravo dimenzionisanje. Jedan stop košta <b>{risk}</b> ({eff}%), a čak i tri otvorene pozicije koje stopiraju zajedno su samo <b>{max}%</b> naloga. Ovako opstaješ.",
+"surv.t":"Preživljavanje gubitničkog niza",
+"surv.d":"Nijedan sistem ne pobeđuje svaki put. Najgori period u našem 2-godišnjem bektestu bio je 5 stopova zaredom — planiraj da preživiš 8. Koliko može da izdrži tvoja veličina?",
+"surv.label":"uzastopnih stopova pre −20% naloga",
+"surv.ok":"✓ Tvoj nalog apsorbuje <b>{n} uzastopnih gubitaka</b> pre −20% pada — daleko iznad najgoreg niza koji smo ikada zabeležili. Napravljen si da preživiš.",
+"surv.mid":"⚠️ Možeš izdržati <b>{n} uzastopnih stopova</b> pre −20%. To pokriva tipičan loš period, ali ne i redak ekstrem. Malo manji lot donosi mir.",
+"surv.low":"⚠️ Samo <b>{n} uzastopnih stopova</b> do −20% — pretesno. Samo bektest je imao niz od 5 gubitaka. Smanji lot pre nego što te niz pronađe.",
+"ref.t":"Brza referenca","ref.d":"Preporučeni lot pri 1% rizika po signalu. Minimalni lot za trgovinu je 0.01.",
+"th.cap":"Kapital","th.lot":"Lot","th.risk":"Rizik / signal","th.max":"Maks (3 otvorene)",
+"principles.h":"Principi",
+"edu1.t":"Pravilo 1%","edu1.b":"Rizikuj mali, fiksni deo naloga na svakom signalu — <b>1% je profesionalni standard</b>. Pri 1%, trebalo bi ti 100 gubitničkih trgovina zaredom da propadneš. To se nikada ne dešava sa sistemom od 80% uspešnosti. Ova jedna navika je razlog zašto profesionalci opstaju decenijama.",
+"edu2.t":"Gubitnički nizovi su normalni","edu2.b":"Čak i pri 80% uspešnosti, nizovi od 3–5 gubitaka dešavaju se redovno, a 8 će se na kraju desiti. <b>Dimenzioniši tako da te 8 stopova zaredom i dalje ostave u igri.</b> Trgovci koji propadnu ne greše češće — preveliki su kad neizbežni niz stigne.",
+"edu3.t":"Maks 3 pozicije · bez preklapanja","edu3.b":"Kasandra nikada ne drži više od <b>3 trgovine istovremeno</b> i preskače signale u okviru 15 poena od otvorene. Ovo ograničava izloženost u najgorem slučaju. Pri dimenzionisanju zapamti: 3 otvorene trgovine = 3× rizik jednog signala ako sve stopiraju zajedno.",
+"edu4.t":"Pomeri stop na nulu","edu4.b":"Kada trgovina dotakne TP1, pomeri stop na ulaz. Od tog trenutka <b>trgovina ne može da izgubi</b> — najgore je nula. Ovo je ugrađeno u svaki signal i zato naše delimično dobitne trgovine retko postaju potpuni gubici.",
+"edu5.t":"Poštuj spred i vesti","edu5.b":"Širok spred i jake vesti (CPI, NFP, FOMC) mogu da šibnu cenu kroz stop. Sistem već filtrira zbijeno tržište sa slabim momentumom — a ti treba <b>da smanjiš ili da izostaneš oko važnih vesti</b>. Preživeti skok je važnije od hvatanja.",
+"edu6.t":"Skaliraj sa kapitalom, ne sa nadom","edu6.b":"Počni sa veličinom koju opravdava tvoj kapital. Kada nalog raste, <b>tvoj fiksni % lot raste automatski sa njim</b> — to je kamatno slaganje. Nikada ne skači na veće lotove posle dobitka iz uzbuđenja, ili posle gubitka da vratiš. Pusti matematiku da te dimenzioniše.",
+"proj.t":"Snaga doslednosti",
+"proj.d":"Mali, stabilni meseci snažno se slažu. Povuci klizač do konzervativnog mesečnog cilja i vidi šta disciplina gradi tokom godine.",
+"proj.monthly":"Mesečni cilj","proj.m3":"Za 3 meseca","proj.m6":"Za 6 meseci","proj.m12":"Za 12 meseci",
+"proj.note":"Samo ilustracija kamatnog slaganja — <b>ne obećanje</b>. Realni prinosi variraju iz meseca u mesec, neki su negativni, a prošli rezultati nikada ne garantuju budućnost. Poenta nije broj, već da <b>ostati u igri i dosledan pobeđuje velike opklade.</b>",
+"rules.t":"Kasandrina zlatna pravila",
+"rule.1":"<b>Nikada ne rizikuj više od 1–2% po signalu.</b> Ako jedan gubitak boli emotivno, prevelik si.",
+"rule.2":"<b>Uvek koristi stop.</b> Svaki signal ga ima. Bez gledanja ručno. Stop je strategija.",
+"rule.3":"<b>Uzimaj delimične i pomeri na nulu.</b> Zaključaj TP1, zaštiti ostatak. Pohlepa vraća profite.",
+"rule.4":"<b>Maks 3 otvorene trgovine.</b> Više pozicija ≠ više profita, samo više korelisanog rizika.",
+"rule.5":"<b>Preživi lošu nedelju.</b> Tvoj jedini posao u padu je da i dalje budeš tu za oporavak.",
+"rule.6":"<b>Pusti nalog da te uzgoji.</b> Skaliraj veličinu sa kapitalom, nikada sa emocijama.",
+"quote.t":"„Pobrini se za negativnu stranu, a pozitivna će se pobrinuti za sebe.“",
+"quote.by":"— PRVO PRAVILO SVAKOG TRGOVCA KOJI JE OPSTAO",
+"disc":"Samo edukativne smernice za upravljanje rizikom. Rezultati za veličinu pozicije su ilustrativni proračuni zasnovani na fiksnom stopu od ~10 poena i procentu rizika koji izabereš, ne personalizovani finansijski savet. Trgovanje proizvodima sa polugom nosi visok rizik gubitka. Ti si isključivo odgovoran za svoje odluke i dimenzionisanje. Prošli i simulirani rezultati ne garantuju budućnost. Nije finansijski savet — trguješ na sopstveni rizik."
+}};
 let RISK=1;
+function rlang(){const l=localStorage.getItem('k_lang')||'en';return RT[l]?l:'en';}
+function rt(k){const l=rlang();return (RT[l]&&RT[l][k])||RT.en[k]||k;}
+function tpl(k,v){let s=rt(k);for(const p in v)s=s.split('{'+p+'}').join(v[p]);return s;}
+function applyRT(){
+  document.querySelectorAll('[data-rk]').forEach(e=>{e.textContent=rt(e.getAttribute('data-rk'));});
+  document.querySelectorAll('[data-rkh]').forEach(e=>{e.innerHTML=rt(e.getAttribute('data-rkh'));});
+  document.title='Kasandra · '+rt('nav.risk');
+}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
 function fmt(n){return n>=1000?'$'+Math.round(n).toLocaleString('en-US'):'$'+n.toFixed(n<100?2:0);}
-function roundLot(l){return Math.max(0.01, Math.round(l*100)/100);}
+function roundLot(l){return Math.max(0.01,Math.round(l*100)/100);}
 function setRisk(r){RISK=r;document.querySelectorAll('.rtab').forEach(t=>t.classList.toggle('on',+t.dataset.r===r));calc();}
-const SL_PER_001=10;   // $ risked per 0.01 lot at a 10-point stop
+const SL_PER_001=10;
 function calc(){
   const cap=Math.max(50,+document.getElementById('cap').value||0);
-  const ideal=cap*RISK/100/1000;          // lot for exact RISK%
+  const ideal=cap*RISK/100/1000;
   const lot=roundLot(ideal);
   const risk$=lot/0.01*SL_PER_001;
-  const eff=risk$/cap*100;
-  const max3=eff*3;
+  const eff=risk$/cap*100, max3=eff*3;
   document.getElementById('o-lot').textContent=lot.toFixed(2);
   document.getElementById('o-risk').textContent=fmt(risk$);
-  const effEl=document.getElementById('o-eff'); effEl.textContent=eff.toFixed(1)+'%';
-  effEl.className='v '+(eff<=1.2?'green':eff<=2.5?'amber':'red');
-  const maxEl=document.getElementById('o-max'); maxEl.textContent=max3.toFixed(1)+'%';
-  maxEl.className='v '+(max3<=4?'green':max3<=7?'amber':'red');
+  const effEl=document.getElementById('o-eff');effEl.textContent=eff.toFixed(1)+'%';effEl.className='v '+(eff<=1.2?'green':eff<=2.5?'amber':'red');
+  const maxEl=document.getElementById('o-max');maxEl.textContent=max3.toFixed(1)+'%';maxEl.className='v '+(max3<=4?'green':max3<=7?'amber':'red');
   const note=document.getElementById('o-note');
-  if(lot>ideal*1.5 && cap<1000){
-    note.className='note warn';
-    note.innerHTML='⚠️ The minimum lot is <b>0.01</b>, so on a small account each signal risks <b>'+eff.toFixed(1)+'%</b> — more than your '+RISK+'% target. That is normal for accounts under ~$1,000; just know a stop bites harder here. Many traders grow a micro account to $1,000+ before relaxing.';
-  } else if(eff>2.5){
-    note.className='note warn';
-    note.innerHTML='⚠️ At <b>'+eff.toFixed(1)+'% per signal</b> a short losing streak hurts fast. Consider the conservative setting or a smaller lot until the account grows.';
-  } else {
-    note.className='note ok';
-    note.innerHTML='✓ Healthy sizing. A single stop costs <b>'+fmt(risk$)+'</b> ('+eff.toFixed(1)+'%), and even three open trades stopping together is just <b>'+max3.toFixed(1)+'%</b> of your account. This is how you last.';
-  }
+  if(lot>ideal*1.5&&cap<1000){note.className='note warn';note.innerHTML=tpl('note.small',{eff:eff.toFixed(1),rp:RISK});}
+  else if(eff>2.5){note.className='note warn';note.innerHTML=tpl('note.high',{eff:eff.toFixed(1)});}
+  else{note.className='note ok';note.innerHTML=tpl('note.ok',{risk:fmt(risk$),eff:eff.toFixed(1),max:max3.toFixed(1)});}
   survival(cap,risk$);
 }
 function survival(cap,risk$){
-  const n=Math.floor(cap*0.20/risk$);      // straight stops to hit -20%
+  const n=Math.floor(cap*0.20/risk$);
   document.getElementById('surv-n').textContent=n;
-  const pct=Math.min(100,n/20*100);
   const fill=document.getElementById('surv-fill');
-  fill.style.width=pct+'%';
+  fill.style.width=Math.min(100,n/20*100)+'%';
   fill.style.background=n>=8?'linear-gradient(90deg,var(--green),var(--accent))':n>=5?'linear-gradient(90deg,var(--amber),var(--accent))':'linear-gradient(90deg,var(--red),var(--amber))';
-  const row=document.getElementById('surv-row'); let h='';
-  for(let i=1;i<=8;i++) h+='<div class="dot8 '+(i<=n?'surv':'dead')+'">'+i+'</div>';
-  row.innerHTML=h+'<div class="dot8" style="border:none;color:var(--dim)">…'+n+'</div>';
+  let h='';for(let i=1;i<=8;i++)h+='<div class="dot8 '+(i<=n?'surv':'dead')+'">'+i+'</div>';
+  document.getElementById('surv-row').innerHTML=h+'<div class="dot8" style="border:none;color:var(--dim)">…'+n+'</div>';
   const sn=document.getElementById('surv-note');
-  if(n>=8){sn.className='note ok';sn.innerHTML='✓ Your account absorbs <b>'+n+' straight losses</b> before a −20% drawdown — well past the worst streak we have ever recorded. You are built to survive.';}
-  else if(n>=5){sn.className='note warn';sn.innerHTML='⚠️ You can take <b>'+n+' straight stops</b> before −20%. That covers the typical bad run but not a rare extreme. A slightly smaller lot buys peace of mind.';}
-  else {sn.className='note warn';sn.innerHTML='⚠️ Only <b>'+n+' straight stops</b> to −20% — too tight. The backtest alone had a 5-loss streak. Size down before a streak finds you.';}
+  if(n>=8){sn.className='note ok';sn.innerHTML=tpl('surv.ok',{n:n});}
+  else if(n>=5){sn.className='note warn';sn.innerHTML=tpl('surv.mid',{n:n});}
+  else{sn.className='note warn';sn.innerHTML=tpl('surv.low',{n:n});}
 }
 function buildRef(){
   const caps=[300,500,1000,2500,5000,10000,25000,50000];
   document.getElementById('ref-body').innerHTML=caps.map(c=>{
-    const lot=roundLot(c*1/100/1000);
-    const risk$=lot/0.01*SL_PER_001;
-    const eff=risk$/c*100, max3=eff*3;
+    const lot=roundLot(c*1/100/1000),risk$=lot/0.01*SL_PER_001,eff=risk$/c*100,max3=eff*3;
     return '<tr><td class="cap">$'+c.toLocaleString('en-US')+'</td><td class="lot">'+lot.toFixed(2)+'</td><td>'+fmt(risk$)+' ('+eff.toFixed(1)+'%)</td><td>'+max3.toFixed(1)+'%</td></tr>';
   }).join('');
 }
@@ -329,8 +503,8 @@ function proj(){
   document.getElementById('p6').textContent=g(6);
   document.getElementById('p12').textContent=g(12);
 }
-// guard: redirect to login if not authenticated
+document.addEventListener('langchange',()=>{applyRT();calc();proj();});
 fetch('/api/me').then(r=>{if(r.status===401)location.href='/login';});
-buildRef();calc();proj();
+applyRT();buildRef();calc();proj();
 </script>
 </body></html>

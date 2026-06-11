@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasandra · Risk Management</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060912;--bg2:#0a1020;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--border-soft:rgba(0,212,255,.08);--accent:#00d4ff;--green:#00ff88;--red:#ff3366;--amber:#ffaa00;--purple:#9575cd;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;font-size:14px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 22px}
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(6,9,18,.8);border-bottom:1px solid var(--border)}
+.nav-in{max-width:980px;margin:0 auto;padding:15px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.35);display:flex;align-items:center;gap:9px}
+.brand .dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.nav-right{display:flex;gap:8px;align-items:center}
+.nlink{font-size:12px;color:var(--dim);text-decoration:none;border:1px solid var(--border);padding:7px 13px;border-radius:7px;white-space:nowrap}
+.nlink:hover{color:var(--accent);border-color:var(--accent)}
+.nlink.on{color:var(--accent);border-color:var(--accent)}
+.hero{padding:40px 0 14px}
+.hero .tag{display:inline-block;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;border:1px solid var(--border);border-radius:20px;padding:5px 13px;margin-bottom:16px}
+.hero h1{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.15}
+.hero h1 b{color:var(--accent)}
+.hero p{color:var(--text-2);margin-top:12px;font-size:15px;line-height:1.7;max-width:640px}
+.panel{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:14px;margin-bottom:22px;overflow:hidden}
+.ph{padding:18px 22px 6px}
+.ph .t{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:9px}
+.ph .t .ic{font-size:18px}
+.ph .d{color:var(--dim);font-size:12px;margin-top:5px}
+.body{padding:18px 22px 22px}
+/* calculator */
+.calc-in{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+@media(max-width:640px){.calc-in{grid-template-columns:1fr}}
+label{font-size:10px;letter-spacing:1.3px;color:var(--dim);text-transform:uppercase;display:block;margin-bottom:8px}
+.capwrap{position:relative}
+.capwrap span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px}
+input[type=number]{width:100%;padding:13px 14px 13px 30px;border-radius:9px;border:1px solid var(--border);background:#0a0e16;color:var(--text);font-family:var(--display);font-size:18px;font-weight:600}
+input:focus{outline:none;border-color:var(--accent)}
+.risk-tabs{display:flex;gap:8px}
+.rtab{flex:1;text-align:center;padding:12px 6px;border-radius:9px;border:1px solid var(--border-soft);background:#0a0e16;cursor:pointer;transition:.15s}
+.rtab .rn{font-family:var(--display);font-weight:700;font-size:14px}
+.rtab .rp{font-size:10px;color:var(--dim);margin-top:3px}
+.rtab.on{border-color:var(--accent);background:rgba(0,212,255,.06)}
+.rtab.on .rn{color:var(--accent)}
+.rtab.cons.on{border-color:var(--green);background:rgba(0,255,136,.06)}.rtab.cons.on .rn{color:var(--green)}
+.rtab.aggr.on{border-color:var(--red);background:rgba(255,51,102,.06)}.rtab.aggr.on .rn{color:var(--red)}
+.out{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:640px){.out{grid-template-columns:repeat(2,1fr)}}
+.ocard{background:#0a0f1a;border:1px solid var(--border-soft);border-radius:11px;padding:16px 14px;text-align:center}
+.ocard .v{font-family:var(--display);font-size:26px;font-weight:700;color:var(--accent)}
+.ocard .v.green{color:var(--green)}.ocard .v.amber{color:var(--amber)}.ocard .v.red{color:var(--red)}
+.ocard .l{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-top:7px}
+.note{margin-top:16px;font-size:12.5px;line-height:1.7;border-radius:10px;padding:13px 16px}
+.note.warn{background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.3);color:#ffd9a0}
+.note.ok{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);color:#a8f0c8}
+.note b{color:#fff}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-size:10px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border-soft)}
+td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:hover td{background:rgba(0,212,255,.03)}
+.lot{font-family:var(--display);font-weight:700;color:var(--accent)}
+td.cap{font-family:var(--display);font-weight:600}
+/* survival meter */
+.meter{height:14px;border-radius:8px;background:#0a0f1a;border:1px solid var(--border-soft);overflow:hidden;margin:14px 0 8px}
+.meter .fill{height:100%;border-radius:8px;transition:.4s;background:linear-gradient(90deg,var(--green),var(--accent))}
+.streakrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.dot8{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#0a0f1a;border:1px solid var(--border-soft);color:var(--dim)}
+.dot8.surv{border-color:rgba(0,255,136,.4);color:var(--green);background:rgba(0,255,136,.05)}
+.dot8.dead{border-color:rgba(255,51,102,.4);color:var(--red);background:rgba(255,51,102,.05)}
+/* signal example + steps */
+.sigex{display:grid;grid-template-columns:auto 1fr;gap:18px;margin-bottom:20px}
+@media(max-width:640px){.sigex{grid-template-columns:1fr}}
+.sigex-card{background:#0a0f1a;border:1px solid var(--border);border-left:3px solid var(--red);border-radius:11px;padding:16px 18px;min-width:200px;font-size:14px;line-height:1.9}
+.se-side{font-family:var(--display);font-weight:700;font-size:16px;color:var(--red);margin-bottom:4px}
+.se-side b{color:#fff}
+.se-line{color:var(--text-2);font-size:13px}
+.se-line b{color:var(--text)}
+.se-line.sl b{color:var(--red)}
+.se-line.tp b{color:var(--green)}
+.sigex-read{display:flex;flex-direction:column;justify-content:center;gap:9px}
+.ser{font-size:12.5px;color:var(--text-2);line-height:1.5}
+.ser .k{display:inline-block;font-family:var(--display);font-weight:700;color:var(--accent);min-width:78px}
+.steps{list-style:none;margin:6px 0 14px}
+.steps li{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13.5px;line-height:1.6;color:var(--text-2)}
+.steps li:last-child{border:none}
+.steps li b{color:var(--text)}
+.steps .sn{flex:0 0 28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(0,212,255,.18),rgba(0,212,255,.05));color:var(--accent);font-family:var(--display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+/* edu cards */
+.edu{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.edu{grid-template-columns:1fr}}
+.ecard{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border-soft);border-radius:12px;padding:20px}
+.ecard .ei{font-size:24px;margin-bottom:10px}
+.ecard h3{font-family:var(--display);font-size:15px;margin-bottom:8px;color:var(--accent)}
+.ecard p{color:var(--text-2);font-size:13px;line-height:1.7}
+.ecard p b{color:var(--text)}
+/* projector */
+.proj-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
+.projout{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.projout .pc{background:#0a0f1a;border:1px solid var(--border-soft);border-radius:11px;padding:16px;text-align:center}
+.projout .pc .v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--green)}
+.projout .pc .l{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-top:6px}
+/* rules */
+.rules{list-style:none}
+.rules li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:14px;line-height:1.5;color:var(--text-2)}
+.rules li:last-child{border:none}
+.rules .n{flex:0 0 26px;height:26px;border-radius:7px;background:rgba(0,212,255,.1);color:var(--accent);font-family:var(--display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px}
+.rules li b{color:var(--text)}
+.disc{font-size:11px;color:var(--dim);line-height:1.7;padding:20px 0 50px;border-top:1px solid rgba(255,255,255,.06);margin-top:10px}
+.quote{font-family:var(--display);font-size:18px;font-weight:600;color:var(--text);line-height:1.5;text-align:center;padding:8px 0 4px}
+.quote .by{display:block;font-size:12px;color:var(--dim);font-weight:400;margin-top:8px;letter-spacing:1px}
+</style></head><body>
+<nav><div class="nav-in">
+  <div class="brand"><span class="dot"></span>KASANDRA</div>
+  <div class="nav-right">
+    <a class="nlink" href="/members">← Dashboard</a>
+    <a class="nlink on" href="/risk">Risk Management</a>
+    <a class="nlink" onclick="signout()">Sign out</a>
+  </div>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <span class="tag">Survive first · profit second</span>
+    <h1>Risk Management is the <b>real edge.</b></h1>
+    <p>A great system loses money in reckless hands, and a modest system compounds a fortune in disciplined ones. This page shows you exactly how much to trade per signal — so a bad week never ends your account, and a good month actually counts.</p>
+  </div>
+
+  <!-- HOW TO TAKE A SIGNAL -->
+  <div class="panel">
+    <div class="ph"><div class="t"><span class="ic">📩</span> How to Take a Signal</div>
+      <div class="d">Every Kasandra signal arrives in the same format. Execution is boring on purpose — boring is what makes it work.</div></div>
+    <div class="body">
+      <div class="sigex">
+        <div class="sigex-card">
+          <div class="se-side">💰 GOLD SELL <b>4087.6</b></div>
+          <div class="se-line sl">🍌 SL <b>4097.6</b></div>
+          <div class="se-line tp">✔️ TP1 <b>4082.6</b></div>
+          <div class="se-line tp">✔️ TP2 <b>4077.6</b></div>
+          <div class="se-line tp">✔️ TP3 <b>4067.6</b></div>
+          <div class="se-line tp">✔️ TP4 <b>OPEN</b> · runner</div>
+        </div>
+        <div class="sigex-read">
+          <div class="ser"><span class="k">Direction</span> BUY = buy / SELL = sell. Match it exactly.</div>
+          <div class="ser"><span class="k">Entry</span> the price (or zone) to get in. Price often wicks into it.</div>
+          <div class="ser"><span class="k">SL</span> your stop. ~10 points. This caps the loss — always set it.</div>
+          <div class="ser"><span class="k">TP1·2·3</span> take a third off at each. TP4 is the open runner.</div>
+        </div>
+      </div>
+      <ol class="steps">
+        <li><span class="sn">1</span><div><b>Size it first.</b> Use the calculator below to get your lot for this account. Never eyeball the size — that decision is made before you click, not after.</div></li>
+        <li><span class="sn">2</span><div><b>Enter at or inside the zone.</b> Price usually dips into the entry area. Get in there — or split into up to <b>3 small entries</b> across the zone to average a better price. If price already ran far past the entry, let it go.</div></li>
+        <li><span class="sn">3</span><div><b>Attach SL and TPs immediately.</b> The moment you enter, set the stop and the take-profits on the order. Never "watch it manually." The stop is the strategy, not a suggestion.</div></li>
+        <li><span class="sn">4</span><div><b>Bank TP1, then go risk-free.</b> When price hits TP1, close a third and <b>move your stop to break-even (entry)</b>. From here the trade cannot lose — worst case is zero.</div></li>
+        <li><span class="sn">5</span><div><b>Trail the rest to TP2, TP3, and the runner.</b> Take another third at TP2, another at TP3. Let the final piece (TP4) ride for the big moves with the stop trailing behind.</div></li>
+        <li><span class="sn">6</span><div><b>Missed it? Skip it.</b> If you weren't there in time, do <b>not</b> chase a signal that already left. Forcing a bad entry costs more than missing a good one. The next signal is always coming.</div></li>
+        <li><span class="sn">7</span><div><b>When the system is quiet, stay quiet.</b> "No setups / filtered" means the market isn't offering a good trade right now. That silence protects you — don't invent trades to fill the boredom.</div></li>
+      </ol>
+      <div class="note ok" style="margin-top:4px">✓ Take <b>every</b> qualifying signal the same mechanical way, at the same risk. The edge is in the repetition — one disciplined trade, a hundred times, not one hero trade.</div>
+    </div>
+  </div>
+
+  <!-- CALCULATOR -->
+  <div class="panel">
+    <div class="ph"><div class="t"><span class="ic">🧮</span> Position Size Calculator</div>
+      <div class="d">Enter your account size, pick your risk comfort. Every Kasandra signal uses a ~10 point (100 pip) stop.</div></div>
+    <div class="body">
+      <div class="calc-in">
+        <div>
+          <label>Your account capital (USD)</label>
+          <div class="capwrap"><span>$</span><input type="number" id="cap" value="1000" min="50" step="50" oninput="calc()"></div>
+        </div>
+        <div>
+          <label>Risk per signal</label>
+          <div class="risk-tabs">
+            <div class="rtab cons" data-r="0.5" onclick="setRisk(0.5)"><div class="rn">0.5%</div><div class="rp">Conservative</div></div>
+            <div class="rtab on" data-r="1" onclick="setRisk(1)"><div class="rn">1%</div><div class="rp">Moderate</div></div>
+            <div class="rtab aggr" data-r="2" onclick="setRisk(2)"><div class="rn">2%</div><div class="rp">Aggressive</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="out">
+        <div class="ocard"><div class="v" id="o-lot">0.01</div><div class="l">Recommended Lot</div></div>
+        <div class="ocard"><div class="v" id="o-risk">$10</div><div class="l">Risk / Signal</div></div>
+        <div class="ocard"><div class="v" id="o-eff">1.0%</div><div class="l">Effective Risk</div></div>
+        <div class="ocard"><div class="v" id="o-max">3.0%</div><div class="l">Max (3 open)</div></div>
+      </div>
+      <div class="note" id="o-note"></div>
+    </div>
+  </div>
+
+  <!-- SURVIVAL -->
+  <div class="panel">
+    <div class="ph"><div class="t"><span class="ic">🛡️</span> Losing Streak Survival</div>
+      <div class="d">No system wins every time. Our 2-year backtest's worst run was 5 stops in a row — plan to survive 8. How many can your size absorb?</div></div>
+    <div class="body">
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span class="dim" style="color:var(--dim)">straight stops before −20% account</span><b id="surv-n" style="font-family:var(--display);font-size:18px;color:var(--green)">20</b></div>
+      <div class="meter"><div class="fill" id="surv-fill" style="width:100%"></div></div>
+      <div class="streakrow" id="surv-row"></div>
+      <div class="note ok" id="surv-note"></div>
+    </div>
+  </div>
+
+  <!-- REFERENCE TABLE -->
+  <div class="panel">
+    <div class="ph"><div class="t"><span class="ic">📋</span> Quick Reference</div>
+      <div class="d">Recommended lot at 1% risk per signal. Minimum tradable lot is 0.01.</div></div>
+    <div class="body" style="padding-top:8px">
+      <table><thead><tr><th>Capital</th><th>Lot</th><th>Risk / signal</th><th>Max (3 open)</th></tr></thead>
+      <tbody id="ref-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div style="margin:6px 0 12px"><div style="font-family:var(--display);font-size:16px;letter-spacing:.05em;color:var(--accent);text-transform:uppercase">The principles</div></div>
+  <div class="edu">
+    <div class="ecard"><div class="ei">🎯</div><h3>The 1% rule</h3><p>Risk a small, fixed slice of your account on each signal — <b>1% is the professional standard</b>. At 1%, you'd need 100 losing trades in a row to blow up. That never happens with an 80% win-rate system. This single habit is why pros survive decades.</p></div>
+    <div class="ecard"><div class="ei">🔁</div><h3>Losing streaks are normal</h3><p>Even at 80% win rate, streaks of 3–5 losses happen regularly, and 8 will happen eventually. <b>Size so 8 straight stops still leaves you trading.</b> The traders who blow up aren't wrong more often — they're sized too big when the inevitable streak arrives.</p></div>
+    <div class="ecard"><div class="ei">⚖️</div><h3>Max 3 positions · no overlap</h3><p>Kasandra never holds more than <b>3 trades at once</b>, and skips signals within 15 points of an open one. This caps your worst-case exposure. When sizing, remember: 3 open trades = 3× your single-signal risk if they all stop together.</p></div>
+    <div class="ecard"><div class="ei">🍌</div><h3>Move stop to break-even</h3><p>When a trade hits TP1, move the stop to entry. From that moment <b>the trade can't lose</b> — worst case is zero. This is built into every signal and it's why our partial-win trades rarely turn into full losses.</p></div>
+    <div class="ecard"><div class="ei">📰</div><h3>Respect spread & news</h3><p>Wide spread and high-impact news (CPI, NFP, FOMC) can spike price through a stop. The system already filters compressed, low-momentum tape — and you should <b>size down or sit out around red-flag news</b>. Surviving the spike matters more than catching it.</p></div>
+    <div class="ecard"><div class="ei">📈</div><h3>Scale with equity, not hope</h3><p>Start at the size your capital justifies. When the account grows, <b>your fixed-% lot grows with it automatically</b> — that's compounding. Never jump to bigger lots after a win out of excitement, or after a loss to "win it back." Let the math size you.</p></div>
+  </div>
+
+  <!-- PROJECTOR -->
+  <div class="panel" style="margin-top:22px">
+    <div class="ph"><div class="t"><span class="ic">🚀</span> The Power of Consistency</div>
+      <div class="d">Small, steady months compound hard. Drag the slider to a <i>conservative</i> monthly target and watch what discipline builds over a year.</div></div>
+    <div class="body">
+      <div class="proj-row">
+        <label style="margin:0">Monthly target</label>
+        <input type="range" id="mret" min="3" max="30" value="10" oninput="proj()">
+        <b id="mret-v" style="font-family:var(--display);color:var(--accent);font-size:16px;min-width:48px;text-align:right">10%</b>
+      </div>
+      <div class="projout">
+        <div class="pc"><div class="v" id="p3">—</div><div class="l">In 3 months</div></div>
+        <div class="pc"><div class="v" id="p6">—</div><div class="l">In 6 months</div></div>
+        <div class="pc"><div class="v" id="p12">—</div><div class="l">In 12 months</div></div>
+      </div>
+      <div class="note warn" style="margin-top:16px">Illustration of compounding only — <b>not a promise</b>. Real returns vary month to month, some are negative, and past performance never guarantees the future. The point isn't the number, it's that <b>staying alive and consistent beats swinging big.</b></div>
+    </div>
+  </div>
+
+  <!-- GOLDEN RULES -->
+  <div class="panel">
+    <div class="ph"><div class="t"><span class="ic">⭐</span> Kasandra's Golden Rules</div></div>
+    <div class="body">
+      <ol class="rules">
+        <li><span class="n">1</span><span><b>Never risk more than 1–2% per signal.</b> If a single loss hurts emotionally, you're too big.</span></li>
+        <li><span class="n">2</span><span><b>Always use the stop.</b> Every signal has one. No "I'll watch it manually." The stop is the strategy.</span></li>
+        <li><span class="n">3</span><span><b>Take partials and move to break-even.</b> Bank TP1, protect the rest. Greed gives profits back.</span></li>
+        <li><span class="n">4</span><span><b>Max 3 trades open.</b> More positions ≠ more profit, just more correlated risk.</span></li>
+        <li><span class="n">5</span><span><b>Survive the bad week.</b> Your only job in a drawdown is to still be here for the recovery.</span></li>
+        <li><span class="n">6</span><span><b>Let the account grow you.</b> Scale size with equity, never with emotion.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="quote">"Take care of the downside, and the upside takes care of itself."<span class="by">— THE FIRST RULE OF EVERY TRADER WHO LASTED</span></div>
+
+  <div class="disc">Educational risk-management guidance only. Position-size outputs are illustrative calculations based on a fixed ~10-point stop and the risk percentage you select, not personalised financial advice. Trading leveraged products carries a high risk of loss. You are solely responsible for your own decisions and position sizing. Past and simulated performance does not guarantee future results. Not financial advice — trade your own risk.</div>
+</div>
+
+<script>
+let RISK=1;
+async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
+function fmt(n){return n>=1000?'$'+Math.round(n).toLocaleString('en-US'):'$'+n.toFixed(n<100?2:0);}
+function roundLot(l){return Math.max(0.01, Math.round(l*100)/100);}
+function setRisk(r){RISK=r;document.querySelectorAll('.rtab').forEach(t=>t.classList.toggle('on',+t.dataset.r===r));calc();}
+const SL_PER_001=10;   // $ risked per 0.01 lot at a 10-point stop
+function calc(){
+  const cap=Math.max(50,+document.getElementById('cap').value||0);
+  const ideal=cap*RISK/100/1000;          // lot for exact RISK%
+  const lot=roundLot(ideal);
+  const risk$=lot/0.01*SL_PER_001;
+  const eff=risk$/cap*100;
+  const max3=eff*3;
+  document.getElementById('o-lot').textContent=lot.toFixed(2);
+  document.getElementById('o-risk').textContent=fmt(risk$);
+  const effEl=document.getElementById('o-eff'); effEl.textContent=eff.toFixed(1)+'%';
+  effEl.className='v '+(eff<=1.2?'green':eff<=2.5?'amber':'red');
+  const maxEl=document.getElementById('o-max'); maxEl.textContent=max3.toFixed(1)+'%';
+  maxEl.className='v '+(max3<=4?'green':max3<=7?'amber':'red');
+  const note=document.getElementById('o-note');
+  if(lot>ideal*1.5 && cap<1000){
+    note.className='note warn';
+    note.innerHTML='⚠️ The minimum lot is <b>0.01</b>, so on a small account each signal risks <b>'+eff.toFixed(1)+'%</b> — more than your '+RISK+'% target. That is normal for accounts under ~$1,000; just know a stop bites harder here. Many traders grow a micro account to $1,000+ before relaxing.';
+  } else if(eff>2.5){
+    note.className='note warn';
+    note.innerHTML='⚠️ At <b>'+eff.toFixed(1)+'% per signal</b> a short losing streak hurts fast. Consider the conservative setting or a smaller lot until the account grows.';
+  } else {
+    note.className='note ok';
+    note.innerHTML='✓ Healthy sizing. A single stop costs <b>'+fmt(risk$)+'</b> ('+eff.toFixed(1)+'%), and even three open trades stopping together is just <b>'+max3.toFixed(1)+'%</b> of your account. This is how you last.';
+  }
+  survival(cap,risk$);
+}
+function survival(cap,risk$){
+  const n=Math.floor(cap*0.20/risk$);      // straight stops to hit -20%
+  document.getElementById('surv-n').textContent=n;
+  const pct=Math.min(100,n/20*100);
+  const fill=document.getElementById('surv-fill');
+  fill.style.width=pct+'%';
+  fill.style.background=n>=8?'linear-gradient(90deg,var(--green),var(--accent))':n>=5?'linear-gradient(90deg,var(--amber),var(--accent))':'linear-gradient(90deg,var(--red),var(--amber))';
+  const row=document.getElementById('surv-row'); let h='';
+  for(let i=1;i<=8;i++) h+='<div class="dot8 '+(i<=n?'surv':'dead')+'">'+i+'</div>';
+  row.innerHTML=h+'<div class="dot8" style="border:none;color:var(--dim)">…'+n+'</div>';
+  const sn=document.getElementById('surv-note');
+  if(n>=8){sn.className='note ok';sn.innerHTML='✓ Your account absorbs <b>'+n+' straight losses</b> before a −20% drawdown — well past the worst streak we have ever recorded. You are built to survive.';}
+  else if(n>=5){sn.className='note warn';sn.innerHTML='⚠️ You can take <b>'+n+' straight stops</b> before −20%. That covers the typical bad run but not a rare extreme. A slightly smaller lot buys peace of mind.';}
+  else {sn.className='note warn';sn.innerHTML='⚠️ Only <b>'+n+' straight stops</b> to −20% — too tight. The backtest alone had a 5-loss streak. Size down before a streak finds you.';}
+}
+function buildRef(){
+  const caps=[300,500,1000,2500,5000,10000,25000,50000];
+  document.getElementById('ref-body').innerHTML=caps.map(c=>{
+    const lot=roundLot(c*1/100/1000);
+    const risk$=lot/0.01*SL_PER_001;
+    const eff=risk$/c*100, max3=eff*3;
+    return '<tr><td class="cap">$'+c.toLocaleString('en-US')+'</td><td class="lot">'+lot.toFixed(2)+'</td><td>'+fmt(risk$)+' ('+eff.toFixed(1)+'%)</td><td>'+max3.toFixed(1)+'%</td></tr>';
+  }).join('');
+}
+function proj(){
+  const r=+document.getElementById('mret').value;
+  document.getElementById('mret-v').textContent=r+'%';
+  const cap=Math.max(50,+document.getElementById('cap').value||1000);
+  const g=m=>fmt(cap*Math.pow(1+r/100,m));
+  document.getElementById('p3').textContent=g(3);
+  document.getElementById('p6').textContent=g(6);
+  document.getElementById('p12').textContent=g(12);
+}
+// guard: redirect to login if not authenticated
+fetch('/api/me').then(r=>{if(r.status===401)location.href='/login';});
+buildRef();calc();proj();
+</script>
+</body></html>

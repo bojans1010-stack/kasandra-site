@@ -591,7 +591,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "crm-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "risk-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):
     """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""
@@ -768,6 +768,11 @@ def connect_page(k_session: str = Cookie(None)):
 def members_page(k_session: str = Cookie(None)):
     if not _session_email(k_session): return RedirectResponse("/login")
     return _page("members.html")
+
+@app.get("/risk")
+def risk_page(k_session: str = Cookie(None)):
+    if not _session_email(k_session): return RedirectResponse("/login")
+    return _page("risk.html")
 
 @app.get("/admin")
 def admin_page(): return _page("admin.html")

@@ -137,6 +137,23 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .hist-sum{display:flex;gap:8px;flex-wrap:wrap;padding:12px 22px;border-bottom:1px solid var(--border-soft);font-size:11px;color:var(--dim)}
 .hist-sum .hs{background:rgba(255,255,255,.04);border-radius:14px;padding:4px 11px}
 .hist-sum .hs b{color:var(--text)}
+/* market status banner */
+#market-status:empty{display:none}
+.ms{display:flex;gap:13px;align-items:flex-start;padding:14px 18px;border-bottom:1px solid var(--border-soft)}
+.ms .ms-ic{font-size:22px;line-height:1.2;flex:0 0 auto}
+.ms .ms-t{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.02em}
+.ms .ms-d{font-size:12px;color:var(--text-2);line-height:1.65;margin-top:3px}
+.ms.scan{background:linear-gradient(90deg,rgba(255,170,0,.08),transparent)}
+.ms.scan .ms-t{color:var(--amber)}
+.ms.scan .ms-ic{animation:radar 2s infinite}
+@keyframes radar{0%,100%{opacity:1}50%{opacity:.45}}
+.ms.armed{background:linear-gradient(90deg,rgba(0,255,136,.08),transparent)}
+.ms.armed .ms-t{color:var(--green)}
+.ms.live{background:linear-gradient(90deg,rgba(255,170,0,.10),transparent)}
+.ms.live .ms-t{color:var(--amber)}
+.ms.paused{background:linear-gradient(90deg,rgba(90,107,128,.12),transparent)}
+.ms.paused .ms-t{color:var(--dim)}
+.ms .ms-d a{color:var(--accent);text-decoration:none}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
@@ -163,6 +180,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
+    <div id="market-status"></div>
     <div style="padding:6px;background:#070b14;position:relative">
       <div id="kchart" style="height:480px;width:100%"></div>
       <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
@@ -498,6 +516,42 @@ async function loadChart(){
     else { upd.textContent='live · '+age+'s ago'; }
   }catch(e){}
 }
+// ---------- market status banner (around the chart, trilingual, no strategy details) ----------
+const BANNER={
+ en:{
+  scan:{t:"🔍 Scanning — no setup right now",d:"Kasandra is watching the market on every candle. Conditions aren't favorable for a high-quality trade at the moment, so the system is holding back. A skipped bad trade protects your account as much as a winning one — a signal appears the instant a clean setup forms."},
+  armed:{t:"✅ Setups armed — waiting for price",d:"The system has live zones ready. A signal fires the moment price reaches one. Have your position size ready from the <a href='/risk'>Risk Management</a> page."},
+  live:{t:"🔫 Trade in progress",d:"A position is live right now — follow it on the chart and in the signal cards."},
+  paused:{t:"🌙 Market closed",d:"Gold isn't trading at the moment (weekend or daily break). The system resumes scanning automatically when the market reopens."}
+ },
+ mk:{
+  scan:{t:"🔍 Скенирање — нема поставка во моментов",d:"Kasandra го следи пазарот на секоја свеќа. Условите во моментов не се поволни за квалитетна трговија, па системот се воздржува. Прескокнатата лоша трговија ја штити сметката исто колку и добитната — сигнал се појавува во моментот кога ќе се формира чиста поставка."},
+  armed:{t:"✅ Поставките се подготвени — се чека цената",d:"Системот има активни зони подготвени. Сигнал се активира во моментот кога цената ќе достигне зона. Подготви ја големината на позицијата од страницата <a href='/risk'>Управување со ризик</a>."},
+  live:{t:"🔫 Трговија во тек",d:"Позиција е активна во моментов — следи ја на графиконот и во картичките со сигнали."},
+  paused:{t:"🌙 Пазарот е затворен",d:"Златото не се тргува во моментов (викенд или дневна пауза). Системот автоматски продолжува со скенирање кога пазарот ќе се отвори."}
+ },
+ sr:{
+  scan:{t:"🔍 Skeniranje — trenutno nema postavke",d:"Kasandra prati tržište na svakoj sveći. Uslovi trenutno nisu povoljni za kvalitetnu trgovinu, pa se sistem uzdržava. Preskočena loša trgovina štiti nalog jednako kao i dobitna — signal se pojavljuje onog trenutka kada se formira čista postavka."},
+  armed:{t:"✅ Postavke spremne — čeka se cena",d:"Sistem ima aktivne zone spremne. Signal se aktivira čim cena dostigne zonu. Pripremi veličinu pozicije sa stranice <a href='/risk'>Upravljanje rizikom</a>."},
+  live:{t:"🔫 Trgovina u toku",d:"Pozicija je trenutno aktivna — prati je na grafikonu i u karticama signala."},
+  paused:{t:"🌙 Tržište zatvoreno",d:"Zlato se trenutno ne trguje (vikend ili dnevna pauza). Sistem automatski nastavlja skeniranje kada se tržište ponovo otvori."}
+ }
+};
+let _lastSig=null;
+function bLang(){const l=localStorage.getItem('k_lang')||'en';return BANNER[l]?l:'en';}
+function updateMarketStatus(d){
+  const el=document.getElementById('market-status'); if(!el) return;
+  if(!d){el.innerHTML='';return;}
+  const sigs=d.signals||[];
+  const isLive=s=>((s.types||[]).join(' ')).toLowerCase().includes('in trade');
+  let state = d.stale ? 'paused' : sigs.some(isLive) ? 'live' : sigs.length===0 ? 'scan' : 'armed';
+  const ic={scan:'🔍',armed:'✅',live:'🔫',paused:'🌙'}[state];
+  const T=BANNER[bLang()][state];
+  const title=T.t.replace(/^(🔍|✅|🔫|🌙)\s*/,'');
+  el.innerHTML='<div class="ms '+state+'"><div class="ms-ic">'+ic+'</div><div><div class="ms-t">'+title+'</div><div class="ms-d">'+T.d+'</div></div></div>';
+}
+document.addEventListener('langchange',()=>updateMarketStatus(_lastSig));
+
 async function loadSignals(){
   let d;
   try{
@@ -505,6 +559,8 @@ async function loadSignals(){
     if(r.status!==200) return;
     d=await r.json();
   }catch(e){return;}
+  _lastSig=d;
+  updateMarketStatus(d);
   const panel=document.getElementById('sigpanel');
   panel.style.display='block';
   renderKChart(d);

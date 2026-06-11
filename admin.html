@@ -58,6 +58,32 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .badge.trial{background:rgba(0,212,255,.14);color:var(--accent)}
 .badge.active{background:rgba(0,255,136,.12);color:var(--green)}
 .badge.expired{background:rgba(255,51,102,.12);color:var(--red)}
+.badge.free{background:rgba(124,77,255,.18);color:#b39ddb}
+/* member modal */
+#mmodal{display:none;position:fixed;inset:0;z-index:200;background:rgba(3,6,12,.78);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+#mmodal.open{display:flex}
+.mm{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;width:480px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 0 50px rgba(0,212,255,.12)}
+.mm-h{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 22px;border-bottom:1px solid var(--border-soft)}
+.mm-h .nm{font-family:var(--display);font-size:17px;font-weight:700}
+.mm-h .em{font-size:12px;color:var(--dim);margin-top:2px}
+.mm-x{cursor:pointer;color:var(--dim);font-size:20px;line-height:1;border:none;background:none}
+.mm-x:hover{color:var(--accent)}
+.mm-info{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;padding:18px 22px;border-bottom:1px solid var(--border-soft)}
+.mm-info .k{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.mm-info .vv{font-size:13px;margin-top:2px}
+.mm-sec{padding:16px 22px;border-bottom:1px solid var(--border-soft)}
+.mm-sec .lbl{font-size:10px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+.mm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mm-btn{padding:11px;border-radius:8px;border:1px solid var(--border-soft);background:#0c1320;color:var(--text);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.mm-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mm-btn.green:hover{border-color:var(--green);color:var(--green)}
+.mm-btn.purple:hover{border-color:#b39ddb;color:#b39ddb}
+.mm-btn.red{color:var(--red)}.mm-btn.red:hover{border-color:var(--red);background:rgba(255,51,102,.08)}
+.mm-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.mm-row input,.mm-row select{flex:1;min-width:0;padding:9px 11px;border-radius:7px;border:1px solid var(--border-soft);background:#0a0e16;color:var(--text);font-family:var(--mono);font-size:12px}
+.mm-row input:focus,.mm-row select:focus{outline:none;border-color:var(--accent)}
+.mm-row .mm-go{flex:0 0 auto;width:auto;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;border:none;font-weight:700;padding:9px 18px;border-radius:7px;cursor:pointer;font-family:var(--display)}
+.mm-msg{padding:0 22px 16px;font-size:12px;color:var(--green);min-height:18px}
 .act{padding:6px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;font-family:var(--mono);margin:2px 4px 2px 0}
 .act.approve{border-color:var(--green);color:var(--green)}.act.approve:hover{background:rgba(0,255,136,.1)}
 .act.revoke{border-color:var(--dim);color:var(--dim)}.act.revoke:hover{border-color:var(--red);color:var(--red)}
@@ -152,6 +178,50 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
 
 </div></div>
+
+<!-- member management modal -->
+<div id="mmodal" onclick="if(event.target===this)closeMM()">
+  <div class="mm">
+    <div class="mm-h">
+      <div><div class="nm" id="mm-name">—</div><div class="em" id="mm-email">—</div></div>
+      <button class="mm-x" onclick="closeMM()">✕</button>
+    </div>
+    <div class="mm-info" id="mm-info"></div>
+    <div class="mm-sec">
+      <div class="lbl">Quick grant</div>
+      <div class="mm-grid">
+        <div class="mm-btn" onclick="mmAct('approve_trial')">7-day Trial</div>
+        <div class="mm-btn green" onclick="mmAct('extend_month')">+1 Month · Paid</div>
+        <div class="mm-btn purple" onclick="mmAct('gift_week')">🎁 1 Week · Free</div>
+        <div class="mm-btn purple" onclick="mmAct('gift_month')">🎁 1 Month · Free</div>
+      </div>
+    </div>
+    <div class="mm-sec">
+      <div class="lbl">Custom grant</div>
+      <div class="mm-row">
+        <input id="mm-days" type="number" placeholder="days" min="1" max="3650" style="flex:0 0 90px">
+        <select id="mm-plan"><option value="paid">Paid</option><option value="free">Free</option><option value="trial">Trial</option><option value="comp">Comp</option></select>
+        <button class="mm-go" onclick="mmGrant()">Add</button>
+      </div>
+    </div>
+    <div class="mm-sec">
+      <div class="lbl">Set exact expiry date</div>
+      <div class="mm-row">
+        <input id="mm-date" type="date">
+        <button class="mm-go" onclick="mmExpiry()">Set</button>
+      </div>
+    </div>
+    <div class="mm-sec">
+      <div class="lbl">Account</div>
+      <div class="mm-grid">
+        <div class="mm-btn red" onclick="mmAct('revoke')">Revoke access</div>
+        <div class="mm-btn" onclick="mmReset()">Reset password</div>
+        <div class="mm-btn" id="mm-admin" onclick="mmAdmin()">Make admin</div>
+      </div>
+    </div>
+    <div class="mm-msg" id="mm-msg"></div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -270,9 +340,13 @@ async function loadMembers(){
   MEMBERS=d.members||[];
   document.getElementById('mem-cards').innerHTML=
     card('accent',MEMBERS.length,'Total Members')+
+    card('green',d.paid||0,'Paid')+
+    card('accent',d.trial||0,'Trial')+
+    card('amber','$'+(d.mrr||0),'MRR (USDT)')+
     card('amber',d.pending||0,'Pending')+
-    card('green',d.active||0,'Active (trial+paid)')+
-    card('red',d.expired||0,'Expired');
+    card('green',d.free||0,'Free / Comp')+
+    card('red',d.expiring||0,'Expiring ≤7d')+
+    card('accent',d.new7||0,'New (7d)');
   renderMembers();
 }
 function setFilter(f){FILTER=f;document.querySelectorAll('.filterbtn').forEach(b=>b.classList.toggle('on',b.dataset.f===f));renderMembers();}
@@ -294,15 +368,9 @@ function renderMembers(){
     let badge='<span class="badge '+lbl+'">'+(lbl==='active'?'paid':lbl)+(m.days_left?(' · '+m.days_left+'d'):'')+'</span>';
     if(m.is_admin) badge+=' <span class="badge" style="background:rgba(0,212,255,.18);color:var(--accent)">ADMIN</span>';
     let plan=m.plan&&m.plan!=='none'?m.plan:'-';
-    let act='';
-    if(lbl==='pending') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'approve_trial\')">Start 7-day trial</button>';
-    else if(lbl==='trial') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';
-    else if(lbl==='active') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month</button><button class="act revoke" onclick="act(\''+m.email+'\',\'revoke\')">Revoke</button>';
-    else if(lbl==='expired') act+='<button class="act approve" onclick="act(\''+m.email+'\',\'extend_month\')">+1 month (paid)</button>';
-    act+='<button class="act neutral" onclick="resetPw(\''+m.email+'\')">Reset pw</button>';
-    if(m.is_admin) act+='<button class="act revoke" onclick="toggleAdmin(\''+m.email+'\',false)">Remove admin</button>';
-    else act+='<button class="act neutral" onclick="toggleAdmin(\''+m.email+'\',true)">Make admin</button>';
-    return '<tr>'+
+    let act='<button class="act approve" onclick="openMM(\''+m.email+'\')">Manage ▸</button>';
+    if(lbl==='pending') act='<button class="act neutral" onclick="act(\''+m.email+'\',\'approve_trial\')">Trial</button>'+act;
+    return '<tr style="cursor:pointer" onclick="if(event.target.tagName!==\'BUTTON\')openMM(\''+m.email+'\')">'+
       '<td><div>'+name+'</div><div class="muted">'+m.email+'</div></td>'+
       '<td class="muted">'+(m.phone||'-')+'</td>'+
       '<td>'+(m.country||'-')+'</td>'+
@@ -317,6 +385,39 @@ async function act(email,action){
   await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action})});
   loadMembers();loadOverview();
 }
+// ---------- member modal ----------
+let MM=null;
+function openMM(email){
+  MM=MEMBERS.find(m=>m.email===email); if(!MM) return;
+  const name=(MM.first_name+' '+MM.last_name).trim()||'—';
+  document.getElementById('mm-name').textContent=name;
+  document.getElementById('mm-email').textContent=MM.email;
+  const lbl=MM.access_label;
+  const badge='<span class="badge '+lbl+'">'+(lbl==='active'?'paid':lbl)+'</span>'+(MM.is_admin?' <span class="badge" style="background:rgba(0,212,255,.18);color:var(--accent)">ADMIN</span>':'');
+  document.getElementById('mm-info').innerHTML=
+    info('Status',badge)+info('Plan',MM.plan&&MM.plan!=='none'?MM.plan:'—')+
+    info('Expires',MM.access_until||'—')+info('Days left',MM.days_left?MM.days_left+' days':'—')+
+    info('Phone',MM.phone||'—')+info('Country',MM.country||'—')+
+    info('Joined',MM.joined||'—')+info('Email',MM.email);
+  document.getElementById('mm-admin').textContent=MM.is_admin?'Remove admin':'Make admin';
+  document.getElementById('mm-msg').textContent='';
+  document.getElementById('mm-days').value='';document.getElementById('mm-date').value='';
+  document.getElementById('mmodal').classList.add('open');
+}
+function info(k,v){return '<div><div class="k">'+k+'</div><div class="vv">'+v+'</div></div>';}
+function closeMM(){document.getElementById('mmodal').classList.remove('open');MM=null;}
+async function mmSend(payload,okmsg){
+  const r=await fetch('/api/admin/set_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d=await r.json();
+  const msg=document.getElementById('mm-msg');
+  if(d.ok){ msg.style.color='var(--green)'; msg.textContent='✓ '+(d.msg||okmsg)+(d.until?(' · until '+d.until):''); await loadMembers(); const e=MM.email; MM=MEMBERS.find(m=>m.email===e); if(MM) openMM(e); else closeMM(); loadOverview(); }
+  else { msg.style.color='var(--red)'; msg.textContent='✕ '+(d.error||'error'); }
+}
+function mmAct(action){ if(!MM)return; if(action==='revoke'&&!confirm('Revoke access for '+MM.email+'?'))return; mmSend({email:MM.email,action}); }
+function mmGrant(){ if(!MM)return; const days=document.getElementById('mm-days').value; const plan=document.getElementById('mm-plan').value; if(!days){document.getElementById('mm-msg').style.color='var(--red)';document.getElementById('mm-msg').textContent='✕ enter days';return;} mmSend({email:MM.email,action:'grant',days:+days,plan}); }
+function mmExpiry(){ if(!MM)return; const date=document.getElementById('mm-date').value; if(!date){document.getElementById('mm-msg').style.color='var(--red)';document.getElementById('mm-msg').textContent='✕ pick a date';return;} mmSend({email:MM.email,action:'set_expiry',date,plan:(MM.plan&&MM.plan!=='none')?MM.plan:'paid'}); }
+async function mmReset(){ if(!MM)return; const np=prompt('New password for '+MM.email+' (min 6):'); if(np===null)return; if(np.length<6){alert('min 6 chars');return;} mmSend({email:MM.email,action:'reset_password',new_password:np},'password reset'); }
+function mmAdmin(){ if(!MM)return; const make=!MM.is_admin; if(!confirm((make?'GIVE':'REMOVE')+' admin access '+(make?'to':'from')+' '+MM.email+'?'))return; mmSend({email:MM.email,action:make?'make_admin':'remove_admin'}); }
 async function resetPw(email){
   const np=prompt('New password for '+email+' (min 6 chars):');
   if(np===null) return;
@@ -337,3 +438,4 @@ function gate(){document.getElementById('gate').style.display='flex';document.ge
 // auto-resume if admin session already active
 fetch('/api/admin/overview').then(r=>{if(r.status===200)showPanel();});
 </script></body></html>
+

@@ -109,6 +109,28 @@ def _grant_access(email, days, plan):
             _save_file(m)
     return new_until
 
+def _set_expiry(email, date_str, plan):
+    """Set an absolute expiry date (YYYY-MM-DD, end of that day UTC)."""
+    import calendar
+    try:
+        ts = calendar.timegm(time.strptime(date_str + " 23:59", "%Y-%m-%d %H:%M"))
+    except Exception:
+        return None
+    approved = "approved" if ts > time.time() else "pending"
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("UPDATE members SET status=%s, access_until=%s, plan=%s WHERE email=%s",
+                    (approved, ts, plan, email))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        m = _load_file()
+        if email in m:
+            m[email]["status"] = approved; m[email]["access_until"] = ts; m[email]["plan"] = plan
+            _save_file(m)
+    return ts
+
+FREE_PLANS = ("free", "comp", "gift")
+
 def _access_state(rec):
     """Return (has_access_bool, label, days_left) for a member record."""
     if not rec or rec.get("status") != "approved":
@@ -120,7 +142,8 @@ def _access_state(rec):
         return (False, "expired", 0)
     days_left = int((until - now) / 86400) + 1
     plan = rec.get("plan", "none")
-    return (True, "trial" if plan == "trial" else "active", days_left)
+    label = "trial" if plan == "trial" else "free" if plan in FREE_PLANS else "active"
+    return (True, label, days_left)
 
 def _all_members():
     if _USE_DB:
@@ -482,10 +505,18 @@ def admin_members(k_admin: str = Cookie(None)):
                     "joined": u.get("joined", ""), "access_until": until_str,
                     "is_admin": _member_is_admin(u)})
     out.sort(key=lambda x: (x["status"] != "pending", x["joined"]))
+    paid = sum(1 for m in out if m["access_label"] == "active")
+    trial = sum(1 for m in out if m["access_label"] == "trial")
+    free = sum(1 for m in out if m["access_label"] == "free")
+    expiring = sum(1 for m in out if m["access_label"] in ("trial", "active", "free") and 0 < m["days_left"] <= 7)
+    cutoff = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 7 * 86400))
+    new7 = sum(1 for m in out if (m.get("joined") or "")[:10] >= cutoff)
     return {"ok": True, "members": out,
             "pending": sum(1 for m in out if m["status"] == "pending"),
-            "active": sum(1 for m in out if m["access_label"] in ("trial", "active")),
-            "expired": sum(1 for m in out if m["access_label"] == "expired")}
+            "active": trial + paid + free,
+            "expired": sum(1 for m in out if m["access_label"] == "expired"),
+            "paid": paid, "trial": trial, "free": free,
+            "expiring": expiring, "new7": new7, "mrr": paid * PRICE_USDT}
 
 @app.post("/api/admin/set_status")
 async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
@@ -502,6 +533,32 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
     elif action == "extend_month":
         _grant_access(email, MONTH_DAYS, "paid")
         return {"ok": True, "email": email, "msg": "30 days added (paid)"}
+    elif action == "gift_week":
+        _grant_access(email, 7, "free")
+        return {"ok": True, "email": email, "msg": "1 week gifted (free)"}
+    elif action == "gift_month":
+        _grant_access(email, 30, "free")
+        return {"ok": True, "email": email, "msg": "1 month gifted (free)"}
+    elif action == "grant":
+        try:
+            days = int(body.get("days"))
+        except Exception:
+            return JSONResponse({"ok": False, "error": "days must be a number"})
+        plan = (body.get("plan") or "paid").strip().lower()
+        if plan not in ("paid", "free", "trial", "comp"):
+            plan = "paid"
+        if days < 1 or days > 3650:
+            return JSONResponse({"ok": False, "error": "days out of range"})
+        nu = _grant_access(email, days, plan)
+        return {"ok": True, "email": email, "msg": f"+{days} days ({plan})",
+                "until": time.strftime("%Y-%m-%d", time.gmtime(nu))}
+    elif action == "set_expiry":
+        plan = (body.get("plan") or "paid").strip().lower()
+        ts = _set_expiry(email, (body.get("date") or "").strip(), plan)
+        if ts is None:
+            return JSONResponse({"ok": False, "error": "bad date (use YYYY-MM-DD)"})
+        return {"ok": True, "email": email, "msg": "expiry set",
+                "until": time.strftime("%Y-%m-%d", time.gmtime(ts))}
     elif action == "revoke":
         _set_status(email, "pending")
         return {"ok": True, "email": email, "msg": "access revoked"}
@@ -534,7 +591,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "admin-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "crm-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):
     """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""

@@ -224,10 +224,10 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
       <a href="#trades" class="btn-ghost" data-i18n="hero.btnTrades">See every trade</a>
     </div>
     <div class="stats" id="results">
-      <div class="stat green"><div class="v green" id="s-roi">+41.8%</div><div class="l" data-i18n="stat.return">Return</div><div class="since" data-i18n="stat.since">since Jun 2026</div></div>
-      <div class="stat"><div class="v" id="s-win">76%</div><div class="l" data-i18n="stat.winrate">Win Rate</div><div class="since" data-i18n="stat.livetrades">live trades</div></div>
-      <div class="stat red"><div class="v red" id="s-dd">-7.8%</div><div class="l" data-i18n="stat.maxdd">Max Drawdown</div><div class="since" data-i18n="stat.worstdip">worst dip</div></div>
-      <div class="stat"><div class="v" id="s-tr">37</div><div class="l" data-i18n="stat.trades">Trades</div><div class="since" data-i18n="stat.counting">and counting</div></div>
+      <div class="stat green"><div class="v green" id="s-roi">—</div><div class="l">Pips</div><div class="since">all signals · live</div></div>
+      <div class="stat"><div class="v" id="s-win">—</div><div class="l" data-i18n="stat.winrate">Win Rate</div><div class="since" data-i18n="stat.livetrades">live trades</div></div>
+      <div class="stat red"><div class="v" id="s-dd">—</div><div class="l">Stops</div><div class="since">honest count</div></div>
+      <div class="stat"><div class="v" id="s-tr">—</div><div class="l" data-i18n="stat.trades">Trades</div><div class="since" data-i18n="stat.counting">and counting</div></div>
     </div>
   </div>
 </header>
@@ -411,11 +411,16 @@ function renderFoot(){
 function toggleAll(){showingAll=!showingAll;renderTrades();}
 async function loadResults(){
   try{
-    const r=await fetch('public_results.json?t='+Date.now());
+    const r=await fetch('/api/public_stats?t='+Date.now());
     const d=await r.json();
     lastData=d;
     allTrades=d.trades||[];
+    const pips=d.pips_total||0;
+    const roiEl=document.getElementById('s-roi');
+    roiEl.textContent=(pips>=0?'+':'')+pips.toLocaleString('en-US');
+    roiEl.style.color=pips>=0?'var(--green)':'var(--red)';
     document.getElementById('s-win').textContent=d.win_rate+'%';
+    document.getElementById('s-dd').textContent=d.sl_count;
     document.getElementById('s-tr').textContent=d.total;
     renderFoot();
     renderTrades();

@@ -534,7 +534,58 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "lotsim-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "homepage-1"   # bump on notable deploys; check at /api/version
+
+def _trade_points(r):
+    """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""
+    e, sl, t1, t2, t3 = r.get("entry"), r.get("sl"), r.get("tp1"), r.get("tp2"), r.get("tp3")
+    o = r.get("outcome")
+    if None not in (e, sl, t1, t2, t3):
+        d1, d2, d3, ds = abs(t1 - e), abs(t2 - e), abs(t3 - e), abs(sl - e)
+        return {"TP3": (d1 + d2 + d3) / 3, "TP2": (d1 + d2) / 3, "TP1": d1 / 3,
+                "BE": 0.0}.get(o, -ds if o == "SL" else 0.0)
+    return {"TP3": 11.7, "TP2": 5.0, "TP1": 1.7, "BE": 0.0, "SL": -10.0}.get(o, 0.0)
+
+@app.get("/api/public_stats")
+def public_stats():
+    """Public homepage stats computed from the NY Pipeline signal history.
+    Closed signals only — no live levels are exposed."""
+    hist = []
+    if os.path.exists(SIGNALS_FILE):
+        try:
+            hist = (json.load(open(SIGNALS_FILE, encoding="utf-8")) or {}).get("history") or []
+        except Exception:
+            hist = []
+    trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
+    for r in hist:
+        o = r.get("outcome")
+        pts = _trade_points(r)
+        pips = round(pts * 10)
+        pips_total += pts * 10
+        if o == "SL":
+            sl_count += 1
+        else:
+            wins += 1
+            if o == "TP3": tp3_count += 1
+        cu = (r.get("closed_utc") or "")
+        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
+        trades.append({
+            "date": cu[:10], "time": cu[11:16],
+            "side": r.get("side", ""),
+            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
+            "pips": pips, "result": "LOSS" if o == "SL" else "WIN",
+            "outcome": o,
+        })
+    total = len(trades)
+    return {
+        "total": total, "wins": wins,
+        "win_rate": round(wins * 100 / total) if total else 0,
+        "sl_count": sl_count, "tp3_count": tp3_count,
+        "pips_total": round(pips_total),
+        "usd_1lot": round(pips_total * 10),
+        "trades": list(reversed(trades))[:100],
+        "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
+    }
 
 @app.get("/api/version")
 def version():

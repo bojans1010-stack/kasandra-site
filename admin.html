@@ -108,6 +108,11 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="cards" id="ov-cards"></div>
 
     <div class="section">
+      <div class="h"><div class="t"><span class="dot"></span>LIVE CHART · XAUUSD 5M</div><div class="meta" id="ov-chart-meta"></div></div>
+      <div style="padding:8px;background:#070b14"><div id="ov-chart" style="height:360px;width:100%"></div></div>
+    </div>
+
+    <div class="section">
       <div class="h"><div class="t"><span class="dot"></span>LIVE SIGNALS</div><div class="meta" id="ov-sig-meta"></div></div>
       <div class="market-bar" id="ov-market"></div>
       <table><thead><tr><th>Side</th><th>Zone</th><th>SL</th><th>TP1</th><th>TP2</th><th>TP3</th><th>Risk</th></tr></thead>
@@ -148,8 +153,37 @@ tr:hover td{background:rgba(0,212,255,.03)}
 
 </div></div>
 
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-let MEMBERS=[], FILTER='all';
+let MEMBERS=[], FILTER='all', AC=null;
+function renderAdminChart(d){
+  const c=d.candles||[];
+  const el=document.getElementById('ov-chart');
+  if(!c.length || typeof LightweightCharts==='undefined'){ el.innerHTML='<div style="color:var(--dim);text-align:center;padding:40px;font-size:12px">waiting for candle feed…</div>'; return; }
+  if(!AC){
+    const chart=LightweightCharts.createChart(el,{
+      layout:{background:{type:'solid',color:'#070b14'},textColor:'#a8b2c1',fontFamily:"'JetBrains Mono',monospace",fontSize:11},
+      grid:{vertLines:{color:'rgba(0,212,255,.04)'},horzLines:{color:'rgba(0,212,255,.04)'}},
+      rightPriceScale:{borderColor:'rgba(0,212,255,.18)'},
+      timeScale:{borderColor:'rgba(0,212,255,.18)',timeVisible:true,secondsVisible:false,rightOffset:6},
+      autoSize:true });
+    const candles=chart.addCandlestickSeries({upColor:'#00ff88',downColor:'#ff3366',borderUpColor:'#00ff88',borderDownColor:'#ff3366',wickUpColor:'rgba(0,255,136,.65)',wickDownColor:'rgba(255,51,102,.65)'});
+    AC={chart,candles,lines:[]};
+  }
+  AC.candles.setData(c);
+  AC.lines.forEach(l=>{try{AC.candles.removePriceLine(l)}catch(e){}});
+  AC.lines=[];
+  (d.signals||[]).forEach((s,i)=>{
+    const sell=s.side==='SELL';
+    AC.lines.push(AC.candles.createPriceLine({price:sell?s.zone_high:s.zone_low,color:sell?'#ff3366':'#00ff88',lineWidth:i===0?2:1,axisLabelVisible:true,title:(sell?'SELL':'BUY')+' '+((s.types||[])[0]||'').split(' ')[0]}));
+    if(i===0){
+      AC.lines.push(AC.candles.createPriceLine({price:s.sl,color:'#ff3366',lineWidth:1,axisLabelVisible:true,title:'SL'}));
+      [s.tp1,s.tp2,s.tp3].forEach((tp,n)=>AC.lines.push(AC.candles.createPriceLine({price:tp,color:'#00d4ff',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'TP'+(n+1)})));
+    }
+  });
+  const mk=d.market||{};
+  document.getElementById('ov-chart-meta').innerHTML=(mk.price!=null?'<b style="color:var(--text)">'+mk.price+'</b> ':'')+(mk.trend?'<span style="color:'+(mk.trend==='BEAR'?'var(--red)':'var(--green)')+'">'+mk.trend+'</span>':'')+(mk.stale?' · <span style="color:var(--amber)">paused</span>':' · live');
+}
 
 async function adminLogin(){
   const pw=document.getElementById('apw').value;
@@ -169,6 +203,7 @@ function showPanel(){
   document.getElementById('panel').style.display='block';
   loadOverview();
   loadMembers();
+  if(!window._ovTimer) window._ovTimer=setInterval(loadOverview,45000);
 }
 function switchTab(t){
   document.getElementById('tab-overview').classList.toggle('active',t==='overview');
@@ -183,11 +218,15 @@ async function loadOverview(){
   if(r.status===401){gate();return;}
   const d=await r.json();
   // cards
+  renderAdminChart(d);
   const res=d.results||{}, ms=d.member_stats||{}, hs=d.history_stats||{};
+  const pips=res.pips_total||0;
   document.getElementById('ov-cards').innerHTML=
-    card('accent',res.total||0,'Total Trades')+
+    card(pips>=0?'green':'red',(pips>=0?'+':'')+pips.toLocaleString('en-US'),'Pips · all signals')+
     card('green',(res.win_rate||0)+'%','Win Rate')+
-    card('accent',(res.roi_pct!=null?res.roi_pct+'%':(hs.hit_rate+'%')),res.roi_pct!=null?'ROI':'Signal Hit Rate')+
+    card('accent',res.total||0,'Signals')+
+    card('red',res.sl_count||0,'Stops')+
+    card('green','$'+(res.usd_1lot||0).toLocaleString('en-US'),'1 Lot Sim')+
     card('green',ms.active||0,'Active Members')+
     card('amber',ms.pending||0,'Pending')+
     card('green','$'+(ms.mrr_usdt||0),'MRR (USDT)');

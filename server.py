@@ -534,7 +534,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "homepage-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "admin-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):
     """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""
@@ -648,12 +648,8 @@ def admin_overview(k_admin: str = Cookie(None)):
     if not _is_admin(k_admin):
         return JSONResponse({"error": "admin only"}, status_code=401)
     out = {"ok": True}
-    # --- trade results ---
-    results = {"trades": [], "total": 0, "win_rate": 0}
-    if os.path.exists(RESULTS_FILE):
-        try: results = json.load(open(RESULTS_FILE, encoding="utf-8"))
-        except Exception: pass
-    out["results"] = results
+    # --- trade results: computed from the NY Pipeline signal history (same as homepage) ---
+    out["results"] = public_stats()
     # --- live signals + history ---
     sig = {"signals": [], "history": [], "price": None, "trend": None,
            "news_status": None, "next_event": None, "generated_utc": None, "stale": True}
@@ -665,6 +661,8 @@ def admin_overview(k_admin: str = Cookie(None)):
         except Exception: pass
     out["signals"] = sig.get("signals", [])
     out["history"] = sig.get("history", [])
+    out["candles"] = sig.get("candles", [])
+    out["open_trades"] = sig.get("open_trades", [])
     out["market"] = {"price": sig.get("price"), "trend": sig.get("trend"),
                      "news_status": sig.get("news_status"), "next_event": sig.get("next_event"),
                      "stale": sig.get("stale", True), "generated_utc": sig.get("generated_utc")}

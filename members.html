@@ -525,7 +525,11 @@ async function loadSignals(){
   const list=document.getElementById('sig-list');
   const sigs=d.signals||[];
   if(!sigs.length){
+    // zones resting: keep history, KPIs and the 1-lot sim on screen
     list.innerHTML='<div class="sig-empty">'+kT('mem.sigEmpty')+'</div>';
+    const ce = document.getElementById('chart-chips');
+    if(ce) ce.innerHTML='<span class="cchip">⏳ zones resting · waiting for the next setup</span>';
+    renderHistory(d.history||[]);
     return;
   }
   // active = currently in a trade; the first non-active card is "next up"

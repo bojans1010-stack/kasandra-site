@@ -125,6 +125,12 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .sigcard .lv.sl .vv{color:var(--red)}
 .sigcard .lv.tp .vv{color:var(--green)}
 .sigcard .meta{margin-top:10px;font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap}
+.sigcard .tpprog{display:flex;gap:12px;margin:0 0 11px;font-family:var(--display);font-size:11px;letter-spacing:.05em}
+.sigcard .tpprog .on{color:var(--green);font-weight:700}
+.sigcard .tpprog .off{color:var(--dim)}
+.sigcard .lv.tp.hit .lk{color:var(--green)}
+.sigcard .lv.tp.hit .vv{color:var(--green);text-shadow:0 0 9px rgba(0,255,136,.5)}
+.sig-list{max-height:62vh;overflow-y:auto}
 .sig-empty{padding:34px 22px;text-align:center;color:var(--dim);font-size:13px;line-height:1.7}
 .sig-disc{padding:0 22px 16px;font-size:10.5px;color:var(--dim);line-height:1.6}
 /* signal history (track record) */
@@ -606,16 +612,19 @@ async function loadSignals(){
     const badge = live ? '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>'
       : (i===firstWaitIdx ? '<span class="rbadge NEXT">\u25B6 NEXT</span>' : '');
     const types=(s.types||[]).join(' + ');
+    const h=s.hits||{};
+    // live trades: show which TPs are already banked (you keep the highest one hit)
+    const prog = live ? '<div class="tpprog">'+['tp1','tp2','tp3'].map((k,n)=>
+        '<span class="'+(h[k]?'on':'off')+'">'+(h[k]?'\u2713':'\u25CB')+' TP'+(n+1)+'</span>').join('')+'</div>' : '';
     const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
+    const tplv=(k,label,val)=>'<div class="lv tp'+(h[k]?' hit':'')+'"><span class="lk">'+label+'</span><span class="vv">'+val+'</span></div>';
     return '<div class="sigcard '+s.side+(live?' live':'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
       '<span>'+badge+' <span class="rbadge '+rb+'">'+rbTxt+'</span></span></div>'+
+      prog+
       '<div class="levels">'+
         '<div class="lv sl"><span class="lk">SL</span><span class="vv">'+s.sl+'</span></div>'+
-        '<div class="lv tp"><span class="lk">TP1</span><span class="vv">'+s.tp1+'</span></div>'+
-        '<div class="lv tp"><span class="lk">TP2</span><span class="vv">'+s.tp2+'</span></div>'+
-        '<div class="lv tp"><span class="lk">TP3</span><span class="vv">'+s.tp3+'</span></div>'+
-        '<div class="lv tp"><span class="lk">TP4</span><span class="vv">'+kT('mem.sigOpen')+'</span></div>'+
+        tplv('tp1','TP1',s.tp1)+tplv('tp2','TP2',s.tp2)+tplv('tp3','TP3',s.tp3)+
       '</div>'+
       '<div class="meta">'+(types?'<span>'+types+'</span>':'')+(dist?'<span>'+dist+'</span>':'')+'</div>'+
     '</div>';

@@ -591,7 +591,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "us30-page-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "us30-toggle-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):
     """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""

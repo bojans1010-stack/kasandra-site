@@ -591,7 +591,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "password reset"}
     return JSONResponse({"ok": False, "error": "bad action"})
 
-SITE_VERSION = "live-cards-tp-progress-1"   # bump on notable deploys; check at /api/version
+SITE_VERSION = "us30-page-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):
     """Points result of one closed signal (thirds at TP1/2/3, BE after TP1)."""
@@ -643,6 +643,159 @@ def public_stats():
         "trades": list(reversed(trades))[:100],
         "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
     }
+
+# ==================== US30 (DJ30) — isolated mirror of the gold pipeline ====================
+# Separate state files and separate /api/us30/* endpoints. The gold endpoints and files
+# above are never read or written here. Same auth/access gating, same INGEST_TOKEN.
+SIGNALS_FILE_US30 = os.path.join(SITE, "live_signals_us30.json")
+CHART_FILE_US30 = os.path.join(SITE, "live_chart_us30.png")
+TICK_FILE_US30 = os.path.join(SITE, "tick_us30.json")
+
+@app.post("/api/us30/ingest_signals")
+async def ingest_signals_us30(request: Request):
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled"}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    if body.get("engine") != "nypipeline":
+        return JSONResponse({"ok": False, "error": "legacy payload ignored"}, status_code=409)
+    hist = body.get("history") or []
+    if not isinstance(hist, list): hist = []
+    candles = body.get("candles") or []
+    if not isinstance(candles, list): candles = []
+    open_trades = body.get("open_trades") or []
+    if not isinstance(open_trades, list): open_trades = []
+    safe = {
+        "generated_utc": body.get("generated_utc"), "price": body.get("price"),
+        "trend": body.get("trend"), "news_status": body.get("news_status"),
+        "next_event": body.get("next_event"), "signals": body.get("signals") or [],
+        "history": hist[-100:], "open_trades": open_trades[:8], "candles": candles[-400:],
+    }
+    try:
+        json.dump(safe, open(SIGNALS_FILE_US30, "w", encoding="utf-8"), indent=2)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "count": len(safe["signals"])}
+
+@app.get("/api/us30/signals")
+def signals_us30(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, days_left = _access_state(u)
+    if not has_access: return JSONResponse({"error": label}, status_code=403)
+    if not os.path.exists(SIGNALS_FILE_US30):
+        return {"signals": [], "price": None, "trend": None, "generated_utc": None, "stale": True}
+    try:
+        data = json.load(open(SIGNALS_FILE_US30, encoding="utf-8"))
+    except Exception:
+        return {"signals": [], "stale": True}
+    try:
+        age = time.time() - os.path.getmtime(SIGNALS_FILE_US30)
+        data["stale"] = age > 1200
+        data["age_seconds"] = int(age)
+    except Exception:
+        data["stale"] = False
+    return data
+
+@app.post("/api/us30/ingest_tick")
+async def ingest_tick_us30(request: Request):
+    if not INGEST_TOKEN: return JSONResponse({"ok": False}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False}, status_code=401)
+    try:
+        body = await request.json(); price = float(body.get("price"))
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    try:
+        with open(TICK_FILE_US30, "w") as f:
+            json.dump({"price": price, "t": time.time()}, f)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True}
+
+@app.get("/api/us30/tick")
+def tick_us30(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, _, _ = _access_state(u)
+    if not has_access: return JSONResponse({"error": "no access"}, status_code=403)
+    try:
+        d = json.load(open(TICK_FILE_US30))
+        return {"price": d.get("price"), "age": round(time.time() - d.get("t", 0), 1)}
+    except Exception:
+        return {"price": None, "age": None}
+
+@app.post("/api/us30/ingest_chart")
+async def ingest_chart_us30(request: Request):
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled"}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    body = await request.body()
+    if not body or len(body) > 4_000_000:
+        return JSONResponse({"ok": False, "error": "bad size"}, status_code=400)
+    if not body.startswith(b"\x89PNG"):
+        return JSONResponse({"ok": False, "error": "not a png"}, status_code=400)
+    try:
+        with open(CHART_FILE_US30, "wb") as f:
+            f.write(body)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "bytes": len(body)}
+
+@app.get("/api/us30/chart.png")
+def chart_png_us30(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, _ = _access_state(u)
+    if not has_access: return JSONResponse({"error": label}, status_code=403)
+    if not os.path.exists(CHART_FILE_US30):
+        return JSONResponse({"error": "no chart yet"}, status_code=404)
+    resp = FileResponse(CHART_FILE_US30, media_type="image/png")
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+@app.get("/api/us30/public_stats")
+def public_stats_us30():
+    hist = []
+    if os.path.exists(SIGNALS_FILE_US30):
+        try:
+            hist = (json.load(open(SIGNALS_FILE_US30, encoding="utf-8")) or {}).get("history") or []
+        except Exception:
+            hist = []
+    trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
+    for r in hist:
+        o = r.get("outcome"); pts = _trade_points(r)
+        pips_total += pts * 10
+        if o == "SL": sl_count += 1
+        else:
+            wins += 1
+            if o == "TP3": tp3_count += 1
+        cu = (r.get("closed_utc") or "")
+        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
+        trades.append({"date": cu[:10], "time": cu[11:16], "side": r.get("side", ""),
+            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
+            "pips": round(pts * 10), "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
+    total = len(trades)
+    return {"total": total, "wins": wins,
+        "win_rate": round(wins * 100 / total) if total else 0,
+        "sl_count": sl_count, "tp3_count": tp3_count,
+        "pips_total": round(pips_total), "usd_1lot": round(pips_total * 10),
+        "trades": list(reversed(trades))[:100],
+        "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}
+
+@app.get("/us30")
+def us30_page(k_session: str = Cookie(None)):
+    if not _session_email(k_session): return RedirectResponse("/login")
+    return _page("members_us30.html")
+# ==================== end US30 mirror ====================
 
 @app.get("/api/version")
 def version():

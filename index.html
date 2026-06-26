@@ -264,8 +264,12 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
     <div class="trades-panel">
       <div class="tp-head">
         <div class="t"><span class="dot"></span><span data-i18n="trades.log">LIVE TRADE LOG</span></div>
-        <div class="upd" id="tp-updated">loading...</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <select id="day-pick" onchange="onDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:12px;cursor:pointer"><option value="all">All time</option></select>
+          <span class="upd" id="tp-updated">loading...</span>
+        </div>
       </div>
+      <div id="day-sum" style="display:none;padding:10px 0 2px;font-size:13px;color:#a8b2c1"></div>
       <table class="trades-table">
         <thead><tr><th data-i18n="trades.thDate">Date</th><th data-i18n="trades.thTime">Time</th><th data-i18n="trades.thSide">Side</th><th data-i18n="trades.thEntry">Entry</th><th data-i18n="trades.thExit">Exit</th><th data-i18n="trades.thPoints">Points</th><th data-i18n="trades.thResult">Result</th></tr></thead>
         <tbody id="trades-body"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:30px" data-i18n="trades.loading">loading live trades...</td></tr></tbody>
@@ -382,10 +386,19 @@ function copyCode(){
     setTimeout(()=>t.classList.remove('show'),1800);
   });
 }
-let allTrades=[],showingAll=false,lastData=null;
+let allTrades=[],showingAll=false,lastData=null,DAY='all';
+function buildDays(){
+  const sel=document.getElementById('day-pick'); if(!sel) return;
+  const days=[...new Set(allTrades.map(t=>t.date))].sort().reverse();
+  const cur=DAY;
+  sel.innerHTML='<option value="all">All time</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all'; DAY=sel.value;
+}
+function onDay(v){ DAY=v; showingAll=false; renderTrades(); }
 function renderTrades(){
   const body=document.getElementById('trades-body');
-  const list=showingAll?allTrades:allTrades.slice(0,10);
+  const filtered = DAY==='all' ? allTrades : allTrades.filter(t=>t.date===DAY);
+  const list = (DAY==='all' && !showingAll) ? filtered.slice(0,10) : filtered;
   body.innerHTML=list.map(t=>{
     const ptsCls=t.pips>=0?'pos':'neg';
     const ptsTxt=(t.pips>=0?'+':'')+t.pips;
@@ -398,9 +411,20 @@ function renderTrades(){
       '<td class="pts '+ptsCls+'">'+ptsTxt+'</td>'+
       '<td><span class="res '+t.result+'">'+t.result+'</span></td>'+
     '</tr>';
-  }).join('');
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:24px">No trades on this day</td></tr>';
+  // day summary (only when a single day is selected)
+  const ds=document.getElementById('day-sum');
+  if(ds){
+    if(DAY!=='all'){
+      const w=filtered.filter(t=>t.result==='WIN').length, l=filtered.length-w;
+      const pips=filtered.reduce((a,t)=>a+(t.pips||0),0);
+      ds.style.display='block';
+      ds.innerHTML='<b>'+DAY+'</b> &middot; '+filtered.length+' trades &middot; '+w+'W / '+l+'L ('+(filtered.length?Math.round(w*100/filtered.length):0)+'%) &middot; <b style="color:'+(pips>=0?'var(--green)':'var(--red)')+'">'+(pips>=0?'+':'')+pips+' pips</b>';
+    } else ds.style.display='none';
+  }
   const btn=document.getElementById('show-more');
-  if(allTrades.length>10){btn.style.display='block';btn.textContent=showingAll?kT('trades.showLess'):kT('trades.showAll');}
+  if(DAY==='all' && allTrades.length>10){btn.style.display='block';btn.textContent=showingAll?kT('trades.showLess'):kT('trades.showAll');}
+  else if(btn){ btn.style.display='none'; }
 }
 function renderFoot(){
   if(!lastData)return;
@@ -414,7 +438,7 @@ async function loadResults(){
     const r=await fetch('/api/public_stats?t='+Date.now());
     const d=await r.json();
     lastData=d;
-    allTrades=d.trades||[];
+    allTrades=d.trades||[];buildDays();
     const pips=d.pips_total||0;
     const roiEl=document.getElementById('s-roi');
     roiEl.textContent=(pips>=0?'+':'')+pips.toLocaleString('en-US');
@@ -431,6 +455,10 @@ async function loadResults(){
 // re-render dynamic bits when language switches
 document.addEventListener('langchange',()=>{renderFoot();renderTrades();});
 loadResults();
+// auto-refresh the public stats every 60s so an open/cached homepage never goes stale
+setInterval(loadResults, 60000);
+// also refresh when the tab is re-focused (catches a tab left open during an outage)
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadResults(); });
 </script>
 </body>
 </html>

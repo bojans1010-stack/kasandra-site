@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kasandra Academy · Learn to trade from zero</title>
+<meta name="description" content="Free beginner trading academy by Kasandra — lots, pips, leverage, stop loss, risk and how to read a signal. Honest, no hype.">
+<style>
+:root{
+  --bg:#070b14; --panel:#0c1220; --panel2:#0e1626; --border:rgba(255,255,255,.08);
+  --border-soft:rgba(255,255,255,.06); --accent:#00d4ff; --green:#00ff88; --red:#ff3366;
+  --amber:#ffaa00; --text:#e8eef7; --text-2:#aab6c8; --dim:#5d6b80;
+  --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);line-height:1.7;
+  background-image:radial-gradient(1200px 600px at 80% -10%,rgba(0,212,255,.06),transparent),radial-gradient(900px 500px at 0% 100%,rgba(0,255,136,.04),transparent);}
+a{color:var(--accent);text-decoration:none}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px}
+nav{border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:rgba(7,11,20,.82);backdrop-filter:blur(8px);z-index:10}
+.nav-in{max-width:920px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.nav-right a{font-size:12px;color:var(--text-2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;margin-left:6px}
+.nav-right a.cta{color:var(--accent);border-color:var(--accent)}
+.hero{padding:54px 0 30px}
+.hero h1{font-size:38px;line-height:1.15;margin:0 0 12px;letter-spacing:.01em}
+.hero h1 .g{color:var(--accent)}
+.hero p{color:var(--text-2);max-width:640px;margin:0;font-size:15px}
+.tag{display:inline-block;font-size:11px;letter-spacing:.18em;color:var(--accent);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:5px 12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:10px 0 50px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border-soft);border-radius:14px;padding:20px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:8px}
+.card:hover{border-color:rgba(0,212,255,.4);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.card .ic{font-size:26px}
+.card .n{font-size:11px;color:var(--dim);letter-spacing:.1em}
+.card h3{margin:2px 0 0;font-size:17px;color:var(--text)}
+.card p{margin:0;font-size:13px;color:var(--text-2)}
+/* lesson view */
+.lesson{display:none;padding:30px 0 60px}
+.lesson.on{display:block}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer;margin-bottom:22px}
+.back:hover{color:var(--accent)}
+.lesson h2{font-size:30px;margin:0 0 6px}
+.lesson .sub{color:var(--dim);font-size:12px;letter-spacing:.1em;margin-bottom:26px}
+.lesson h4{color:var(--accent);font-size:15px;margin:28px 0 6px;letter-spacing:.02em}
+.lesson p{color:var(--text-2);margin:0 0 14px;font-size:15px}
+.lesson b{color:var(--text)}
+.lesson ul{color:var(--text-2);font-size:15px;padding-left:20px}
+.lesson li{margin:6px 0}
+.box{background:var(--panel);border:1px solid var(--border-soft);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:18px 0;font-size:14px;color:var(--text-2)}
+.box.warn{border-left-color:var(--amber)}
+.box b{color:var(--text)}
+.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.tbl th,.tbl td{border:1px solid var(--border-soft);padding:9px 12px;text-align:left}
+.tbl th{color:var(--accent);font-weight:600;background:rgba(0,212,255,.05)}
+.tbl td{color:var(--text-2)}
+.lessnav{display:flex;justify-content:space-between;gap:10px;margin-top:36px;border-top:1px solid var(--border-soft);padding-top:20px}
+.lessnav a{font-size:13px;color:var(--text-2);cursor:pointer}
+.lessnav a:hover{color:var(--accent)}
+.cta-block{background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(0,255,136,.05));border:1px solid rgba(0,212,255,.25);border-radius:14px;padding:22px;margin:30px 0;text-align:center}
+.cta-block a{display:inline-block;margin-top:10px;background:var(--accent);color:#04121b;font-weight:700;padding:10px 22px;border-radius:10px;letter-spacing:.04em}
+footer{border-top:1px solid var(--border-soft);color:var(--dim);font-size:12px;padding:24px 0 40px;line-height:1.6}
+</style>
+</head>
+<body>
+<nav><div class="nav-in">
+  <div class="brand"><span class="dot"></span>KASANDRA ACADEMY</div>
+  <div class="nav-right"><a href="/members">← Dashboard</a><a href="/risk">🛡️ Risk</a></div>
+</div></nav>
+
+<div class="wrap">
+  <!-- INDEX -->
+  <section id="index">
+    <div class="hero">
+      <span class="tag">FREE · NO HYPE · BEGINNER FRIENDLY</span>
+      <h1>Learn to trade <span class="g">from zero.</span></h1>
+      <p>Plain-English basics, no jargon dumps and no get-rich nonsense. Start here, understand what you're actually doing, then decide if our signals are for you.</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- LESSON VIEW -->
+  <section class="lesson" id="lesson">
+    <div class="back" onclick="showIndex()">← All lessons</div>
+    <div id="lesson-body"></div>
+    <div class="lessnav">
+      <a id="prev" onclick="nav(-1)"></a>
+      <a id="next" onclick="nav(1)"></a>
+    </div>
+    <div class="cta-block">
+      <div>Ready to put this into practice with live signals?</div>
+      <a href="/members">Go to your dashboard →</a>
+    </div>
+  </section>
+
+  <footer>
+    Kasandra Academy is free educational content. It is <b>not financial advice</b>. Trading carries
+    real risk and most retail traders lose money — never trade with money you cannot afford to lose.
+  </footer>
+</div>
+
+<script>
+const L = [
+  { id:'lot', ic:'📏', t:'What is a "lot"?', d:'Position size — the single biggest driver of your risk.',
+    html:`
+    <p>A <b>lot</b> is the size of your trade. It decides how much money each price move is worth to you.</p>
+    <h4>The three sizes</h4>
+    <table class="tbl"><tr><th>Lot</th><th>Name</th><th>Gold: $ per point</th></tr>
+    <tr><td>1.00</td><td>Standard</td><td>$100</td></tr>
+    <tr><td>0.10</td><td>Mini</td><td>$10</td></tr>
+    <tr><td>0.01</td><td>Micro (smallest)</td><td>$1</td></tr></table>
+    <p>On <b>gold</b>, 0.01 lot means every $1 move in the price = $1 for you. At 1.00 lot, that same move = $100. Same trade, 100× the swing — up <i>and</i> down.</p>
+    <div class="box warn"><b>The beginner mistake:</b> trading too big. A lot size that feels exciting is usually too large. Bigger lot = bigger losses just as fast as bigger wins. Start at the minimum and only size up once you've survived a losing streak without panicking.</div>
+    <p>Different instruments pay differently per lot — e.g. <b>US30</b> at 1.00 lot ≈ $1 per point, gold at 1.00 lot ≈ $100 per point. Always know your $/point before you click buy.</p>` },
+
+  { id:'pips', ic:'📐', t:'Pips & points', d:'How price moves are measured and turned into money.',
+    html:`
+    <p>Price moves are counted in <b>points</b> and <b>pips</b>. They're just units of distance on the chart.</p>
+    <h4>The simple version</h4>
+    <ul>
+      <li>A <b>point</b> is a 1-unit move (gold going 4200 → 4201 = 1 point).</li>
+      <li>A <b>pip</b> is a smaller slice — on gold we count <b>1 point = 10 pips</b>.</li>
+    </ul>
+    <h4>Turning it into money</h4>
+    <p><b>Profit = points moved × $ per point × your lot.</b></p>
+    <div class="box">Example: gold moves +10 points in your favour, you're on 0.01 lot ($1/point) → +$10. On 0.10 lot → +$100.</div>
+    <p>That's the whole game: how far price moves (points), times how big you're trading (lot). The signal tells you the points; <i>you</i> control the lot.</p>` },
+
+  { id:'leverage', ic:'⚖️', t:'Leverage & margin', d:'How small money controls big positions — and why that bites.',
+    html:`
+    <p><b>Leverage</b> lets you control a large position with a small deposit. <b>Margin</b> is the deposit the broker holds while the trade is open.</p>
+    <p>1:500 leverage means roughly <b>$10 can control a $5,000 position</b>. Sounds great — and it's exactly how beginners blow accounts.</p>
+    <div class="box warn"><b>The truth:</b> leverage magnifies <i>both</i> sides. It does not make you more likely to win — it makes every win and every loss bigger. High leverage + big lots = fastest way to zero.</div>
+    <h4>How to think about it</h4>
+    <p>Ignore the leverage number and focus on one thing: <b>how many dollars do I lose if my stop gets hit?</b> If that number scares you, your lot is too big. Leverage is a tool, not a strategy.</p>` },
+
+  { id:'sltp', ic:'🛑', t:'Stop loss & take profit', d:'The two exits that keep you alive.',
+    html:`
+    <p>Every trade needs two automatic exits set <i>before</i> you enter:</p>
+    <ul>
+      <li><b>Stop Loss (SL):</b> closes the trade at a set loss so a bad trade can't wipe you out. <b>Non-negotiable — always use one.</b></li>
+      <li><b>Take Profit (TP):</b> closes the trade at a set profit so you actually bank the win.</li>
+    </ul>
+    <h4>The TP ladder</h4>
+    <p>Kasandra signals use three targets — <b>TP1, TP2, TP3</b> — getting further away. The idea: secure profit early (TP1), then let the rest run for the bigger targets while moving your stop up so you can't give it all back.</p>
+    <div class="box"><b>Golden rule:</b> a trade without a stop loss isn't a trade, it's a prayer. The market doesn't care about your prayers.</div>` },
+
+  { id:'risk', ic:'🎯', t:'Risk & position sizing', d:'The one skill that separates survivors from blown accounts.',
+    html:`
+    <p>This is the most important lesson on the page. Not entries — <b>risk</b>.</p>
+    <h4>The 1–2% rule</h4>
+    <p>Never risk more than <b>1–2% of your account on a single trade</b>. On a $500 account that's $5–$10 of risk per trade. Boring? Yes. It's also why you'll still be here next month.</p>
+    <h4>How to pick your lot</h4>
+    <p>Work backwards from your stop:</p>
+    <ul>
+      <li>Decide your max loss in $ (say $5).</li>
+      <li>Look at the stop distance in points (say 10 points on gold).</li>
+      <li>Pick the lot where 10 points = $5 → that's 0.05 lot ($0.50/point).</li>
+    </ul>
+    <div class="box warn"><b>Why it matters:</b> even an 80%-win strategy hits losing streaks. Size so a string of losses is survivable, and you stay in the game long enough for the edge to play out. Blow up once and your edge is worth nothing.</div>` },
+
+  { id:'instruments', ic:'🥇', t:'Gold (XAUUSD) & US30', d:'What we trade and how they behave.',
+    html:`
+    <p>Kasandra trades two instruments:</p>
+    <h4>Gold — XAUUSD</h4>
+    <p>The price of gold against the US dollar. It moves on news, fear, rates and the dollar. Active and volatile, especially during the London and New York sessions. 1.00 lot ≈ $100 per point.</p>
+    <h4>US30 — the Dow</h4>
+    <p>An index of 30 big US companies. Trends hard during US market hours, bigger point numbers (~50,000) but each point is worth less per lot (1.00 lot ≈ $1/point). Minimum size is 0.10 lot.</p>
+    <div class="box">Same system, two markets. They move differently, so trading both spreads your activity across different conditions.</div>` },
+
+  { id:'signal', ic:'📊', t:'How to read a Kasandra signal', d:'Entry, stop, targets — what each number means.',
+    html:`
+    <p>A signal is a level where the system expects a reaction, plus a full plan. You'll see:</p>
+    <ul>
+      <li><b>Side</b> — BUY (expecting price up) or SELL (expecting price down).</li>
+      <li><b>Zone</b> — the price area to enter (e.g. 4199–4204).</li>
+      <li><b>SL</b> — where you're wrong and get out.</li>
+      <li><b>TP1 / TP2 / TP3</b> — the three profit targets.</li>
+    </ul>
+    <h4>How to act</h4>
+    <p>Enter in the zone, set your SL and TPs exactly as given, and <b>size your lot using the risk lesson above</b>. Many traders bank part at TP1 and move their stop to breakeven so the trade can't turn into a loss.</p>
+    <div class="box"><b>You're always in control.</b> The signal is a plan, not a command. Your money, your lot size, your risk.</div>` },
+
+  { id:'real', ic:'🧠', t:'Realistic expectations', d:'The honest lesson nobody else gives you.',
+    html:`
+    <p>Time for the truth most "gurus" hide: <b>the majority of retail traders lose money.</b> That's not us being negative — it's the documented reality of the industry.</p>
+    <h4>Why most lose</h4>
+    <ul>
+      <li>Trading too big (lot size) and getting wiped by one bad run.</li>
+      <li>No stop loss, or moving it when price goes against them.</li>
+      <li>Chasing "90% win rate" promises that aren't real.</li>
+      <li>Quitting a good system after a normal losing streak.</li>
+    </ul>
+    <h4>What realistic looks like</h4>
+    <p>A real edge is <b>steady and unglamorous</b>: small consistent gains, the occasional losing streak you have to sit through, and slow growth — not doubling your account in a week. Anyone promising that is selling a dream.</p>
+    <div class="box warn"><b>Our promise instead:</b> we show every trade we take — wins <i>and</i> losses, logged live. No hidden losers. You judge it on the real record, not a screenshot. <b>Only ever trade money you can afford to lose.</b></div>` },
+];
+
+const grid = document.getElementById('grid');
+grid.innerHTML = L.map((l,i)=>`<div class="card" onclick="show(${i})"><div class="ic">${l.ic}</div><div class="n">LESSON ${String(i+1).padStart(2,'0')}</div><h3>${l.t}</h3><p>${l.d}</p></div>`).join('');
+
+let cur = 0;
+function show(i){
+  cur = i; const l = L[i];
+  document.getElementById('lesson-body').innerHTML =
+    `<h2>${l.ic} ${l.t}</h2><div class="sub">LESSON ${String(i+1).padStart(2,'0')} OF ${String(L.length).padStart(2,'0')}</div>${l.html}`;
+  document.getElementById('prev').textContent = i>0 ? '← '+L[i-1].t : '';
+  document.getElementById('next').textContent = i<L.length-1 ? L[i+1].t+' →' : '';
+  document.getElementById('index').style.display='none';
+  document.getElementById('lesson').classList.add('on');
+  location.hash = l.id;
+  window.scrollTo(0,0);
+}
+function nav(d){ const n=cur+d; if(n>=0&&n<L.length) show(n); }
+function showIndex(){
+  document.getElementById('lesson').classList.remove('on');
+  document.getElementById('index').style.display='block';
+  location.hash='';
+  window.scrollTo(0,0);
+}
+// deep-link by hash (e.g. /academy#lot)
+(function(){ const h=location.hash.slice(1); const i=L.findIndex(l=>l.id===h); if(i>=0) show(i); })();
+</script>
+</body>
+</html>

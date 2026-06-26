@@ -2,9 +2,9 @@
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kasandra · Members</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#060912;--bg2:#0a1020;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--border-soft:rgba(0,212,255,.08);--accent:#00d4ff;--green:#00ff88;--red:#ff3366;--amber:#ffaa00;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+:root{--bg:#060912;--bg2:#0a1020;--card:#0d131f;--card-hi:#131b2e;--border:rgba(0,212,255,.18);--border-soft:rgba(0,212,255,.08);--accent:#00d4ff;--green:#00ff88;--red:#ff3366;--amber:#ffaa00;--text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;--mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;--display:'Space Grotesk',system-ui,-apple-system,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;font-size:14px}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 3px)}
@@ -163,7 +163,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
-  <div class="nav-right"><span style="display:inline-flex;gap:6px;margin-right:8px"><a class="signout" href="/members" style="color:var(--accent);border-color:var(--accent);font-weight:700">GOLD</a><a class="signout" href="/us30">US30</a></span><a class="signout" href="/risk" style="color:var(--accent);border-color:var(--accent)">🛡️ Risk Management</a><span data-lang-dropdown></span><span class="who" id="who">...</span><a class="signout" onclick="changePw()" data-i18n="mem.changePw">Change password</a><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
+  <div class="nav-right"><span style="display:inline-flex;gap:6px;margin-right:8px"><a class="signout" href="/members" style="color:var(--accent);border-color:var(--accent);font-weight:700">GOLD</a><a class="signout" href="/us30">US30</a></span><a class="signout" href="/academy">🎓 Academy</a><a class="signout" href="/risk" style="color:var(--accent);border-color:var(--accent)">🛡️ Risk Management</a><span data-lang-dropdown></span><span class="who" id="who">...</span><a class="signout" onclick="changePw()" data-i18n="mem.changePw">Change password</a><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
 </div></nav>
 <div class="wrap">
   <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
@@ -201,7 +201,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="sig-disc" data-i18n="mem.sigDisc">Signals are generated automatically by the Kasandra gold system. Each level is support (BUY) or resistance (SELL) with a fixed stop and a TP ladder. Not financial advice &mdash; trade your own risk.</div>
   </div>
   <div class="panel" id="histpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div class="upd" id="hist-upd"></div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div style="display:flex;align-items:center;gap:8px"><select id="hist-day" onchange="onHistDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 9px;font-family:inherit;font-size:11px;cursor:pointer"><option value="all">All time</option></select><span class="upd" id="hist-upd"></span></div></div>
     <div class="hist-sum" id="hist-sum"></div>
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
@@ -591,7 +591,7 @@ async function loadSignals(){
     list.innerHTML='<div class="sig-empty">'+kT('mem.sigEmpty')+'</div>';
     const ce = document.getElementById('chart-chips');
     if(ce) ce.innerHTML='<span class="cchip">⏳ zones resting · waiting for the next setup</span>';
-    renderHistory(d.history||[]);
+    HIST_ALL=d.history||[]; buildHistDays(); applyHist();
     return;
   }
   // active = currently in a trade; the first non-active card is "next up"
@@ -629,7 +629,7 @@ async function loadSignals(){
       '<div class="meta">'+(types?'<span>'+types+'</span>':'')+(dist?'<span>'+dist+'</span>':'')+'</div>'+
     '</div>';
   }).join('');
-  renderHistory(d.history||[]);
+  HIST_ALL=d.history||[]; buildHistDays(); applyHist();
 }
 
 // dollar result of one signal at 1.00 lot ($100/point on gold), thirds model
@@ -645,6 +645,19 @@ function tradeUsd(r){
 }
 const fmtUsd = v => (v<0?'-$':'+$')+Math.abs(Math.round(v)).toLocaleString('en-US');
 
+let HIST_ALL=[], HIST_DAY='all';
+function buildHistDays(){
+  const sel=document.getElementById('hist-day'); if(!sel) return;
+  const days=[...new Set(HIST_ALL.map(t=>(t.closed_utc||'').slice(0,10)).filter(Boolean))].sort().reverse();
+  const cur=HIST_DAY;
+  sel.innerHTML='<option value="all">All time</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all'; HIST_DAY=sel.value;
+}
+function onHistDay(v){ HIST_DAY=v; applyHist(); }
+function applyHist(){
+  const f = HIST_DAY==='all' ? HIST_ALL : HIST_ALL.filter(t=>(t.closed_utc||'').slice(0,10)===HIST_DAY);
+  renderHistory(f);
+}
 function renderHistory(hist){
   const panel=document.getElementById('histpanel');
   if(!hist || !hist.length){ panel.style.display='none'; document.getElementById('lotpanel').style.display='none'; return; }

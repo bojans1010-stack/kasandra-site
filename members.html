@@ -201,7 +201,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="sig-disc" data-i18n="mem.sigDisc">Signals are generated automatically by the Kasandra gold system. Each level is support (BUY) or resistance (SELL) with a fixed stop and a TP ladder. Not financial advice &mdash; trade your own risk.</div>
   </div>
   <div class="panel" id="histpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div style="display:flex;align-items:center;gap:8px"><select id="hist-day" onchange="onHistDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 9px;font-family:inherit;font-size:11px;cursor:pointer"><option value="all">All time</option></select><span class="upd" id="hist-upd"></span></div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div style="display:flex;align-items:center;gap:8px"><select id="hist-day" onchange="onHistDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 9px;font-family:inherit;font-size:11px;cursor:pointer"><option value="all">All time</option><option value="custom">Custom range…</option></select><span id="hist-range" style="display:none;align-items:center;gap:5px"><input type="date" id="hist-from" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"><span style="color:#6b7686;font-size:11px">→</span><input type="date" id="hist-to" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"></span><span class="upd" id="hist-upd"></span></div></div>
     <div class="hist-sum" id="hist-sum"></div>
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
@@ -645,17 +645,25 @@ function tradeUsd(r){
 }
 const fmtUsd = v => (v<0?'-$':'+$')+Math.abs(Math.round(v)).toLocaleString('en-US');
 
-let HIST_ALL=[], HIST_DAY='all';
+let HIST_ALL=[], HIST_DAY='all', HFROM='', HTO='';
 function buildHistDays(){
   const sel=document.getElementById('hist-day'); if(!sel) return;
   const days=[...new Set(HIST_ALL.map(t=>(t.closed_utc||'').slice(0,10)).filter(Boolean))].sort().reverse();
   const cur=HIST_DAY;
-  sel.innerHTML='<option value="all">All time</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  sel.innerHTML='<option value="all">All time</option><option value="custom">Custom range…</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all'; HIST_DAY=sel.value;
+  toggleHistRange();
 }
-function onHistDay(v){ HIST_DAY=v; applyHist(); }
+function toggleHistRange(){
+  const box=document.getElementById('hist-range'); if(box) box.style.display = HIST_DAY==='custom' ? 'inline-flex' : 'none';
+}
+function onHistDay(v){ HIST_DAY=v; toggleHistRange(); applyHist(); }
+function onHistRange(){ HFROM=document.getElementById('hist-from').value; HTO=document.getElementById('hist-to').value; applyHist(); }
 function applyHist(){
-  const f = HIST_DAY==='all' ? HIST_ALL : HIST_ALL.filter(t=>(t.closed_utc||'').slice(0,10)===HIST_DAY);
+  let f;
+  if(HIST_DAY==='all') f=HIST_ALL;
+  else if(HIST_DAY==='custom') f=HIST_ALL.filter(t=>{const d=(t.closed_utc||'').slice(0,10); return d && (!HFROM||d>=HFROM) && (!HTO||d<=HTO);});
+  else f=HIST_ALL.filter(t=>(t.closed_utc||'').slice(0,10)===HIST_DAY);
   renderHistory(f);
 }
 function renderHistory(hist){

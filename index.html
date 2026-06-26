@@ -265,7 +265,12 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
       <div class="tp-head">
         <div class="t"><span class="dot"></span><span data-i18n="trades.log">LIVE TRADE LOG</span></div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <select id="day-pick" onchange="onDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:12px;cursor:pointer"><option value="all">All time</option></select>
+          <select id="day-pick" onchange="onDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:12px;cursor:pointer"><option value="all">All time</option><option value="custom">Custom range…</option></select>
+          <span id="range-box" style="display:none;align-items:center;gap:6px">
+            <input type="date" id="range-from" onchange="onRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 8px;font-family:inherit;font-size:12px;cursor:pointer">
+            <span style="color:#6b7686;font-size:12px">→</span>
+            <input type="date" id="range-to" onchange="onRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 8px;font-family:inherit;font-size:12px;cursor:pointer">
+          </span>
           <span class="upd" id="tp-updated">loading...</span>
         </div>
       </div>
@@ -386,19 +391,25 @@ function copyCode(){
     setTimeout(()=>t.classList.remove('show'),1800);
   });
 }
-let allTrades=[],showingAll=false,lastData=null,DAY='all';
+let allTrades=[],showingAll=false,lastData=null,DAY='all',RFROM='',RTO='';
 function buildDays(){
   const sel=document.getElementById('day-pick'); if(!sel) return;
   const days=[...new Set(allTrades.map(t=>t.date))].sort().reverse();
   const cur=DAY;
-  sel.innerHTML='<option value="all">All time</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  sel.innerHTML='<option value="all">All time</option><option value="custom">Custom range…</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all'; DAY=sel.value;
+  toggleRangeBox();
 }
-function onDay(v){ DAY=v; showingAll=false; renderTrades(); }
+function toggleRangeBox(){
+  const box=document.getElementById('range-box'); if(box) box.style.display = DAY==='custom' ? 'inline-flex' : 'none';
+}
+function onDay(v){ DAY=v; showingAll=false; toggleRangeBox(); renderTrades(); }
+function onRange(){ RFROM=document.getElementById('range-from').value; RTO=document.getElementById('range-to').value; renderTrades(); }
+function inRange(d){ return (!RFROM||d>=RFROM) && (!RTO||d<=RTO); }
 function renderTrades(){
   const body=document.getElementById('trades-body');
-  const filtered = DAY==='all' ? allTrades : allTrades.filter(t=>t.date===DAY);
-  const list = (DAY==='all' && !showingAll) ? filtered.slice(0,10) : filtered;
+  const filtered = DAY==='all' ? allTrades : (DAY==='custom' ? allTrades.filter(t=>inRange(t.date)) : allTrades.filter(t=>t.date===DAY));
+  const list = ((DAY==='all'||DAY==='custom') && !showingAll) ? filtered.slice(0,10) : filtered;
   body.innerHTML=list.map(t=>{
     const ptsCls=t.pips>=0?'pos':'neg';
     const ptsTxt=(t.pips>=0?'+':'')+t.pips;
@@ -418,12 +429,13 @@ function renderTrades(){
     if(DAY!=='all'){
       const w=filtered.filter(t=>t.result==='WIN').length, l=filtered.length-w;
       const pips=filtered.reduce((a,t)=>a+(t.pips||0),0);
+      const label = DAY==='custom' ? ((RFROM||'start')+' → '+(RTO||'now')) : DAY;
       ds.style.display='block';
-      ds.innerHTML='<b>'+DAY+'</b> &middot; '+filtered.length+' trades &middot; '+w+'W / '+l+'L ('+(filtered.length?Math.round(w*100/filtered.length):0)+'%) &middot; <b style="color:'+(pips>=0?'var(--green)':'var(--red)')+'">'+(pips>=0?'+':'')+pips+' pips</b>';
+      ds.innerHTML='<b>'+label+'</b> &middot; '+filtered.length+' trades &middot; '+w+'W / '+l+'L ('+(filtered.length?Math.round(w*100/filtered.length):0)+'%) &middot; <b style="color:'+(pips>=0?'var(--green)':'var(--red)')+'">'+(pips>=0?'+':'')+pips+' pips</b>';
     } else ds.style.display='none';
   }
   const btn=document.getElementById('show-more');
-  if(DAY==='all' && allTrades.length>10){btn.style.display='block';btn.textContent=showingAll?kT('trades.showLess'):kT('trades.showAll');}
+  if((DAY==='all'||DAY==='custom') && filtered.length>10){btn.style.display='block';btn.textContent=showingAll?kT('trades.showLess'):kT('trades.showAll');}
   else if(btn){ btn.style.display='none'; }
 }
 function renderFoot(){

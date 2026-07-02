@@ -58,6 +58,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   #maingrid{grid-template-columns:minmax(0,2.2fr) minmax(400px,1fr);gap:20px;align-items:start;margin-bottom:20px}
   #maingrid .panel{margin-bottom:0}
   #sidecol{display:flex;flex-direction:column;gap:20px;position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
+  #sidecol>.panel{flex-shrink:0}
   #kchart{height:calc(100vh - 320px) !important;min-height:560px;max-height:860px}
   .kpis{grid-template-columns:repeat(4,1fr);gap:20px}
   .kpi .v{font-size:38px}

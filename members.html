@@ -55,16 +55,25 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .connect .code{display:inline-block;background:rgba(0,212,255,.1);border:1px dashed rgba(0,212,255,.5);padding:2px 10px;border-radius:6px;color:var(--accent);font-weight:700;cursor:pointer}
 .btn{display:inline-block;margin-top:14px;padding:12px 26px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border-radius:10px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.03em;text-decoration:none;box-shadow:0 8px 26px var(--gold-glow);transition:transform .2s,box-shadow .2s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px var(--gold-glow)}
-/* desktop dashboard: wide grid, tall chart, sticky signal rail */
-#maingrid{display:grid;grid-template-columns:1fr;gap:0}
-@media(min-width:1400px){
-  .wrap{max-width:min(1780px,95vw)}
-  .nav-in{max-width:min(1780px,95vw)}
-  #maingrid{grid-template-columns:minmax(0,2.2fr) minmax(400px,1fr);gap:20px;align-items:start;margin-bottom:20px}
-  #maingrid .panel{margin-bottom:0}
-  #sidecol{display:flex;flex-direction:column;gap:20px;position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
-  #sidecol>.panel{flex-shrink:0}
-  #kchart{height:calc(100vh - 320px) !important;min-height:560px;max-height:860px}
+/* dashboard: single stacked column — signals → chart → history */
+#maingrid{display:flex;flex-direction:column;gap:20px;margin-bottom:20px}
+#sigpanel{order:1} #chartpanel{order:2} #histpanel{order:3}
+#maingrid .panel{margin-bottom:0}
+/* live performance banner atop the chart */
+#chart-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--border-soft);background:linear-gradient(160deg,rgba(230,192,122,.06),transparent 72%)}
+.chero-lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.chero-row{display:flex;align-items:baseline;gap:12px;margin-top:5px}
+#hero-price{font-size:34px;font-weight:700;line-height:1;color:var(--gold);text-shadow:0 0 22px var(--gold-glow);letter-spacing:-1px;transition:color .25s}
+#hero-trend{font-size:11px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:6px;color:var(--dim)}
+#hero-trend.bull{color:var(--green);background:rgba(0,255,136,.12)}
+#hero-trend.bear{color:var(--red);background:rgba(255,51,102,.12)}
+.chero-r{flex:1;min-width:200px;max-width:380px}
+#hero-eq{display:block;width:100%;height:56px;overflow:visible}
+.chero-eqlbl{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);letter-spacing:.04em;margin-top:3px}
+.chero-eqlbl #hero-eq-val{color:var(--gold);font-weight:600;font-family:var(--mono)}
+@media(max-width:620px){#hero-price{font-size:27px}.chero-r{min-width:100%;max-width:none}}
+@media(min-width:900px){
+  #kchart{height:540px !important}
   .kpis{grid-template-columns:repeat(4,1fr);gap:20px}
   .kpi .v{font-size:38px}
   .welcome h1{font-size:32px}
@@ -193,12 +202,21 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="panel" id="chartpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 5M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
     <div id="market-status"></div>
+    <div id="chart-hero">
+      <div class="chero-l">
+        <div class="chero-lbl">XAU/USD &middot; live price</div>
+        <div class="chero-row"><span id="hero-price" class="mono">&mdash;</span><span id="hero-trend"></span></div>
+      </div>
+      <div class="chero-r">
+        <svg id="hero-eq" viewBox="0 0 360 56" preserveAspectRatio="none"></svg>
+        <div class="chero-eqlbl"><span>Cumulative result</span><span id="hero-eq-val">&mdash;</span></div>
+      </div>
+    </div>
     <div style="padding:6px;background:#070b14;position:relative">
       <div id="kchart" style="height:480px;width:100%"></div>
       <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
     </div>
   </div>
-  <div id="sidecol">
   <div class="panel" id="sigpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.sigTitle">LIVE GOLD SIGNALS</span></div><div class="upd" id="sig-upd"></div></div>
     <div class="sig-ctx" id="sig-ctx"></div>
@@ -211,7 +229,6 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
-  </div><!-- /sidecol -->
   </div><!-- /maingrid -->
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
@@ -468,7 +485,10 @@ async function pollTick(){
     }
     try{ KC.candles.update(KT.bar); }catch(e){}
     const el = document.getElementById('kchart-price');
-    if(el){ el.textContent = p; el.style.color = (KT.prev!=null && p<KT.prev) ? 'var(--red)' : 'var(--green)'; KT.prev = p; }
+    if(el){ el.textContent = p; el.style.color = (KT.prev!=null && p<KT.prev) ? 'var(--red)' : 'var(--green)'; }
+    const hp = document.getElementById('hero-price');
+    if(hp){ hp.textContent = (typeof p==='number' ? p.toFixed(1) : p); }
+    KT.prev = p;
   }catch(e){}
 }
 </script>
@@ -552,6 +572,31 @@ function updateMarketStatus(d){
 }
 document.addEventListener('langchange',()=>updateMarketStatus(_lastSig));
 
+// ---- live performance banner (gold price + cumulative equity sparkline) ----
+function rowPts(r){ return ({TP3:11.7,TP2:5,TP1:1.7,BE:0,SL:-10})[r&&r.outcome] || 0; }
+function heroBanner(d){
+  const tr=document.getElementById('hero-trend');
+  if(tr){ const t=(d.trend||'').toUpperCase();
+    tr.className = t==='BULL'?'bull':(t==='BEAR'?'bear':'');
+    tr.textContent = t ? (t==='BULL'?'▲ BULL':'▼ BEAR') : 'FLAT'; }
+  const hp=document.getElementById('hero-price');
+  if(hp && d.price!=null && /[—-]/.test(hp.textContent)) hp.textContent=(+d.price).toFixed(1);
+  const svg=document.getElementById('hero-eq'); if(!svg) return;
+  const hist=d.history||[]; let cum=0; const pts=hist.map(r=>{cum+=rowPts(r);return cum;});
+  const val=document.getElementById('hero-eq-val'); if(val) val.textContent=(cum>=0?'+':'')+Math.round(cum*10).toLocaleString('en-US')+' pts';
+  if(pts.length<2){ svg.innerHTML=''; return; }
+  const sig=pts.length+':'+Math.round(cum); if(svg.dataset.sig===sig) return; svg.dataset.sig=sig;   // redraw only on change
+  const W=360,H=56,PAD=6, min=Math.min(0,...pts), max=Math.max(...pts,1), span=(max-min)||1;
+  const X=i=>(i/(pts.length-1))*W, Y=v=>H-PAD-((v-min)/span)*(H-PAD*2);
+  const line=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  const area=line+' L'+W+' '+H+' L0 '+H+' Z';
+  const lx=X(pts.length-1).toFixed(1), ly=Y(pts[pts.length-1]).toFixed(1);
+  svg.innerHTML=
+    '<defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6c07a" stop-opacity="0.32"/><stop offset="1" stop-color="#e6c07a" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#hg)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#e6c07a" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="filter:drop-shadow(0 0 4px rgba(230,192,122,.5))"><animate attributeName="stroke-dashoffset" from="1" to="0" dur="1.3s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1"/></path>'+
+    '<circle cx="'+lx+'" cy="'+ly+'" r="3" fill="#f6dca6" style="filter:drop-shadow(0 0 5px #e6c07a)"><animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/></circle>';
+}
 async function loadSignals(){
   let d;
   try{
@@ -564,6 +609,7 @@ async function loadSignals(){
   const panel=document.getElementById('sigpanel');
   panel.style.display='block';
   renderKChart(d);
+  heroBanner(d);
   // context bar: price, trend, news
   const ctx=document.getElementById('sig-ctx');
   let chips='';

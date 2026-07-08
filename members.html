@@ -191,7 +191,6 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div style="padding:6px;background:#070b14;position:relative">
       <div id="kchart" style="height:480px;width:100%"></div>
       <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
-      <img id="livechart" alt="Live Kasandra chart" style="width:100%;border-radius:8px;display:none">
     </div>
   </div>
   <div id="sidecol">
@@ -204,7 +203,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="panel" id="histpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div style="display:flex;align-items:center;gap:8px"><select id="hist-day" onchange="onHistDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 9px;font-family:inherit;font-size:11px;cursor:pointer"><option value="all">All time</option><option value="custom">Custom range…</option></select><span id="hist-range" style="display:none;align-items:center;gap:5px"><input type="date" id="hist-from" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"><span style="color:#6b7686;font-size:11px">→</span><input type="date" id="hist-to" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"></span><span class="upd" id="hist-upd"></span></div></div>
     <div class="hist-sum" id="hist-sum"></div>
-    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Zone</th><th data-i18n="mem.histRisk">Risk</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
+    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
   </div><!-- /sidecol -->
@@ -310,12 +309,16 @@ function kchartInit(){
   return { chart, candles, dots, priceLines:[], zones:[], tradeLines:[] };
 }
 
+// Signal types arrive anonymised from the pusher: "Zone 1 · in trade" or "Zone 4 zone".
+// Never assume a single-token label — pull the "Zone N" prefix explicitly.
+function zoneLabel(s){ return ((((s||{}).types||[])[0]||'').match(/^Zone\s*\d+/)||[''])[0]; }
+
 function renderKChart(d){
   if(!d.candles || !d.candles.length || typeof LightweightCharts==='undefined'){
-    // fallback to the image feed if no candle data
-    document.getElementById('kchart').style.display='none';
-    document.getElementById('livechart').style.display='block';
-    loadChart();
+    // no candles / charting lib unavailable: show a notice rather than a chart.
+    // (the old TradingView PNG fallback was removed - it leaked the EMA labels)
+    document.getElementById('kchart').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--dim);font-size:13px">Chart unavailable right now. Signals below are live.</div>';
+    document.getElementById('chartpanel').style.display='block';
     return;
   }
   const panel = document.getElementById('chartpanel');
@@ -330,7 +333,7 @@ function renderKChart(d){
 
   (d.signals||[]).forEach((s,i)=>{
     const sell = s.side==='SELL';
-    const ema = ((s.types||[])[0]||'').split(' ')[0];   // "EMA130"
+    const ema = zoneLabel(s);   // "Zone 3" (strategy internals are never sent to the browser)
     const zoneColor = sell ? 'rgba(255,51,102,.10)' : 'rgba(0,255,136,.10)';
     try{
       const band = new KZoneBand(s.zone_low, s.zone_high, zoneColor);
@@ -507,22 +510,6 @@ async function load(){
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
 }
-async function loadChart(){
-  try{
-    const r=await fetch('/api/chart.png?t='+Date.now());
-    if(r.status!==200){return;}
-    const age=parseInt(r.headers.get('X-Chart-Age')||'0',10);
-    const blob=await r.blob();
-    const img=document.getElementById('livechart');
-    const old=img.src;
-    img.src=URL.createObjectURL(blob);
-    if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
-    document.getElementById('chartpanel').style.display='block';
-    const upd=document.getElementById('chart-upd');
-    if(age>180){ upd.innerHTML='<span style="color:var(--amber)">feed paused</span>'; }
-    else { upd.textContent='live · '+age+'s ago'; }
-  }catch(e){}
-}
 // ---------- market status banner (around the chart, trilingual, no strategy details) ----------
 const BANNER={
  en:{
@@ -601,7 +588,7 @@ async function loadSignals(){
   // status chips strip in the chart header
   const chipsEl = document.getElementById('chart-chips');
   if(chipsEl) chipsEl.innerHTML = sigs.map((s,i)=>{
-    const ema = ((s.types||[])[0]||'').split(' ')[0] || ('Z'+(i+1));
+    const ema = zoneLabel(s) || ('Zone '+(i+1));
     if(isLive(s)) return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
     if(i===firstWaitIdx) return '<span class="cchip next">\u25B6 '+ema+' NEXT</span>';
     return '<span class="cchip">\u23F3 '+ema+'</span>';

@@ -375,7 +375,6 @@ async def ingest_signals(request: Request):
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     return {"ok": True, "count": len(safe["signals"])}
 
-CHART_FILE = os.path.join(SITE, "live_chart.png")
 TICK_FILE = os.path.join(SITE, "tick.json")
 
 @app.post("/api/ingest_tick")
@@ -413,43 +412,11 @@ def tick(k_session: str = Cookie(None)):
     except Exception:
         return {"price": None, "age": None}
 
-@app.post("/api/ingest_chart")
-async def ingest_chart(request: Request):
-    """One-way push of the live chart PNG from the PC. Protected by INGEST_TOKEN.
-    SAFETY: write-only sink, image bytes only, size-capped."""
-    if not INGEST_TOKEN:
-        return JSONResponse({"ok": False, "error": "ingest disabled (no token set)"}, status_code=403)
-    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
-        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
-    body = await request.body()
-    if not body or len(body) > 4_000_000:
-        return JSONResponse({"ok": False, "error": "bad size"}, status_code=400)
-    if not body.startswith(b"\x89PNG"):
-        return JSONResponse({"ok": False, "error": "not a png"}, status_code=400)
-    try:
-        with open(CHART_FILE, "wb") as f:
-            f.write(body)
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-    return {"ok": True, "bytes": len(body)}
-
-@app.get("/api/chart.png")
-def chart_png(k_session: str = Cookie(None)):
-    """Live chart image for members. Same access gate as signals."""
-    email = _session_email(k_session)
-    if not email:
-        return JSONResponse({"error": "members only"}, status_code=401)
-    u = _get_member(email) or {}
-    has_access, label, _ = _access_state(u)
-    if not has_access:
-        return JSONResponse({"error": label}, status_code=403)
-    if not os.path.exists(CHART_FILE):
-        return JSONResponse({"error": "no chart yet"}, status_code=404)
-    age = int(time.time() - os.path.getmtime(CHART_FILE))
-    resp = FileResponse(CHART_FILE, media_type="image/png")
-    resp.headers["Cache-Control"] = "no-store"
-    resp.headers["X-Chart-Age"] = str(age)
-    return resp
+# NOTE: /api/ingest_chart and /api/chart.png were REMOVED on purpose.
+# The pushed PNG was a raw TradingView screenshot, so it baked the EMA labels and the
+# "zones ride EMA 34/89/130/200 - SL 10 - TP 5/10/20+" footer into an image that any
+# logged-in member could fetch. The members page now renders its own chart from the
+# anonymised `candles` + `signals` payload instead. Do not reintroduce these routes.
 
 @app.post("/api/admin/login")
 async def admin_login(request: Request):
@@ -648,7 +615,6 @@ def public_stats():
 # Separate state files and separate /api/us30/* endpoints. The gold endpoints and files
 # above are never read or written here. Same auth/access gating, same INGEST_TOKEN.
 SIGNALS_FILE_US30 = os.path.join(SITE, "live_signals_us30.json")
-CHART_FILE_US30 = os.path.join(SITE, "live_chart_us30.png")
 TICK_FILE_US30 = os.path.join(SITE, "tick_us30.json")
 
 @app.post("/api/us30/ingest_signals")
@@ -731,36 +697,8 @@ def tick_us30(k_session: str = Cookie(None)):
     except Exception:
         return {"price": None, "age": None}
 
-@app.post("/api/us30/ingest_chart")
-async def ingest_chart_us30(request: Request):
-    if not INGEST_TOKEN:
-        return JSONResponse({"ok": False, "error": "ingest disabled"}, status_code=403)
-    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
-        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
-    body = await request.body()
-    if not body or len(body) > 4_000_000:
-        return JSONResponse({"ok": False, "error": "bad size"}, status_code=400)
-    if not body.startswith(b"\x89PNG"):
-        return JSONResponse({"ok": False, "error": "not a png"}, status_code=400)
-    try:
-        with open(CHART_FILE_US30, "wb") as f:
-            f.write(body)
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-    return {"ok": True, "bytes": len(body)}
-
-@app.get("/api/us30/chart.png")
-def chart_png_us30(k_session: str = Cookie(None)):
-    email = _session_email(k_session)
-    if not email: return JSONResponse({"error": "members only"}, status_code=401)
-    u = _get_member(email) or {}
-    has_access, label, _ = _access_state(u)
-    if not has_access: return JSONResponse({"error": label}, status_code=403)
-    if not os.path.exists(CHART_FILE_US30):
-        return JSONResponse({"error": "no chart yet"}, status_code=404)
-    resp = FileResponse(CHART_FILE_US30, media_type="image/png")
-    resp.headers["Cache-Control"] = "no-store"
-    return resp
+# /api/us30/ingest_chart and /api/us30/chart.png removed for the same reason as the gold
+# routes: the pushed screenshot leaked the EMA labels + strategy footer. See note above.
 
 @app.get("/api/us30/public_stats")
 def public_stats_us30():

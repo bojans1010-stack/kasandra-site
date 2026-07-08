@@ -218,9 +218,10 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <ol>
       <li data-i18n="mem.connStep1">Open a VT Markets account through our partner link</li>
       <li><span data-i18n="mem.connStep2pre">Enter invite code</span> <span class="code" onclick="copyCode()">uKdrW9fs</span> <span data-i18n="mem.connStep2post">during signup</span></li>
-      <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
+      <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/Kasandra_tech" target="_blank">@Kasandra_tech</a> or <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
     </ol>
     <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="mem.connBtn">OPEN VT MARKETS ACCOUNT &rarr;</a>
+    <a class="btn" href="https://my.quomarkets.com/register?regnew=0197b524-a822-720a-ad73-61ccec9bdfb9" target="_blank" style="margin-left:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">OR QUO MARKETS &rarr;</a>
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
@@ -510,7 +511,7 @@ async function load(){
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/vanja_milanov" target="_blank" style="color:var(--accent);font-weight:600">@vanja_milanov</a> '+kT('mem.expiredP2post')+'</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Kasandra_tech" target="_blank" style="color:var(--accent);font-weight:600">@Kasandra_tech</a> '+kT('mem.expiredP2post')+'</p></div>');
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }

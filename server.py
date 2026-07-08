@@ -365,7 +365,7 @@ async def ingest_signals(request: Request):
         "news_status": body.get("news_status"),
         "next_event": body.get("next_event"),
         "signals": body.get("signals") or [],
-        "history": hist[-100:],
+        "history": hist[-5000:],
         "open_trades": open_trades[:8],
         "candles": candles[-400:],
     }
@@ -607,7 +607,7 @@ def public_stats():
         "sl_count": sl_count, "tp3_count": tp3_count,
         "pips_total": round(pips_total),
         "usd_1lot": round(pips_total * 10),
-        "trades": list(reversed(trades))[:100],
+        "trades": list(reversed(trades))[:1000],
         "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
     }
 
@@ -639,7 +639,7 @@ async def ingest_signals_us30(request: Request):
         "generated_utc": body.get("generated_utc"), "price": body.get("price"),
         "trend": body.get("trend"), "news_status": body.get("news_status"),
         "next_event": body.get("next_event"), "signals": body.get("signals") or [],
-        "history": hist[-100:], "open_trades": open_trades[:8], "candles": candles[-400:],
+        "history": hist[-5000:], "open_trades": open_trades[:8], "candles": candles[-400:],
     }
     try:
         json.dump(safe, open(SIGNALS_FILE_US30, "w", encoding="utf-8"), indent=2)
@@ -726,7 +726,7 @@ def public_stats_us30():
         "win_rate": round(wins * 100 / total) if total else 0,
         "sl_count": sl_count, "tp3_count": tp3_count,
         "pips_total": round(pips_total), "usd_1lot": round(pips_total * 10),
-        "trades": list(reversed(trades))[:100],
+        "trades": list(reversed(trades))[:1000],
         "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}
 
 @app.get("/us30")

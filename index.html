@@ -6,16 +6,18 @@
 <title>Kasandra Technologies · Automated Gold Trading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#060912;--bg2:#0a1020;--card:#0d131f;--card-hi:#131b2e;
   --border:rgba(0,212,255,0.18);--border-soft:rgba(0,212,255,0.08);
   --accent:#00d4ff;--accent-dim:rgba(0,212,255,0.6);
   --green:#00ff88;--red:#ff3366;--amber:#ffaa00;--purple:#b388ff;
-  --text:#e0e6ed;--text-2:#a8b2c1;--dim:#5a6b80;
+  --text:#e6ebf2;--text-2:#a8b2c1;--dim:#6a7688;
+  --gold:#e6c07a;--gold-2:#f6dca6;--gold-dim:rgba(230,192,122,.6);--gold-glow:rgba(230,192,122,.35);
   --mono:'JetBrains Mono',ui-monospace,monospace;
   --display:'Space Grotesk',ui-sans-serif,sans-serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -24,9 +26,11 @@ body{
     radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,0.10) 0%,transparent 60%),
     radial-gradient(ellipse 60% 40% at 90% 100%,rgba(179,136,255,0.07) 0%,transparent 60%),
     var(--bg);
-  background-attachment:fixed;color:var(--text);font-family:var(--mono);
-  min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden;
+  background-attachment:fixed;color:var(--text);font-family:var(--sans);
+  min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
+/* data / numbers stay mono - reads precise and "trading". everything else uses the sans for readability */
+.mono,.trades-table,.stat .v,.tkr{font-family:var(--mono)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,212,255,0.018) 2px,rgba(0,212,255,0.018) 3px)}
 .wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 22px}
@@ -45,30 +49,49 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .nav-cta:hover{background:var(--accent);color:var(--bg)!important;box-shadow:0 0 24px rgba(0,212,255,.4)}
 
 /* HERO */
-.hero{padding:100px 0 70px;text-align:center}
-.eyebrow{font-size:12px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:26px;opacity:0;animation:rise .8s .1s forwards}
-.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(38px,6.5vw,74px);line-height:1.06;letter-spacing:-1px;margin-bottom:24px;opacity:0;animation:rise .8s .25s forwards}
-.hero h1 .ac{color:var(--accent);text-shadow:0 0 28px rgba(0,212,255,.4)}
-.hero p.lead{font-size:clamp(15px,2vw,19px);color:var(--text-2);max-width:600px;margin:0 auto 40px;opacity:0;animation:rise .8s .4s forwards}
-.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;animation:rise .8s .55s forwards}
-.btn-primary{padding:15px 32px;background:linear-gradient(135deg,var(--accent),#0095c8);color:#03121a;border:none;border-radius:10px;
-  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer;text-decoration:none;transition:all .25s;box-shadow:0 8px 30px rgba(0,212,255,.25)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,212,255,.45)}
-.btn-ghost{padding:15px 32px;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:10px;font-weight:500;font-size:14px;cursor:pointer;text-decoration:none;transition:all .25s}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.hero{padding:64px 0 56px}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+.hero-copy{max-width:560px}
+.status-chip{display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border:1px solid var(--border);border-radius:100px;background:rgba(0,212,255,.05);font-size:12px;letter-spacing:.04em;color:var(--text-2);margin-bottom:26px;opacity:0;animation:rise .8s .1s forwards}
+.status-chip .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.6s infinite}
+.status-chip b{color:var(--text);font-weight:600}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(36px,5vw,60px);line-height:1.03;letter-spacing:-1.5px;margin-bottom:22px;opacity:0;animation:rise .8s .25s forwards}
+.hero h1 .ac{color:var(--accent);text-shadow:0 0 34px rgba(0,212,255,.45)}
+.hero h1 .au{background:linear-gradient(180deg,var(--gold-2),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 22px var(--gold-glow))}
+.hero p.lead{font-size:clamp(15px,1.3vw,17px);color:var(--text-2);max-width:520px;margin:0 0 34px;line-height:1.65;opacity:0;animation:rise .8s .4s forwards}
+.hero-ctas{display:flex;gap:13px;flex-wrap:wrap;opacity:0;animation:rise .8s .55s forwards}
+.btn-primary{padding:15px 30px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border:none;border-radius:11px;
+  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.02em;cursor:pointer;text-decoration:none;transition:all .25s;box-shadow:0 10px 34px var(--gold-glow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 46px var(--gold-glow)}
+.btn-ghost{padding:15px 28px;background:rgba(255,255,255,.02);color:var(--text);border:1px solid var(--border);border-radius:11px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;transition:all .25s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.06)}
+/* hero results card */
+.hero-visual{opacity:0;animation:rise .9s .5s forwards}
+.rcard{position:relative;background:linear-gradient(160deg,rgba(19,27,46,.92),rgba(11,16,27,.92));border:1px solid var(--border);border-radius:18px;padding:22px 22px 15px;box-shadow:0 34px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05)}
+.rcard::after{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(160deg,var(--gold-dim),transparent 40%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.5}
+.rcard-head{display:flex;justify-content:space-between;align-items:flex-start}
+.rcard-ttl{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.rcard-big{font-family:var(--mono);font-size:33px;font-weight:700;color:var(--gold);text-shadow:0 0 24px var(--gold-glow);line-height:1.15;margin-top:4px}
+.rcard-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.rcard-live{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--text-2);letter-spacing:.04em}
+.rcard-live .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 1.6s infinite}
+.rcard svg{display:block;width:100%;height:148px;margin-top:10px;overflow:visible}
+.rcard-foot{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);letter-spacing:.04em;padding-top:9px;border-top:1px solid var(--border-soft);margin-top:8px}
+.rcard-foot b{color:var(--text-2);font-weight:600}
 @keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:54px 0 0;opacity:0;animation:rise .8s .7s forwards}
-.stat{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:10px;padding:24px 18px;text-align:center;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
-.stat.green::before{background:var(--green);box-shadow:0 0 10px var(--green)}
-.stat.red::before{background:var(--red);box-shadow:0 0 10px var(--red)}
-.stat .v{font-family:var(--display);font-size:clamp(26px,4vw,40px);font-weight:700;line-height:1;color:var(--accent)}
-.stat .v.green{color:var(--green);text-shadow:0 0 12px rgba(0,255,136,.3)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:40px 0 0;opacity:0;animation:rise .8s .7s forwards}
+.stat{background:linear-gradient(150deg,rgba(19,27,46,.65),rgba(11,16,27,.55));border:1px solid var(--border-soft);border-radius:14px;padding:22px 20px;position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.stat:hover{transform:translateY(-3px);border-color:var(--border);box-shadow:0 18px 44px rgba(0,0,0,.4)}
+.stat::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--accent);opacity:.5}
+.stat.gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.stat.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.stat .v{font-size:clamp(28px,3.4vw,40px);font-weight:700;line-height:1;color:var(--accent);letter-spacing:-1px}
+.stat .v.gold{color:var(--gold);text-shadow:0 0 18px var(--gold-glow)}
 .stat .v.red{color:var(--red)}
-.stat .l{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:10px}
-.stat .since{font-size:10px;color:var(--dim);margin-top:3px;opacity:.7}
+.stat .l{font-size:10px;letter-spacing:1.6px;color:var(--text-2);text-transform:uppercase;margin-top:12px;font-weight:600}
+.stat .since{font-size:10.5px;color:var(--dim);margin-top:4px}
 
 /* SECTION */
 section.block{padding:80px 0}
@@ -158,9 +181,14 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 .foot-links{display:flex;gap:22px}
 .foot-links a{color:var(--text-2);text-decoration:none;font-size:12px}
 .foot-links a:hover{color:var(--accent)}
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hero-copy{max-width:none}
+  .hero h1 br{display:none}
+}
 @media(max-width:820px){
   .wrap{padding:0 18px}
-  .hero{padding:64px 0 50px}
+  .hero{padding:56px 0 50px}
   section.block{padding:54px 0}
   .sec-head{margin-bottom:34px}
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -216,15 +244,33 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow" data-i18n="hero.eyebrow">Kasandra Technologies</div>
-    <h1>Automated <span class="ac">gold</span> trading,<br>built on <span class="ac">transparency</span>.</h1>
-    <p class="lead" data-i18n="hero.lead">A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.</p>
-    <div class="hero-ctas">
-      <a href="#how" class="btn-primary" data-i18n="hero.btnHow">HOW IT WORKS</a>
-      <a href="#trades" class="btn-ghost" data-i18n="hero.btnTrades">See every trade</a>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="status-chip"><span class="live"></span> <span>System <b>live</b> &middot; trading XAU/USD now</span></div>
+        <h1>Automated <span class="au">gold</span> trading, <br>built on <span class="ac">transparency</span>.</h1>
+        <p class="lead" data-i18n="hero.lead">A live, rules-based system trading XAU/USD on VT Markets. No hype, no hidden numbers. Every trade, every result, shown exactly as it happened.</p>
+        <div class="hero-ctas">
+          <a href="#how" class="btn-primary" data-i18n="hero.btnHow">HOW IT WORKS</a>
+          <a href="#trades" class="btn-ghost" data-i18n="hero.btnTrades">See every trade</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="rcard">
+          <div class="rcard-head">
+            <div>
+              <div class="rcard-ttl">Cumulative result</div>
+              <div class="rcard-big" id="rc-pips">—</div>
+              <div class="rcard-sub" id="rc-sub">points banked, live account</div>
+            </div>
+            <div class="rcard-live"><span class="d"></span> LIVE</div>
+          </div>
+          <svg id="eq-svg" viewBox="0 0 520 148" preserveAspectRatio="none"></svg>
+          <div class="rcard-foot"><span>Signals <b id="rc-n">—</b></span><span>Win rate <b id="rc-wr">—</b></span><span>XAU/USD &middot; 5M</span></div>
+        </div>
+      </div>
     </div>
     <div class="stats" id="results">
-      <div class="stat green"><div class="v green" id="s-roi">—</div><div class="l">Pips</div><div class="since">all signals · live</div></div>
+      <div class="stat gold"><div class="v gold" id="s-roi">—</div><div class="l">Pips</div><div class="since">all signals &middot; live</div></div>
       <div class="stat"><div class="v" id="s-win">—</div><div class="l" data-i18n="stat.winrate">Win Rate</div><div class="since" data-i18n="stat.livetrades">live trades</div></div>
       <div class="stat red"><div class="v" id="s-dd">—</div><div class="l">Stops</div><div class="since">honest count</div></div>
       <div class="stat"><div class="v" id="s-tr">—</div><div class="l" data-i18n="stat.trades">Trades</div><div class="since" data-i18n="stat.counting">and counting</div></div>
@@ -445,6 +491,28 @@ function renderFoot(){
   document.getElementById('tp-foot').textContent=kT('trades.foot').replace('{wins}',d.wins).replace('{losses}',(d.total-d.wins)).replace('{wr}',d.win_rate);
 }
 function toggleAll(){showingAll=!showingAll;renderTrades();}
+function countUp(el,target,o){o=o||{};const dur=1100,t0=performance.now();const abs=Math.abs(target);
+  const fmt=v=>(o.plus&&target>=0?'+':(target<0?'-':''))+Math.round(v).toLocaleString('en-US')+(o.suffix||'');
+  (function f(t){const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,3);el.textContent=fmt(abs*e);if(p<1)requestAnimationFrame(f);})(performance.now());}
+function renderEquity(trades){
+  const svg=document.getElementById('eq-svg'); if(!svg)return;
+  const chrono=[...(trades||[])].reverse();       // API sends newest-first; curve needs oldest-first
+  let cum=0; const pts=chrono.map(t=>{cum+=(t.pips||0);return cum;});
+  if(pts.length<2){return;}
+  const W=520,H=148,PAD=10, min=Math.min(0,...pts), max=Math.max(...pts,1), span=(max-min)||1;
+  const X=i=>(i/(pts.length-1))*W, Y=v=>H-PAD-((v-min)/span)*(H-PAD*2);
+  const line=pts.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const area=line+` L${W} ${H} L0 ${H} Z`;
+  const lx=X(pts.length-1).toFixed(1), ly=Y(pts[pts.length-1]).toFixed(1);
+  svg.innerHTML=
+    '<defs><linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#e6c07a" stop-opacity="0.30"/><stop offset="1" stop-color="#e6c07a" stop-opacity="0"/>'+
+    '</linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#gfill)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#e6c07a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="filter:drop-shadow(0 0 5px rgba(230,192,122,.5))">'+
+    '<animate attributeName="stroke-dashoffset" from="1" to="0" dur="1.4s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1"/></path>'+
+    '<circle cx="'+lx+'" cy="'+ly+'" r="3.6" fill="#f6dca6" style="filter:drop-shadow(0 0 6px #e6c07a)"><animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/></circle>';
+}
 async function loadResults(){
   try{
     const r=await fetch('/api/public_stats?t='+Date.now());
@@ -452,12 +520,16 @@ async function loadResults(){
     lastData=d;
     allTrades=d.trades||[];buildDays();
     const pips=d.pips_total||0;
-    const roiEl=document.getElementById('s-roi');
-    roiEl.textContent=(pips>=0?'+':'')+pips.toLocaleString('en-US');
-    roiEl.style.color=pips>=0?'var(--green)':'var(--red)';
-    document.getElementById('s-win').textContent=d.win_rate+'%';
-    document.getElementById('s-dd').textContent=d.sl_count;
-    document.getElementById('s-tr').textContent=d.total;
+    const animate=!window.__statsShown; window.__statsShown=true;
+    const put=(id,target,o)=>{const el=document.getElementById(id);if(!el)return;o=o||{};
+      const fmt=v=>(o.plus&&target>=0?'+':(target<0?'-':''))+Math.round(Math.abs(v)).toLocaleString('en-US')+(o.suffix||'');
+      if(animate){countUp(el,target,o);}else{el.textContent=fmt(target);}};
+    put('s-roi',pips,{plus:true}); put('s-win',d.win_rate,{suffix:'%'});
+    put('s-dd',d.sl_count,{}); put('s-tr',d.total,{});
+    put('rc-pips',pips,{plus:true});
+    const rn=document.getElementById('rc-n'), rw=document.getElementById('rc-wr');
+    if(rn) rn.textContent=d.total; if(rw) rw.textContent=d.win_rate+'%';
+    renderEquity(d.trades);
     renderFoot();
     renderTrades();
   }catch(e){

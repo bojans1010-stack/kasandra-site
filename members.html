@@ -563,6 +563,23 @@ async function payCrypto(){
   }catch(e){ alert('Could not open checkout. Message @Kasandra_tech to pay manually.'); }
   if(b){b.disabled=false;b.textContent='Pay '+((window.PAY&&window.PAY.price)||99)+' USDT · Crypto →';}
 }
+// ---- private Telegram signals channel (invite link served only to active members) ----
+async function loadTelegram(){
+  try{
+    const r=await fetch('/api/telegram/invite'); if(!r.ok) return;
+    const d=await r.json(); if(!d.ok||!d.url) return;
+    const c=document.querySelector('.connect');
+    c.insertAdjacentHTML('beforebegin',
+      '<a href="'+d.url+'" target="_blank" rel="noopener" '+
+      'style="display:flex;align-items:center;justify-content:center;gap:10px;'+
+      'background:linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05));'+
+      'border:1px solid var(--gold);border-radius:12px;padding:15px 20px;margin-bottom:18px;'+
+      'text-decoration:none;color:var(--gold);font-weight:600;font-size:14.5px;transition:.15s" '+
+      'onmouseover="this.style.background=\'rgba(212,175,55,.22)\'" '+
+      'onmouseout="this.style.background=\'linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05))\'">'+
+      '📢 '+kT('mem.tgAlerts')+'</a>');
+  }catch(e){}
+}
 async function load(){
   window.PAY=await fetch('/api/pay/status').then(r=>r.json()).catch(()=>({enabled:false,price:99}));
   const me=await fetch('/api/me');
@@ -581,6 +598,7 @@ async function load(){
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
     const renewBtn=(u.access_label==='trial')?payBtn():'';
     c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+renewBtn+'</div>');
+    loadTelegram();
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
     loadAffiliate();

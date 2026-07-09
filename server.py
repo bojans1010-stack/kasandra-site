@@ -31,6 +31,11 @@ STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "https://buy.stripe.
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 STRIPE_ENABLED = bool(STRIPE_PAYMENT_LINK)          # show the card button
 STRIPE_AUTO = bool(STRIPE_PAYMENT_LINK and STRIPE_WEBHOOK_SECRET)   # auto-grant on webhook
+
+# Private Telegram signals channel (paid members only). The invite link is served
+# only to authenticated members with active access — never embedded in public HTML.
+TELEGRAM_INVITE_LINK = os.environ.get("TELEGRAM_INVITE_LINK", "https://t.me/+2r11N5pC8LcwZjlk").strip()
+
 SESSION_DAYS = 30
 _SESSIONS = {}
 _ADMIN_SESSIONS = {}
@@ -510,6 +515,18 @@ def me(k_session: str = Cookie(None)):
             "status": u.get("status", "pending"), "joined": u.get("joined", ""),
             "has_access": has_access, "access_label": label, "days_left": days_left,
             "price_usdt": PRICE_USDT}
+
+@app.get("/api/telegram/invite")
+def telegram_invite(k_session: str = Cookie(None)):
+    """Private signals-channel invite link. Paid/trial members only — the link is
+    never sent to non-subscribers, so it can't leak to free users via the page source."""
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, _ = _access_state(u)
+    if not has_access or not TELEGRAM_INVITE_LINK:
+        return JSONResponse({"ok": False, "error": label}, status_code=403)
+    return {"ok": True, "url": TELEGRAM_INVITE_LINK}
 
 @app.get("/api/results")
 def results(k_session: str = Cookie(None)):

@@ -147,7 +147,7 @@ section.block{padding:80px 0}
 /* HOW IT WORKS + TWO WAYS */
 .how-intro{max-width:760px;margin:0 auto 44px;text-align:center;color:var(--text-2);font-size:15px;line-height:1.8}
 .how-intro b{color:var(--text)}
-.ways{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.ways{display:grid;grid-template-columns:minmax(0,480px);justify-content:center;gap:18px}
 .way{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:16px;padding:34px 30px;position:relative;overflow:hidden}
 .way.best{border:2px solid var(--accent)}
 .way .tagpill{display:inline-block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:16px;font-weight:700}
@@ -340,22 +340,6 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
     </div>
     <p class="how-intro" data-i18n-html="how.intro">Kasandra runs a single rules-based system on gold (XAU/USD). It reads the market around the clock and acts only when its conditions line up, with <b>fixed risk on every trade</b> &mdash; tight stops, single entries, no martingale, no revenge trading. You can let that system trade <b>for you automatically</b>, or take its signals and trade them <b>yourself</b>. <b>We never touch or hold your money.</b> You trade through your own VT Markets account &mdash; your funds stay in your name, with the broker, under your control at all times. We simply provide the technology that connects you to the strategy.</p>
     <div class="ways">
-      <div class="way best">
-        <span class="tagpill" data-i18n="how.bestTag">Best results &middot; hands-off</span>
-        <h3 data-i18n="how.bestH">Automated copy trading</h3>
-        <div class="sub" data-i18n="how.bestSub">The system trades your account for you</div>
-        <ul>
-          <li data-i18n="how.bestL1">Connect your VT Markets account to our automated copy trading</li>
-          <li data-i18n="how.bestL2">Every trade the system takes is copied to your account automatically</li>
-          <li data-i18n="how.bestL3">No screen time, no manual entries, nothing to miss</li>
-          <li data-i18n="how.bestL4">Same entries, same risk control, fully hands-off</li>
-          <li data-i18n="how.bestL5">This is how you get results closest to the live track record above</li>
-        </ul>
-        <a class="wbtn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="how.bestBtn">CONNECT &amp; COPY AUTOMATICALLY &rarr;</a>
-        <a class="wbtn" href="https://my.quomarkets.com/register?regnew=0197b524-a822-720a-ad73-61ccec9bdfb9" target="_blank" style="margin-top:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">OR OPEN QUO MARKETS &rarr;</a>
-        <a class="wbtn" href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" style="margin-top:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">OR OPEN PU PRIME &rarr;</a>
-        <div class="price" data-i18n="how.bestPrice">Open account &middot; enter code uKdrW9fs &middot; message us to connect</div>
-      </div>
       <div class="way manual">
         <span class="tagpill" data-i18n="how.manualTag">Try it free &middot; 7 days</span>
         <h3 data-i18n="how.manualH">Trade the signals yourself</h3>

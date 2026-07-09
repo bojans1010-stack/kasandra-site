@@ -524,7 +524,8 @@ def telegram_invite(k_session: str = Cookie(None)):
     if not email: return JSONResponse({"error": "members only"}, status_code=401)
     u = _get_member(email) or {}
     has_access, label, _ = _access_state(u)
-    if not has_access or not TELEGRAM_INVITE_LINK:
+    # PAID members only — trial/free/expired do not get the private signals channel
+    if label != "active" or not TELEGRAM_INVITE_LINK:
         return JSONResponse({"ok": False, "error": label}, status_code=403)
     return {"ok": True, "url": TELEGRAM_INVITE_LINK}
 

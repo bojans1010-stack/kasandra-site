@@ -142,6 +142,7 @@ td .muted{font-size:12px}
     <div class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
     <div class="tab" id="tab-affiliates" onclick="switchTab('affiliates')">Affiliates</div>
+    <div class="tab" id="tab-payments" onclick="switchTab('payments')">Payments</div>
   </div>
 
   <!-- ============ OVERVIEW ============ -->
@@ -200,6 +201,18 @@ td .muted{font-size:12px}
       <table>
         <thead><tr><th>Affiliate</th><th>Code</th><th>Referrals</th><th>Paid</th><th>Owed</th><th>Paid out</th><th>Action</th></tr></thead>
         <tbody id="affbody"><tr><td colspan="7" class="empty">loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENTS ============ -->
+  <div class="view" id="view-payments">
+    <div class="cards" id="pay-cards"></div>
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold)"></span>PAYMENTS · CRYPTO</div><div class="meta" id="pay-meta"></div></div>
+      <table>
+        <thead><tr><th>When</th><th>Member</th><th>Amount</th><th>Status</th><th>Order</th></tr></thead>
+        <tbody id="paybody"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -303,11 +316,12 @@ function showPanel(){
   if(!window._ovTimer) window._ovTimer=setInterval(loadOverview,45000);
 }
 function switchTab(t){
-  ['overview','members','affiliates'].forEach(x=>{
+  ['overview','members','affiliates','payments'].forEach(x=>{
     document.getElementById('tab-'+x).classList.toggle('active',t===x);
     document.getElementById('view-'+x).classList.toggle('active',t===x);
   });
   if(t==='affiliates') loadAffiliates();
+  if(t==='payments') loadPayments();
 }
 
 // ---------- OVERVIEW ----------
@@ -384,6 +398,26 @@ async function settleAff(email,owed){
   if(!confirm('Mark $'+owed+' as paid out to '+email+'?\nThis clears their pending balance (record only — send the USDT separately).')) return;
   await fetch('/api/admin/affiliate/settle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
   loadAffiliates();
+}
+// ---------- PAYMENTS ----------
+async function loadPayments(){
+  const r=await fetch('/api/admin/payments'); const d=await r.json();
+  const ps=d.payments||[];
+  document.getElementById('pay-cards').innerHTML=
+    card('gold','$'+(d.revenue||0),'Revenue')+
+    card('green',d.paid_count||0,'Paid')+
+    card('accent',ps.length,'Total')+
+    card(d.enabled?'green':'red',d.enabled?'ON':'OFF','Checkout');
+  document.getElementById('pay-meta').textContent=d.enabled?'Cryptomus checkout live':'not configured — set CRYPTOMUS_MERCHANT + CRYPTOMUS_API_KEY';
+  const b=document.getElementById('paybody');
+  if(!ps.length){ b.innerHTML='<tr><td colspan="5" class="empty">No payments yet</td></tr>'; return; }
+  const cls={paid:'TP3',paid_over:'TP3',pending:'BE',process:'BE',confirm_check:'BE',cancel:'SL',fail:'SL',wrong_amount:'SL'};
+  b.innerHTML=ps.map(p=>
+    '<tr><td class="mono muted">'+(p.created||'')+'</td>'+
+    '<td>'+(p.email||'—')+'</td>'+
+    '<td class="mono">$'+Math.round(p.amount||0)+'</td>'+
+    '<td><span class="oc '+(cls[p.status]||'BE')+'">'+(p.status||'?')+'</span></td>'+
+    '<td class="mono muted" style="font-size:11px">'+(p.order_id||'')+'</td></tr>').join('');
 }
 
 // ---------- USER MANAGEMENT ----------

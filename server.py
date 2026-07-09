@@ -7,7 +7,7 @@ to a local JSON file (members.json) for local testing. Same API either way.
 """
 from fastapi import FastAPI, Request, Cookie
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
-import json, os, hashlib, secrets, time, re
+import json, os, hashlib, secrets, time, re, base64, urllib.request, urllib.error
 
 app = FastAPI()
 SITE = os.path.dirname(os.path.abspath(__file__))
@@ -19,6 +19,12 @@ INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "").strip()
 # admin password: env var on Railway, else local file
 ADMIN_PW_FILE = os.path.join(SITE, "admin_pw.txt")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+# Cryptomus crypto payments (set these env vars on Railway; the code never hardcodes them)
+CRYPTOMUS_MERCHANT = os.environ.get("CRYPTOMUS_MERCHANT", "").strip()
+CRYPTOMUS_API_KEY = os.environ.get("CRYPTOMUS_API_KEY", "").strip()
+SITE_URL_PUBLIC = os.environ.get("SITE_URL_PUBLIC", "https://kasandra.app").strip().rstrip("/")
+PAY_ENABLED = bool(CRYPTOMUS_MERCHANT and CRYPTOMUS_API_KEY)
+PAYMENTS_FILE = os.path.join(SITE, "payments.json")
 SESSION_DAYS = 30
 _SESSIONS = {}
 _ADMIN_SESSIONS = {}
@@ -55,6 +61,9 @@ def _init_db():
     cur.execute("""CREATE TABLE IF NOT EXISTS commissions(
         id SERIAL PRIMARY KEY, referrer TEXT, referred TEXT,
         amount DOUBLE PRECISION, created TEXT, status TEXT DEFAULT 'pending')""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS payments(
+        order_id TEXT PRIMARY KEY, email TEXT, amount DOUBLE PRECISION,
+        status TEXT, created TEXT, fulfilled BOOLEAN DEFAULT FALSE)""")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -248,6 +257,85 @@ def _accrue_referral(referred_email):
     if not ref or ref.get("email") == referred_email:
         return
     _add_commission(ref["email"], referred_email, REF_COMMISSION)
+
+# ---------- crypto payments (Cryptomus) ----------
+def _load_payments():
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("SELECT * FROM payments ORDER BY created DESC")
+        rows = cur.fetchall(); cur.close(); conn.close()
+        return [dict(r) for r in rows]
+    if not os.path.exists(PAYMENTS_FILE):
+        return []
+    try:
+        return sorted(json.load(open(PAYMENTS_FILE, encoding="utf-8")),
+                      key=lambda p: p.get("created", ""), reverse=True)
+    except Exception:
+        return []
+
+def _get_payment(order_id):
+    for p in _load_payments():
+        if p.get("order_id") == order_id:
+            return p
+    return None
+
+def _upsert_payment(order_id, email, amount, status, fulfilled):
+    created = time.strftime("%Y-%m-%d %H:%M")
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("""INSERT INTO payments(order_id,email,amount,status,created,fulfilled)
+            VALUES(%s,%s,%s,%s,%s,%s)
+            ON CONFLICT(order_id) DO UPDATE SET status=EXCLUDED.status, fulfilled=EXCLUDED.fulfilled""",
+            (order_id, email, amount, status, created, fulfilled))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        ps = _load_payments()
+        for p in ps:
+            if p.get("order_id") == order_id:
+                p["status"] = status; p["fulfilled"] = fulfilled
+                json.dump(ps, open(PAYMENTS_FILE, "w", encoding="utf-8"), indent=2)
+                return
+        ps.insert(0, {"order_id": order_id, "email": email, "amount": amount,
+                      "status": status, "created": created, "fulfilled": fulfilled})
+        json.dump(ps, open(PAYMENTS_FILE, "w", encoding="utf-8"), indent=2)
+
+def _cmus_sign(data_dict):
+    """Cryptomus signature: md5( base64(php_json_encode(data)) + API_KEY ). Match PHP json_encode:
+    compact separators + escaped forward slashes."""
+    raw = json.dumps(data_dict, separators=(',', ':')).replace('/', '\\/')
+    return hashlib.md5((base64.b64encode(raw.encode()).decode() + CRYPTOMUS_API_KEY).encode()).hexdigest()
+
+def _cryptomus_create_invoice(order_id, amount, email):
+    payload = {
+        "amount": str(amount), "currency": "USD", "order_id": order_id,
+        "url_callback": SITE_URL_PUBLIC + "/api/pay/webhook",
+        "url_return": SITE_URL_PUBLIC + "/members",
+        "url_success": SITE_URL_PUBLIC + "/members",
+        "additional_data": email, "lifetime": 3600, "subtract": "100",
+    }
+    raw = json.dumps(payload, separators=(',', ':')).replace('/', '\\/')
+    sign = hashlib.md5((base64.b64encode(raw.encode()).decode() + CRYPTOMUS_API_KEY).encode()).hexdigest()
+    req = urllib.request.Request("https://api.cryptomus.com/v1/payment", data=raw.encode(), method="POST",
+        headers={"merchant": CRYPTOMUS_MERCHANT, "sign": sign, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.load(r)
+
+def _verify_webhook(data):
+    sign = data.get("sign")
+    if not sign:
+        return False
+    d = {k: v for k, v in data.items() if k != "sign"}
+    return secrets.compare_digest(_cmus_sign(d), str(sign))
+
+def _fulfill_payment(order_id, email, amount):
+    """Grant a paid month + accrue affiliate commission, exactly once per order."""
+    p = _get_payment(order_id)
+    if p and p.get("fulfilled"):
+        return False
+    _grant_access(email, MONTH_DAYS, "paid")
+    _accrue_referral(email)
+    _upsert_payment(order_id, email, amount, "paid", True)
+    return True
 
 def _all_members():
     if _USE_DB:
@@ -970,6 +1058,61 @@ async def admin_affiliate_settle(request: Request, k_admin: str = Cookie(None)):
     email = (body.get("email") or "").strip().lower()
     n = _settle_commissions(email)
     return {"ok": True, "settled": n, "msg": f"marked {n} commission(s) as paid out"}
+
+@app.get("/api/pay/status")
+def pay_status():
+    return {"enabled": PAY_ENABLED, "price": PRICE_USDT}
+
+@app.post("/api/pay/create")
+async def pay_create(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "members only"}, status_code=401)
+    if not PAY_ENABLED:
+        return JSONResponse({"ok": False, "error": "payments not configured yet"}, status_code=503)
+    order_id = "K-" + secrets.token_hex(8)
+    _upsert_payment(order_id, email, PRICE_USDT, "pending", False)
+    try:
+        res = _cryptomus_create_invoice(order_id, PRICE_USDT, email)
+        url = (res.get("result") or {}).get("url")
+        if not url:
+            raise ValueError("no checkout url: " + json.dumps(res)[:200])
+        return {"ok": True, "url": url}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": "could not create checkout"}, status_code=502)
+
+@app.post("/api/pay/webhook")
+async def pay_webhook(request: Request):
+    """Cryptomus payment callback. Signature-verified; grants access on a real 'paid' event."""
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    if not PAY_ENABLED or not _verify_webhook(data):
+        return JSONResponse({"ok": False, "error": "bad signature"}, status_code=403)
+    order_id = data.get("order_id") or ""
+    status = (data.get("status") or "").lower()
+    try:
+        amount = float(data.get("amount") or data.get("payment_amount") or 0)
+    except Exception:
+        amount = 0.0
+    stored = _get_payment(order_id) or {}
+    email = (stored.get("email") or data.get("additional_data") or "").strip().lower()
+    if status in ("paid", "paid_over") and email and amount >= PRICE_USDT * 0.98:
+        _fulfill_payment(order_id, email, amount)
+    else:
+        _upsert_payment(order_id, email, amount, status or "unknown", bool(stored.get("fulfilled")))
+    return {"ok": True}
+
+@app.get("/api/admin/payments")
+def admin_payments(k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    ps = _load_payments()[:150]
+    paid = [p for p in ps if (p.get("status") or "") in ("paid", "paid_over")]
+    revenue = round(sum(float(p.get("amount") or 0) for p in paid))
+    return {"payments": ps, "count": len(ps), "paid_count": len(paid),
+            "revenue": revenue, "enabled": PAY_ENABLED}
 
 @app.get("/api/admin/overview")
 def admin_overview(k_admin: str = Cookie(None)):

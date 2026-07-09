@@ -543,7 +543,18 @@ async function changePw(){
   const d=await r.json();
   alert(d.ok ? kT('mem.pwOk') : (d.error||'error'));
 }
+function payBtn(){ if(!(window.PAY&&window.PAY.enabled)) return '';
+  return '<div style="margin-top:16px"><button id="paybtn" class="btn" style="margin:0" onclick="payCrypto()">Pay '+(window.PAY.price||99)+' USDT &middot; Crypto &rarr;</button><div style="font-size:11px;color:var(--dim);margin-top:8px">Instant activation &middot; pay in USDT, any chain</div></div>'; }
+async function payCrypto(){
+  const b=document.getElementById('paybtn'); if(b){b.disabled=true;b.textContent='Opening checkout…';}
+  try{ const r=await fetch('/api/pay/create',{method:'POST'}); const d=await r.json();
+    if(d.ok&&d.url){ location.href=d.url; return; }
+    alert(d.error||'Payment is not available right now. Message @Kasandra_tech to pay manually.');
+  }catch(e){ alert('Could not open checkout. Message @Kasandra_tech to pay manually.'); }
+  if(b){b.disabled=false;b.textContent='Pay '+((window.PAY&&window.PAY.price)||99)+' USDT · Crypto →';}
+}
 async function load(){
+  window.PAY=await fetch('/api/pay/status').then(r=>r.json()).catch(()=>({enabled:false,price:99}));
   const me=await fetch('/api/me');
   if(me.status===401){location.href='/login';return;}
   const u=await me.json();
@@ -558,7 +569,8 @@ async function load(){
     let txt=u.access_label==='trial'
       ? '&#9201; '+kT('mem.trialBanner').replace('{days}',u.days_left).replace('{price}',price)
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
-    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
+    const renewBtn=(u.access_label==='trial')?payBtn():'';
+    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+renewBtn+'</div>');
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
     loadAffiliate();
@@ -570,7 +582,7 @@ async function load(){
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Kasandra_tech" target="_blank" style="color:var(--accent);font-weight:600">@Kasandra_tech</a> '+kT('mem.expiredP2post')+'</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Kasandra_tech" target="_blank" style="color:var(--accent);font-weight:600">@Kasandra_tech</a> '+kT('mem.expiredP2post')+'</p>'+payBtn()+'</div>');
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }

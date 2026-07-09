@@ -230,6 +230,21 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <tbody id="hist-body"></tbody></table>
   </div>
   </div><!-- /maingrid -->
+
+  <div class="panel" id="affpanel" style="display:none;margin-bottom:20px">
+    <div class="ph"><div class="t"><span class="dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold)"></span>REFER &amp; EARN &middot; 30% RECURRING</div><span class="upd" id="aff-code"></span></div>
+    <div style="padding:20px 22px">
+      <p style="color:var(--text-2);font-size:13px;line-height:1.65;margin-bottom:16px">Share your link. Every person you refer who becomes a paid member earns you <b style="color:var(--gold)">30% (~30 USDT)</b> for every month they stay subscribed &mdash; paid out in USDT. No limit.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px">
+        <input id="aff-link" readonly onclick="this.select()" style="flex:1;min-width:230px;background:#0a0e16;border:1px solid var(--gold-dim);border-radius:9px;padding:12px 14px;color:var(--gold);font-family:var(--mono);font-size:13px">
+        <button class="btn" style="margin:0" onclick="copyAff()" id="aff-copy">Copy link</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="aff-stats"></div>
+      <div style="font-size:10px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Your referrals</div>
+      <table><thead><tr><th>Member</th><th>Status</th><th>Joined</th></tr></thead><tbody id="aff-refs"><tr><td colspan="3" style="color:var(--dim);padding:16px 0">No referrals yet &mdash; share your link to start earning.</td></tr></tbody></table>
+    </div>
+  </div>
+
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
@@ -494,6 +509,28 @@ async function pollTick(){
 </script>
 <script>
 function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
+async function loadAffiliate(){
+  try{
+    const r=await fetch('/api/affiliate/me'); if(r.status!==200) return;
+    const d=await r.json();
+    document.getElementById('affpanel').style.display='block';
+    document.getElementById('aff-link').value=location.origin+'/?ref='+d.ref_code;
+    document.getElementById('aff-code').textContent='Your code: '+d.ref_code;
+    const S=(v,l,cls)=>'<div style="background:linear-gradient(150deg,rgba(19,27,46,.6),rgba(11,16,27,.5));border:1px solid var(--border-soft);border-radius:12px;padding:16px 14px;text-align:center"><div class="mono" style="font-size:26px;font-weight:700;color:'+(cls||'var(--accent)')+'">'+v+'</div><div style="font-size:9.5px;letter-spacing:1.3px;color:var(--text-2);text-transform:uppercase;margin-top:6px;font-weight:600">'+l+'</div></div>';
+    document.getElementById('aff-stats').innerHTML=
+      S(d.signups,'Referrals')+S(d.paid,'Paid','var(--green)')+
+      S('$'+d.earned_pending,'Owed to you','var(--gold)')+S('$'+d.earned_settled,'Paid out','var(--text-2)');
+    const refs=d.referrals||[];
+    if(refs.length){
+      const cls={active:'TP3',trial:'TP1',pending:'BE',expired:'SL',free:'TP2'};
+      document.getElementById('aff-refs').innerHTML=refs.map(r=>
+        '<tr><td>'+r.name+' <span style="color:var(--dim);font-size:11px">'+r.email+'</span></td>'+
+        '<td><span class="oc '+(cls[r.status]||'BE')+'">'+r.status+'</span></td>'+
+        '<td class="date">'+(r.joined||'').slice(0,10)+'</td></tr>').join('');
+    }
+  }catch(e){}
+}
+function copyAff(){const el=document.getElementById('aff-link');el.select();navigator.clipboard.writeText(el.value).then(()=>{const b=document.getElementById('aff-copy');b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy link',1500);});}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
 async function changePw(){
   const cur=prompt(kT('mem.pwCurrent'));
@@ -523,6 +560,7 @@ async function load(){
     c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
+    loadAffiliate();
     return;
   }
 

@@ -141,6 +141,7 @@ td .muted{font-size:12px}
   <div class="tabs">
     <div class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
+    <div class="tab" id="tab-affiliates" onclick="switchTab('affiliates')">Affiliates</div>
   </div>
 
   <!-- ============ OVERVIEW ============ -->
@@ -187,6 +188,18 @@ td .muted{font-size:12px}
       <table>
         <thead><tr><th>Member</th><th>Contact</th><th>Country</th><th>Status</th><th>Plan</th><th>Expires</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="mbody"><tr><td colspan="8" class="empty">loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ AFFILIATES ============ -->
+  <div class="view" id="view-affiliates">
+    <div class="cards" id="aff-cards"></div>
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold)"></span>AFFILIATES · 30% RECURRING</div><div class="meta" id="aff-meta"></div></div>
+      <table>
+        <thead><tr><th>Affiliate</th><th>Code</th><th>Referrals</th><th>Paid</th><th>Owed</th><th>Paid out</th><th>Action</th></tr></thead>
+        <tbody id="affbody"><tr><td colspan="7" class="empty">loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -290,10 +303,11 @@ function showPanel(){
   if(!window._ovTimer) window._ovTimer=setInterval(loadOverview,45000);
 }
 function switchTab(t){
-  document.getElementById('tab-overview').classList.toggle('active',t==='overview');
-  document.getElementById('tab-members').classList.toggle('active',t==='members');
-  document.getElementById('view-overview').classList.toggle('active',t==='overview');
-  document.getElementById('view-members').classList.toggle('active',t==='members');
+  ['overview','members','affiliates'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',t===x);
+    document.getElementById('view-'+x).classList.toggle('active',t===x);
+  });
+  if(t==='affiliates') loadAffiliates();
 }
 
 // ---------- OVERVIEW ----------
@@ -345,6 +359,32 @@ async function loadOverview(){
   }).join('') : '<tr><td colspan="7" class="empty">no trades yet</td></tr>';
 }
 function card(cls,v,l){return '<div class="card '+cls+'"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+// ---------- AFFILIATES ----------
+async function loadAffiliates(){
+  const r=await fetch('/api/admin/affiliates'); const d=await r.json();
+  const rows=d.affiliates||[];
+  document.getElementById('aff-cards').innerHTML=
+    card('accent',rows.length,'Affiliates')+
+    card('green',rows.reduce((a,x)=>a+x.paid,0),'Paid Referrals')+
+    card('gold','$'+(d.total_owed||0),'Total Owed')+
+    card('accent','$'+rows.reduce((a,x)=>a+x.settled,0),'Total Paid Out');
+  document.getElementById('aff-meta').textContent=rows.length+' affiliate(s) · '+d.pct+'% recurring · $'+d.per_month+'/mo each';
+  const b=document.getElementById('affbody');
+  if(!rows.length){ b.innerHTML='<tr><td colspan="7" class="empty">No affiliates yet — referrals appear here as members share their links</td></tr>'; return; }
+  b.innerHTML=rows.map(a=>
+    '<tr><td><div class="mcell"><div class="avatar" style="width:32px;height:32px;font-size:12px;background:'+avColor(a.email)+'">'+((a.name||'?').trim()[0]||'?').toUpperCase()+'</div><div><div class="nm">'+a.name+'</div><div class="em2">'+a.email+'</div></div></div></td>'+
+    '<td class="mono">'+(a.ref_code||'—')+'</td>'+
+    '<td class="mono">'+a.signups+'</td>'+
+    '<td class="mono">'+a.paid+'</td>'+
+    '<td class="mono" style="color:var(--gold);font-weight:700">$'+a.owed+'</td>'+
+    '<td class="mono muted">$'+a.settled+'</td>'+
+    '<td>'+(a.owed>0?'<button class="act approve" onclick="settleAff(\''+a.email+'\','+a.owed+')">Mark paid out ▸</button>':'<span class="muted">—</span>')+'</td></tr>').join('');
+}
+async function settleAff(email,owed){
+  if(!confirm('Mark $'+owed+' as paid out to '+email+'?\nThis clears their pending balance (record only — send the USDT separately).')) return;
+  await fetch('/api/admin/affiliate/settle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+  loadAffiliates();
+}
 
 // ---------- USER MANAGEMENT ----------
 async function loadMembers(){

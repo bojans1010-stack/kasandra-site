@@ -50,6 +50,11 @@ def _init_db():
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS access_until DOUBLE PRECISION DEFAULT 0")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'none'")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS ref_code TEXT")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS referred_by TEXT")
+    cur.execute("""CREATE TABLE IF NOT EXISTS commissions(
+        id SERIAL PRIMARY KEY, referrer TEXT, referred TEXT,
+        amount DOUBLE PRECISION, created TEXT, status TEXT DEFAULT 'pending')""")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -86,6 +91,9 @@ def _set_status(email, status):
 TRIAL_DAYS = 7
 MONTH_DAYS = 30
 PRICE_USDT = 99
+REF_PCT = 30                                   # affiliate commission: 30% of each paid month
+REF_COMMISSION = round(PRICE_USDT * REF_PCT / 100)   # = 30 USDT per paid month, per referral
+COMMISSIONS_FILE = os.path.join(SITE, "commissions.json")   # JSON-mode fallback store
 
 def _grant_access(email, days, plan):
     """Extend a member's access by `days` from now (or from their current expiry if still active)."""
@@ -144,6 +152,102 @@ def _access_state(rec):
     plan = rec.get("plan", "none")
     label = "trial" if plan == "trial" else "free" if plan in FREE_PLANS else "active"
     return (True, label, days_left)
+
+# ---------- affiliate / referral system ----------
+def _gen_ref_code():
+    import string
+    return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+
+def _member_by_ref(code):
+    if not code:
+        return None
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("SELECT * FROM members WHERE ref_code=%s", (code,))
+        row = cur.fetchone(); cur.close(); conn.close()
+        return dict(row) if row else None
+    for e, m in _load_file().items():
+        if m.get("ref_code") == code:
+            return {**m, "email": e}
+    return None
+
+def _set_member_field(email, field, val):
+    # `field` is always an internal literal, never user input -> safe to interpolate
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute(f"UPDATE members SET {field}=%s WHERE email=%s", (val, email))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        m = _load_file()
+        if email in m:
+            m[email][field] = val; _save_file(m)
+
+def _uniq_ref_code():
+    for _ in range(12):
+        c = _gen_ref_code()
+        if not _member_by_ref(c):
+            return c
+    return _gen_ref_code()
+
+def _ensure_ref_code(email):
+    m = _get_member(email)
+    if not m:
+        return None
+    if m.get("ref_code"):
+        return m["ref_code"]
+    code = _uniq_ref_code()
+    _set_member_field(email, "ref_code", code)
+    return code
+
+def _load_commissions():
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("SELECT * FROM commissions ORDER BY id")
+        rows = cur.fetchall(); cur.close(); conn.close()
+        return [dict(r) for r in rows]
+    if not os.path.exists(COMMISSIONS_FILE):
+        return []
+    try:
+        return json.load(open(COMMISSIONS_FILE, encoding="utf-8"))
+    except Exception:
+        return []
+
+def _add_commission(referrer_email, referred_email, amount):
+    created = time.strftime("%Y-%m-%d %H:%M")
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("INSERT INTO commissions(referrer,referred,amount,created,status) VALUES(%s,%s,%s,%s,'pending')",
+                    (referrer_email, referred_email, amount, created))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        c = _load_commissions()
+        nid = (max([x.get("id", 0) for x in c]) + 1) if c else 1
+        c.append({"id": nid, "referrer": referrer_email, "referred": referred_email,
+                  "amount": amount, "created": created, "status": "pending"})
+        json.dump(c, open(COMMISSIONS_FILE, "w", encoding="utf-8"), indent=2)
+
+def _settle_commissions(referrer_email):
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("UPDATE commissions SET status='settled' WHERE referrer=%s AND status='pending'", (referrer_email,))
+        n = cur.rowcount; conn.commit(); cur.close(); conn.close()
+        return n
+    c = _load_commissions(); n = 0
+    for x in c:
+        if x.get("referrer") == referrer_email and x.get("status") == "pending":
+            x["status"] = "settled"; n += 1
+    json.dump(c, open(COMMISSIONS_FILE, "w", encoding="utf-8"), indent=2)
+    return n
+
+def _accrue_referral(referred_email):
+    """When a referred member gets a PAID month, credit their referrer a 30% commission."""
+    m = _get_member(referred_email)
+    if not m or not m.get("referred_by"):
+        return
+    ref = _member_by_ref(m["referred_by"])
+    if not ref or ref.get("email") == referred_email:
+        return
+    _add_commission(ref["email"], referred_email, REF_COMMISSION)
 
 def _all_members():
     if _USE_DB:
@@ -238,6 +342,11 @@ async def register(request: Request):
            "country": country, "phone": phone, "salt": salt, "pw": _hash(pw, salt),
            "status": "pending", "joined": time.strftime("%Y-%m-%d %H:%M")}
     _put_member(email, rec)
+    # affiliate: give this member their own referral code, and attribute the referrer if valid
+    _set_member_field(email, "ref_code", _uniq_ref_code())
+    ref = (body.get("ref") or "").strip().upper()[:12]
+    if ref and _member_by_ref(ref):
+        _set_member_field(email, "referred_by", ref)
     tok = _new_session(email)
     resp = JSONResponse({"ok": True})
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
@@ -499,6 +608,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "email": email, "msg": "7-day trial started"}
     elif action == "extend_month":
         _grant_access(email, MONTH_DAYS, "paid")
+        _accrue_referral(email)
         return {"ok": True, "email": email, "msg": "30 days added (paid)"}
     elif action == "gift_week":
         _grant_access(email, 7, "free")
@@ -517,6 +627,8 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         if days < 1 or days > 3650:
             return JSONResponse({"ok": False, "error": "days out of range"})
         nu = _grant_access(email, days, plan)
+        if plan == "paid":
+            _accrue_referral(email)
         return {"ok": True, "email": email, "msg": f"+{days} days ({plan})",
                 "until": time.strftime("%Y-%m-%d", time.gmtime(nu))}
     elif action == "set_expiry":
@@ -524,6 +636,8 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         ts = _set_expiry(email, (body.get("date") or "").strip(), plan)
         if ts is None:
             return JSONResponse({"ok": False, "error": "bad date (use YYYY-MM-DD)"})
+        if plan == "paid":
+            _accrue_referral(email)
         return {"ok": True, "email": email, "msg": "expiry set",
                 "until": time.strftime("%Y-%m-%d", time.gmtime(ts))}
     elif action == "revoke":
@@ -788,6 +902,74 @@ async def ingest_results(request: Request):
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     return {"ok": True, "total": safe["total"]}
+
+def _mask_email(e):
+    if not e or "@" not in e:
+        return e
+    u, d = e.split("@", 1)
+    return (u[0] + "***" if len(u) > 1 else "***") + "@" + d
+
+@app.get("/api/affiliate/me")
+def affiliate_me(k_session: str = Cookie(None)):
+    """A member's own affiliate stats: their code/link, referrals and earnings."""
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    code = _ensure_ref_code(email)
+    refs = []
+    for e, m in _all_members().items():
+        if m.get("referred_by") == code:
+            _, label, _dl = _access_state(m)
+            refs.append({"name": (m.get("name") or e), "email": _mask_email(e),
+                         "status": label, "joined": m.get("joined", "")})
+    refs.sort(key=lambda r: r.get("joined", ""), reverse=True)
+    comms = [c for c in _load_commissions() if c.get("referrer") == email]
+    pending = round(sum(c["amount"] for c in comms if c.get("status") == "pending"))
+    settled = round(sum(c["amount"] for c in comms if c.get("status") == "settled"))
+    return {"ref_code": code, "pct": REF_PCT, "per_month": REF_COMMISSION,
+            "referrals": refs, "signups": len(refs),
+            "paid": sum(1 for r in refs if r["status"] == "active"),
+            "earned_pending": pending, "earned_settled": settled, "earned_total": pending + settled}
+
+@app.get("/api/admin/affiliates")
+def admin_affiliates(k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    members = _all_members()
+    comms = _load_commissions()
+    by_code = {}
+    for e, m in members.items():
+        if m.get("referred_by"):
+            by_code.setdefault(m["referred_by"], []).append((e, m))
+    earners = set(c["referrer"] for c in comms)
+    for e, m in members.items():
+        if m.get("ref_code") and by_code.get(m["ref_code"]):
+            earners.add(e)
+    rows = []
+    for e in earners:
+        m = members.get(e)
+        if not m:
+            continue
+        my_refs = by_code.get(m.get("ref_code"), [])
+        my_comms = [c for c in comms if c.get("referrer") == e]
+        pending = round(sum(c["amount"] for c in my_comms if c.get("status") == "pending"))
+        settled = round(sum(c["amount"] for c in my_comms if c.get("status") == "settled"))
+        rows.append({"email": e, "name": m.get("name") or e, "ref_code": m.get("ref_code"),
+                     "signups": len(my_refs),
+                     "paid": sum(1 for (_re, rm) in my_refs if _access_state(rm)[1] == "active"),
+                     "owed": pending, "settled": settled})
+    rows.sort(key=lambda r: (-r["owed"], -r["signups"]))
+    return {"affiliates": rows, "total_owed": round(sum(r["owed"] for r in rows)),
+            "pct": REF_PCT, "per_month": REF_COMMISSION}
+
+@app.post("/api/admin/affiliate/settle")
+async def admin_affiliate_settle(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    n = _settle_commissions(email)
+    return {"ok": True, "settled": n, "msg": f"marked {n} commission(s) as paid out"}
 
 @app.get("/api/admin/overview")
 def admin_overview(k_admin: str = Cookie(None)):

@@ -38,7 +38,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.35
 .klang-opt:hover{background:rgba(0,212,255,.10);color:var(--accent)}
 .klang-opt.sel{color:var(--accent);background:rgba(0,212,255,.06)}
 .klang-opt.sel::after{content:' \2713';font-size:11px}
-</style></head><body>
+</style><script>try{var _r=new URLSearchParams(location.search).get('ref');if(_r)localStorage.setItem('kref',_r.toUpperCase().slice(0,12));}catch(e){}</script></head><body>
 <div class="box">
 <a href="/" class="back" data-i18n="auth.back">&larr; back to site</a>
 <div class="brand"><span class="dot"></span>KASANDRA</div>
@@ -83,7 +83,8 @@ async function go(){
     email:document.getElementById('email').value,
     country:document.getElementById('country').value,
     phone:document.getElementById('phone').value,
-    password:document.getElementById('pw').value
+    password:document.getElementById('pw').value,
+    ref:(localStorage.getItem('kref')||new URLSearchParams(location.search).get('ref')||'').toUpperCase()
   };
   const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const d=await r.json();

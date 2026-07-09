@@ -7,7 +7,7 @@ to a local JSON file (members.json) for local testing. Same API either way.
 """
 from fastapi import FastAPI, Request, Cookie
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
-import json, os, hashlib, secrets, time, re, base64, urllib.request, urllib.error
+import json, os, hashlib, hmac, secrets, time, re, base64, urllib.request, urllib.error
 
 app = FastAPI()
 SITE = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +25,12 @@ CRYPTOMUS_API_KEY = os.environ.get("CRYPTOMUS_API_KEY", "").strip()
 SITE_URL_PUBLIC = os.environ.get("SITE_URL_PUBLIC", "https://kasandra.app").strip().rstrip("/")
 PAY_ENABLED = bool(CRYPTOMUS_MERCHANT and CRYPTOMUS_API_KEY)
 PAYMENTS_FILE = os.path.join(SITE, "payments.json")
+# Stripe card payments (hosted payment link + webhook). The link URL is public;
+# STRIPE_WEBHOOK_SECRET (whsec_...) is the secret you set on Railway for auto-grant.
+STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "https://buy.stripe.com/aFa6oHfVn3R86FabfHfAc0N").strip()
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
+STRIPE_ENABLED = bool(STRIPE_PAYMENT_LINK)          # show the card button
+STRIPE_AUTO = bool(STRIPE_PAYMENT_LINK and STRIPE_WEBHOOK_SECRET)   # auto-grant on webhook
 SESSION_DAYS = 30
 _SESSIONS = {}
 _ADMIN_SESSIONS = {}
@@ -336,6 +342,18 @@ def _fulfill_payment(order_id, email, amount):
     _accrue_referral(email)
     _upsert_payment(order_id, email, amount, "paid", True)
     return True
+
+def _verify_stripe_sig(payload: bytes, sig_header: str):
+    """Verify a Stripe webhook signature (Stripe-Signature: t=...,v1=...)."""
+    if not STRIPE_WEBHOOK_SECRET or not sig_header:
+        return False
+    parts = dict(p.split("=", 1) for p in sig_header.split(",") if "=" in p)
+    t, v1 = parts.get("t"), parts.get("v1")
+    if not t or not v1:
+        return False
+    signed = t.encode() + b"." + payload
+    expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
+    return secrets.compare_digest(expected, v1)
 
 def _all_members():
     if _USE_DB:
@@ -1061,7 +1079,9 @@ async def admin_affiliate_settle(request: Request, k_admin: str = Cookie(None)):
 
 @app.get("/api/pay/status")
 def pay_status():
-    return {"enabled": PAY_ENABLED, "price": PRICE_USDT}
+    # only advertise a method that will actually auto-activate the member on payment
+    return {"enabled": PAY_ENABLED or STRIPE_AUTO, "crypto": PAY_ENABLED,
+            "stripe": STRIPE_AUTO, "price": PRICE_USDT}
 
 @app.post("/api/pay/create")
 async def pay_create(k_session: str = Cookie(None)):
@@ -1104,6 +1124,40 @@ async def pay_webhook(request: Request):
         _upsert_payment(order_id, email, amount, status or "unknown", bool(stored.get("fulfilled")))
     return {"ok": True}
 
+@app.post("/api/pay/stripe")
+async def pay_stripe(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "members only"}, status_code=401)
+    if not STRIPE_ENABLED:
+        return JSONResponse({"ok": False, "error": "card payments not configured"}, status_code=503)
+    order_id = "S-" + secrets.token_hex(8)
+    _upsert_payment(order_id, email, PRICE_USDT, "pending", False)
+    sep = "&" if "?" in STRIPE_PAYMENT_LINK else "?"
+    return {"ok": True, "url": STRIPE_PAYMENT_LINK + sep + "client_reference_id=" + order_id}
+
+@app.post("/api/pay/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """Stripe checkout webhook. Signature-verified; grants access on a paid session."""
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    if not STRIPE_AUTO or not _verify_stripe_sig(payload, sig):
+        return JSONResponse({"ok": False, "error": "bad signature"}, status_code=403)
+    try:
+        event = json.loads(payload)
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    if event.get("type") == "checkout.session.completed":
+        s = (event.get("data") or {}).get("object") or {}
+        if (s.get("payment_status") or "") == "paid":
+            order_id = s.get("client_reference_id") or ("S-" + secrets.token_hex(6))
+            amount = round(float(s.get("amount_total") or 0) / 100, 2) or PRICE_USDT
+            stored = _get_payment(order_id) or {}
+            email = (stored.get("email") or (s.get("customer_details") or {}).get("email") or "").strip().lower()
+            if email:
+                _fulfill_payment(order_id, email, amount)
+    return {"ok": True}
+
 @app.get("/api/admin/payments")
 def admin_payments(k_admin: str = Cookie(None)):
     if not _is_admin(k_admin):
@@ -1112,7 +1166,8 @@ def admin_payments(k_admin: str = Cookie(None)):
     paid = [p for p in ps if (p.get("status") or "") in ("paid", "paid_over")]
     revenue = round(sum(float(p.get("amount") or 0) for p in paid))
     return {"payments": ps, "count": len(ps), "paid_count": len(paid),
-            "revenue": revenue, "enabled": PAY_ENABLED}
+            "revenue": revenue, "enabled": PAY_ENABLED or STRIPE_AUTO,
+            "crypto": PAY_ENABLED, "stripe": STRIPE_AUTO}
 
 @app.get("/api/admin/overview")
 def admin_overview(k_admin: str = Cookie(None)):

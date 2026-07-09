@@ -543,8 +543,18 @@ async function changePw(){
   const d=await r.json();
   alert(d.ok ? kT('mem.pwOk') : (d.error||'error'));
 }
-function payBtn(){ if(!(window.PAY&&window.PAY.enabled)) return '';
-  return '<div style="margin-top:16px"><button id="paybtn" class="btn" style="margin:0" onclick="payCrypto()">Pay '+(window.PAY.price||99)+' USDT &middot; Crypto &rarr;</button><div style="font-size:11px;color:var(--dim);margin-top:8px">Instant activation &middot; pay in USDT, any chain</div></div>'; }
+function payBtn(){ const p=window.PAY||{}; if(!p.enabled) return '';
+  let b='';
+  if(p.crypto) b+='<button id="paybtn" class="btn" style="margin:0" onclick="payCrypto()">Pay '+(p.price||99)+' USDT &middot; Crypto</button>';
+  if(p.stripe) b+='<button class="btn" style="margin:0;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none" onclick="payCard()">Pay by card</button>';
+  if(!b) return '';
+  return '<div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'+b+'</div><div style="font-size:11px;color:var(--dim);margin-top:8px">Instant activation</div>'; }
+async function payCard(){
+  try{ const r=await fetch('/api/pay/stripe',{method:'POST'}); const d=await r.json();
+    if(d.ok&&d.url){ location.href=d.url; return; }
+    alert(d.error||'Card payment is not available right now.');
+  }catch(e){ alert('Could not open card checkout.'); }
+}
 async function payCrypto(){
   const b=document.getElementById('paybtn'); if(b){b.disabled=true;b.textContent='Opening checkout…';}
   try{ const r=await fetch('/api/pay/create',{method:'POST'}); const d=await r.json();

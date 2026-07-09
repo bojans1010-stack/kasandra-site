@@ -408,7 +408,7 @@ async function loadPayments(){
     card('green',d.paid_count||0,'Paid')+
     card('accent',ps.length,'Total')+
     card(d.enabled?'green':'red',d.enabled?'ON':'OFF','Checkout');
-  document.getElementById('pay-meta').textContent=d.enabled?'Cryptomus checkout live':'not configured — set CRYPTOMUS_MERCHANT + CRYPTOMUS_API_KEY';
+  document.getElementById('pay-meta').textContent='Crypto: '+(d.crypto?'live':'off')+' · Card: '+(d.stripe?'live':'off');
   const b=document.getElementById('paybody');
   if(!ps.length){ b.innerHTML='<tr><td colspan="5" class="empty">No payments yet</td></tr>'; return; }
   const cls={paid:'TP3',paid_over:'TP3',pending:'BE',process:'BE',confirm_check:'BE',cancel:'SL',fail:'SL',wrong_amount:'SL'};

@@ -49,7 +49,7 @@ USDT_ERC20_CONTRACT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 CRYPTO_TRON_ON = bool(USDT_TRON_ADDR)
 CRYPTO_ERC20_ON = bool(USDT_ERC20_ADDR and ETHERSCAN_KEY)
 SELFCRYPTO_ENABLED = CRYPTO_TRON_ON or CRYPTO_ERC20_ON
-ORDER_LIFETIME = 1800          # a pending crypto order is valid for 30 minutes
+ORDER_LIFETIME = 7200          # a pending crypto order is valid for 2 hours
 
 SESSION_DAYS = 30
 _SESSIONS = {}
@@ -433,22 +433,38 @@ def _http_get_json(url, headers=None, timeout=20):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)
 
+def _txid_fulfilled(txid):
+    """True only if this txid already fulfilled an order — so a still-unmatched txid
+    stays retryable on later polls (e.g. once the buyer re-opens checkout)."""
+    if not txid: return False
+    for p in _load_payments():
+        if p.get("txid") == txid and p.get("fulfilled"):
+            return True
+    return False
+
 def _match_incoming(network, amount, txid):
     """A confirmed USDT transfer landed. Match it to one pending order and fulfill, once per txid."""
-    if not txid or _txid_seen(txid):
+    if not txid or _txid_fulfilled(txid):
         return
     amt3 = round(amount, 3)
-    for p in _pending_crypto_orders():
-        if p.get("network") != network: continue
+    live = [p for p in _pending_crypto_orders() if p.get("network") == network]
+    # 1) exact unique-amount match (99.00X)
+    for p in live:
         try: want = round(float(p["amount"]), 3)
         except Exception: continue
         if abs(want - amt3) < 0.0005:
-            oid, email = p["order_id"], p.get("email", "")
-            _fulfill_payment(oid, email, amount)
-            _set_txid(oid, txid)
-            print("crypto: matched %s %.3f -> %s (%s) tx %s" % (network, amount, oid, email, txid[:16]))
+            _fulfill_payment(p["order_id"], p.get("email", ""), amount); _set_txid(p["order_id"], txid)
+            print("crypto: matched %s %.3f -> %s (%s) tx %s" % (network, amount, p["order_id"], p.get("email",""), txid[:16]))
             return
-    # no match but subscription-sized -> record so admin can grant manually (nothing lost)
+    # 2) fallback: buyer rounded (e.g. sent 99.00 for a 99.007 order). If exactly ONE live
+    #    order on this network is within 1 USDT, it's unambiguous -> match it.
+    near = [p for p in live if abs(float(p.get("amount") or 0) - amount) < 1.0]
+    if len(near) == 1:
+        p = near[0]
+        _fulfill_payment(p["order_id"], p.get("email", ""), amount); _set_txid(p["order_id"], txid)
+        print("crypto: fallback-matched %s %.3f -> %s (%s) tx %s" % (network, amount, p["order_id"], p.get("email",""), txid[:16]))
+        return
+    # 3) ambiguous or no order -> record for one-click manual grant (stays retryable)
     if amount >= PRICE_USDT * 0.9:
         uid = "U-" + txid[:20]
         if not _get_payment(uid):

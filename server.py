@@ -7,7 +7,7 @@ to a local JSON file (members.json) for local testing. Same API either way.
 """
 from fastapi import FastAPI, Request, Cookie
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
-import json, os, hashlib, hmac, secrets, time, re, base64, urllib.request, urllib.error
+import json, os, hashlib, hmac, secrets, time, re, base64, urllib.request, urllib.error, threading
 
 app = FastAPI()
 SITE = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +35,21 @@ STRIPE_AUTO = bool(STRIPE_PAYMENT_LINK and STRIPE_WEBHOOK_SECRET)   # auto-grant
 # Private Telegram signals channel (paid members only). The invite link is served
 # only to authenticated members with active access — never embedded in public HTML.
 TELEGRAM_INVITE_LINK = os.environ.get("TELEGRAM_INVITE_LINK", "https://t.me/+2r11N5pC8LcwZjlk").strip()
+
+# --- Self-hosted crypto payments (no processor; direct USDT to our own wallets) ---
+# PUBLIC receiving addresses only (safe to expose). A background watcher polls the
+# chains and auto-grants membership when a payment with the exact unique amount lands.
+# The server never holds keys — it only READS public blockchain data.
+USDT_TRON_ADDR = os.environ.get("USDT_TRON_ADDR", "TYjkhBgaKFHSM1w4knFt1FfhLEA8dLqxV6").strip()
+USDT_ERC20_ADDR = os.environ.get("USDT_ERC20_ADDR", "0xD7C168ABDe6AEc0aF3f966956478DbB44f2B018D").strip()
+TRONGRID_KEY = os.environ.get("TRONGRID_KEY", "").strip()      # optional, raises rate limit
+ETHERSCAN_KEY = os.environ.get("ETHERSCAN_KEY", "").strip()    # required to enable ERC20 watching
+USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+USDT_ERC20_CONTRACT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+CRYPTO_TRON_ON = bool(USDT_TRON_ADDR)
+CRYPTO_ERC20_ON = bool(USDT_ERC20_ADDR and ETHERSCAN_KEY)
+SELFCRYPTO_ENABLED = CRYPTO_TRON_ON or CRYPTO_ERC20_ON
+ORDER_LIFETIME = 1800          # a pending crypto order is valid for 30 minutes
 
 SESSION_DAYS = 30
 _SESSIONS = {}
@@ -75,6 +90,8 @@ def _init_db():
     cur.execute("""CREATE TABLE IF NOT EXISTS payments(
         order_id TEXT PRIMARY KEY, email TEXT, amount DOUBLE PRECISION,
         status TEXT, created TEXT, fulfilled BOOLEAN DEFAULT FALSE)""")
+    cur.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS network TEXT")
+    cur.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS txid TEXT")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -348,6 +365,135 @@ def _fulfill_payment(order_id, email, amount):
     _upsert_payment(order_id, email, amount, "paid", True)
     return True
 
+# ---------- self-hosted crypto payment watcher (direct USDT to our wallets) ----------
+def _created_ts(p):
+    try: return time.mktime(time.strptime(p.get("created", ""), "%Y-%m-%d %H:%M"))
+    except Exception: return 0.0
+
+def _pending_crypto_orders():
+    """Live (unpaid, unexpired) crypto orders."""
+    now = time.time()
+    out = []
+    for p in _load_payments():
+        if p.get("status") == "pending" and not p.get("fulfilled") and p.get("network"):
+            if now - _created_ts(p) <= ORDER_LIFETIME:
+                out.append(p)
+    return out
+
+def _unique_crypto_amount(network):
+    """Smallest 99.00X amount (3 decimals) not used by another live order on this network,
+    so an incoming transfer maps to exactly one buyer."""
+    used = set()
+    for p in _pending_crypto_orders():
+        if p.get("network") == network:
+            try: used.add(round(float(p["amount"]), 3))
+            except Exception: pass
+    for i in range(1, 1000):
+        amt = round(PRICE_USDT + i / 1000.0, 3)   # 99.001 .. 99.999
+        if amt not in used:
+            return amt
+    return round(PRICE_USDT + 0.001, 3)
+
+def _create_crypto_order(order_id, email, amount, network):
+    created = time.strftime("%Y-%m-%d %H:%M")
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("""INSERT INTO payments(order_id,email,amount,status,created,fulfilled,network)
+            VALUES(%s,%s,%s,'pending',%s,FALSE,%s) ON CONFLICT(order_id) DO NOTHING""",
+            (order_id, email, amount, created, network))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        ps = _load_payments()
+        ps.insert(0, {"order_id": order_id, "email": email, "amount": amount, "status": "pending",
+                      "created": created, "fulfilled": False, "network": network, "txid": ""})
+        json.dump(ps, open(PAYMENTS_FILE, "w", encoding="utf-8"), indent=2)
+
+def _set_txid(order_id, txid):
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("UPDATE payments SET txid=%s WHERE order_id=%s", (txid, order_id))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        ps = _load_payments()
+        for p in ps:
+            if p.get("order_id") == order_id: p["txid"] = txid
+        json.dump(ps, open(PAYMENTS_FILE, "w", encoding="utf-8"), indent=2)
+
+def _txid_seen(txid):
+    if not txid: return False
+    for p in _load_payments():
+        if p.get("txid") == txid: return True
+    return False
+
+def _http_get_json(url, headers=None, timeout=20):
+    req = urllib.request.Request(url, headers=headers or {}, method="GET")
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+def _match_incoming(network, amount, txid):
+    """A confirmed USDT transfer landed. Match it to one pending order and fulfill, once per txid."""
+    if not txid or _txid_seen(txid):
+        return
+    amt3 = round(amount, 3)
+    for p in _pending_crypto_orders():
+        if p.get("network") != network: continue
+        try: want = round(float(p["amount"]), 3)
+        except Exception: continue
+        if abs(want - amt3) < 0.0005:
+            oid, email = p["order_id"], p.get("email", "")
+            _fulfill_payment(oid, email, amount)
+            _set_txid(oid, txid)
+            print("crypto: matched %s %.3f -> %s (%s) tx %s" % (network, amount, oid, email, txid[:16]))
+            return
+    # no match but subscription-sized -> record so admin can grant manually (nothing lost)
+    if amount >= PRICE_USDT * 0.9:
+        uid = "U-" + txid[:20]
+        if not _get_payment(uid):
+            _upsert_payment(uid, "", amount, "unmatched", False)
+            _set_txid(uid, txid)
+            print("crypto: UNMATCHED %s %.3f tx %s (needs manual grant)" % (network, amount, txid[:16]))
+
+def _poll_tron():
+    url = ("https://api.trongrid.io/v1/accounts/%s/transactions/trc20"
+           "?only_confirmed=true&limit=40&order_by=block_timestamp,desc&contract_address=%s"
+           % (USDT_TRON_ADDR, USDT_TRC20_CONTRACT))
+    headers = {"TRON-PRO-API-KEY": TRONGRID_KEY} if TRONGRID_KEY else {}
+    data = _http_get_json(url, headers)
+    for t in (data.get("data") or []):
+        if (t.get("to") or "") != USDT_TRON_ADDR: continue
+        try: amt = int(t.get("value") or 0) / 1e6
+        except Exception: continue
+        _match_incoming("tron", amt, t.get("transaction_id") or "")
+
+def _poll_erc20():
+    url = ("https://api.etherscan.io/v2/api?chainid=1&module=account&action=tokentx"
+           "&contractaddress=%s&address=%s&page=1&offset=40&sort=desc&apikey=%s"
+           % (USDT_ERC20_CONTRACT, USDT_ERC20_ADDR, ETHERSCAN_KEY))
+    data = _http_get_json(url)
+    if str(data.get("status")) != "1": return
+    for t in (data.get("result") or []):
+        if (t.get("to") or "").lower() != USDT_ERC20_ADDR.lower(): continue
+        try:
+            dec = int(t.get("tokenDecimal") or 6)
+            amt = int(t.get("value") or 0) / (10 ** dec)
+        except Exception: continue
+        _match_incoming("erc20", amt, t.get("hash") or "")
+
+def _poll_crypto_once():
+    if CRYPTO_TRON_ON:
+        try: _poll_tron()
+        except Exception as e: print("tron poll err:", e)
+    if CRYPTO_ERC20_ON:
+        try: _poll_erc20()
+        except Exception as e: print("erc20 poll err:", e)
+
+def _crypto_watcher_loop():
+    print("crypto watcher started (tron=%s erc20=%s)" % (CRYPTO_TRON_ON, CRYPTO_ERC20_ON))
+    while True:
+        try: _poll_crypto_once()
+        except Exception as e: print("crypto watcher err:", e)
+        time.sleep(30)
+
 def _verify_stripe_sig(payload: bytes, sig_header: str):
     """Verify a Stripe webhook signature (Stripe-Signature: t=...,v1=...)."""
     if not STRIPE_WEBHOOK_SECRET or not sig_header:
@@ -426,6 +572,9 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 def _startup():
     try: _init_db()
     except Exception as e: print("db init note:", e)
+    if SELFCRYPTO_ENABLED:
+        try: threading.Thread(target=_crypto_watcher_loop, daemon=True).start()
+        except Exception as e: print("crypto watcher start note:", e)
 
 @app.post("/api/register")
 async def register(request: Request):
@@ -1098,8 +1247,42 @@ async def admin_affiliate_settle(request: Request, k_admin: str = Cookie(None)):
 @app.get("/api/pay/status")
 def pay_status():
     # only advertise a method that will actually auto-activate the member on payment
-    return {"enabled": PAY_ENABLED or STRIPE_AUTO, "crypto": PAY_ENABLED,
+    return {"enabled": PAY_ENABLED or STRIPE_AUTO or SELFCRYPTO_ENABLED,
+            "crypto": SELFCRYPTO_ENABLED or PAY_ENABLED,
+            "selfcrypto": SELFCRYPTO_ENABLED, "tron": CRYPTO_TRON_ON, "erc20": CRYPTO_ERC20_ON,
             "stripe": STRIPE_AUTO, "price": PRICE_USDT}
+
+@app.post("/api/pay/crypto/create")
+async def crypto_create(request: Request, k_session: str = Cookie(None)):
+    """Create a pending USDT order with a unique amount; the watcher auto-grants on arrival."""
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "members only"}, status_code=401)
+    try: body = await request.json()
+    except Exception: body = {}
+    network = (body.get("network") or "tron").lower()
+    if network in ("erc20", "eth", "ethereum"):
+        network, addr, on = "erc20", USDT_ERC20_ADDR, CRYPTO_ERC20_ON
+    else:
+        network, addr, on = "tron", USDT_TRON_ADDR, CRYPTO_TRON_ON
+    if not on or not addr:
+        return JSONResponse({"ok": False, "error": "that network isn't available"}, status_code=503)
+    amount = _unique_crypto_amount(network)
+    order_id = "C-" + secrets.token_hex(8)
+    _create_crypto_order(order_id, email, amount, network)
+    return {"ok": True, "order_id": order_id, "network": network, "address": addr,
+            "amount": amount, "asset": "USDT", "price": PRICE_USDT, "expires_in": ORDER_LIFETIME,
+            "chain": "TRON (TRC20)" if network == "tron" else "Ethereum (ERC20)"}
+
+@app.get("/api/pay/crypto/status")
+def crypto_status(order_id: str = "", k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "members only"}, status_code=401)
+    p = _get_payment(order_id) or {}
+    if not p or p.get("email") != email:
+        return JSONResponse({"ok": False, "error": "not found"}, status_code=404)
+    return {"ok": True, "status": p.get("status"), "paid": bool(p.get("fulfilled"))}
 
 @app.post("/api/pay/create")
 async def pay_create(k_session: str = Cookie(None)):

@@ -555,14 +555,69 @@ async function payCard(){
     alert(d.error||'Card payment is not available right now.');
   }catch(e){ alert('Could not open card checkout.'); }
 }
-async function payCrypto(){
-  const b=document.getElementById('paybtn'); if(b){b.disabled=true;b.textContent='Opening checkout…';}
-  try{ const r=await fetch('/api/pay/create',{method:'POST'}); const d=await r.json();
-    if(d.ok&&d.url){ location.href=d.url; return; }
-    alert(d.error||'Payment is not available right now. Message @Kasandra_tech to pay manually.');
-  }catch(e){ alert('Could not open checkout. Message @Kasandra_tech to pay manually.'); }
-  if(b){b.disabled=false;b.textContent='Pay '+((window.PAY&&window.PAY.price)||99)+' USDT · Crypto →';}
+// ---- self-hosted USDT checkout (direct to our wallet, auto-activates on arrival) ----
+let _cryptoPoll=null;
+async function payCrypto(){ openCrypto('tron'); }
+async function openCrypto(network){
+  const P=window.PAY||{};
+  let ov=document.getElementById('cryptoOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='cryptoOv';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(3,5,11,.86);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
+    document.body.appendChild(ov); }
+  ov.innerHTML='<div style="color:var(--text-2);font-size:14px">Opening checkout…</div>';
+  try{
+    const r=await fetch('/api/pay/crypto/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network})});
+    const d=await r.json();
+    if(!d.ok){ ov.innerHTML=cryptoErr(d.error||'Checkout unavailable'); return; }
+    renderCrypto(ov,d,P); startCryptoPoll(d.order_id);
+  }catch(e){ ov.innerHTML=cryptoErr('Could not open checkout'); }
 }
+function cryptoErr(msg){
+  return '<div style="background:#0c1424;border:1px solid var(--gold-dim,#5a4a1e);border-radius:16px;max-width:440px;padding:26px;text-align:center">'
+    +'<p style="color:var(--text-2);margin-bottom:12px">'+msg+'.</p>'
+    +'<p style="color:var(--dim);font-size:12px;margin-bottom:18px">You can also message <a href="https://t.me/Kasandra_tech" target="_blank" style="color:var(--gold)">@Kasandra_tech</a> to pay manually.</p>'
+    +'<button onclick="closeCrypto()" class="btn" style="margin:0">Close</button></div>';
+}
+function renderCrypto(ov,d,P){
+  const other = d.network==='tron'
+    ? (P.erc20?'<button onclick="openCrypto(\'erc20\')" style="background:none;border:0;color:var(--gold);font-size:12px;cursor:pointer;text-decoration:underline">Pay on Ethereum (ERC20) instead</button>':'')
+    : '<button onclick="openCrypto(\'tron\')" style="background:none;border:0;color:var(--gold);font-size:12px;cursor:pointer;text-decoration:underline">Switch to TRON (TRC20) — much lower fee</button>';
+  const netName=d.network==='tron'?'TRON (TRC20)':'Ethereum (ERC20)';
+  ov.innerHTML='<div style="background:#0c1424;border:1px solid var(--gold-dim,#5a4a1e);border-radius:16px;max-width:460px;width:100%;padding:24px 24px 20px;position:relative">'
+   +'<button onclick="closeCrypto()" style="position:absolute;top:10px;right:14px;background:none;border:0;color:var(--dim);font-size:24px;cursor:pointer;line-height:1">&times;</button>'
+   +'<h3 style="font-family:var(--display,Georgia,serif);color:var(--gold);font-size:19px;margin-bottom:4px">Pay '+d.price+' USDT</h3>'
+   +'<p style="color:var(--dim);font-size:12px;margin-bottom:18px">Send <b style="color:var(--text-2)">'+d.chain+'</b> USDT. Your access activates automatically within ~1–2 min.</p>'
+   +cryptoRow('Send exactly','<span style="color:var(--gold);font-weight:700;font-size:17px">'+d.amount+' USDT</span>',d.amount)
+   +cryptoRow('To this address','<span style="font-family:monospace;font-size:12.5px;word-break:break-all;color:var(--text-2)">'+d.address+'</span>',d.address)
+   +'<div style="background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.25);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--text-2);margin:14px 0 4px;line-height:1.5">'
+     +'&#9888;&#65039; Send the <b>exact amount</b>, and only <b>USDT on '+netName+'</b>. The unique cents let us match the payment to your account.</div>'
+   +'<div id="cryptoStat" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px;color:var(--text-2);font-size:13px">'
+     +'<span style="width:9px;height:9px;border-radius:50%;background:#ffaa00;display:inline-block;animation:kpulse 1.3s infinite"></span> Waiting for payment…</div>'
+   +'<div style="text-align:center;margin-top:14px">'+other+'</div></div>'
+   +'<style>@keyframes kpulse{0%,100%{opacity:.35}50%{opacity:1}}</style>';
+}
+function cryptoRow(label,valueHtml,copyVal){
+  const id='cp'+Math.random().toString(36).slice(2,7);
+  return '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+label+'</div>'
+   +'<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px 12px">'
+   +'<div style="flex:1;min-width:0">'+valueHtml+'</div>'
+   +'<button id="'+id+'" onclick="cryptoCopy(\''+String(copyVal)+'\',\''+id+'\')" style="background:var(--gold-dim,#5a4a1e);border:0;color:var(--gold);border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>'
+   +'</div></div>';
+}
+function cryptoCopy(v,id){ navigator.clipboard.writeText(v).then(()=>{const b=document.getElementById(id);if(b){b.textContent='Copied &#10003;';setTimeout(()=>b.textContent='Copy',1500);}}); }
+function startCryptoPoll(orderId){
+  if(_cryptoPoll) clearInterval(_cryptoPoll);
+  _cryptoPoll=setInterval(async()=>{
+    try{ const r=await fetch('/api/pay/crypto/status?order_id='+encodeURIComponent(orderId)); const d=await r.json();
+      if(d.ok&&d.paid){ clearInterval(_cryptoPoll); cryptoPaid(); }
+    }catch(e){}
+  },8000);
+}
+function cryptoPaid(){ const s=document.getElementById('cryptoStat');
+  if(s) s.innerHTML='<span style="color:#00ff88;font-size:14px">&#9989; Payment received — activating your access…</span>';
+  setTimeout(()=>location.reload(),2200);
+}
+function closeCrypto(){ if(_cryptoPoll){clearInterval(_cryptoPoll);_cryptoPoll=null;} const ov=document.getElementById('cryptoOv'); if(ov) ov.remove(); }
 // ---- private Telegram signals channel (invite link served only to active members) ----
 async function loadTelegram(){
   try{

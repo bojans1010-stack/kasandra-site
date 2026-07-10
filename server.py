@@ -161,7 +161,10 @@ def _set_expiry(email, date_str, plan):
         ts = calendar.timegm(time.strptime(date_str + " 23:59", "%Y-%m-%d %H:%M"))
     except Exception:
         return None
-    approved = "approved" if ts > time.time() else "pending"
+    # An admin-set expiry always marks a real member; access is decided by access_until
+    # vs now. A past date => "expired" (shows the renew/Pay button), NOT "pending"
+    # (which hides it and reads as an unreviewed signup).
+    approved = "approved"
     if _USE_DB:
         conn = _db(); cur = conn.cursor()
         cur.execute("UPDATE members SET status=%s, access_until=%s, plan=%s WHERE email=%s",

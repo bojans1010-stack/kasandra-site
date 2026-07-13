@@ -132,7 +132,7 @@ def _set_status(email, status):
     m = _load_file()
     if email in m: m[email]["status"] = status; _save_file(m)
 
-TRIAL_DAYS = 7
+TRIAL_DAYS = 3
 MONTH_DAYS = 30
 PRICE_USDT = 99
 REF_PCT = 30                                   # affiliate commission: 30% of each paid month
@@ -904,7 +904,7 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         return JSONResponse({"ok": False, "error": "no such member"})
     if action == "approve_trial":
         _grant_access(email, TRIAL_DAYS, "trial")
-        return {"ok": True, "email": email, "msg": "7-day trial started"}
+        return {"ok": True, "email": email, "msg": "3-day trial started"}
     elif action == "extend_month":
         _grant_access(email, MONTH_DAYS, "paid")
         _accrue_referral(email)
@@ -1176,7 +1176,7 @@ and accurately. Match the user's language (English, Macedonian, or Serbian).
 WHAT KASANDRA IS
 - A rules-based automated system that trades gold (XAU/USD) and publishes every signal live: entry zone, stop-loss, and three take-profit targets (TP1/TP2/TP3).
 - Members trade the signals in their OWN broker account. Kasandra never touches or holds anyone's money. Funds stay with the broker in the member's name.
-- Membership is 99 USDT per month. There is a 7-day free trial.
+- Membership is 99 USDT per month. There is a 3-day free trial.
 
 HOW IT WORKS
 - The system watches gold around the clock and arms "zones" at key levels. When price reaches a zone it becomes a live signal.

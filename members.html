@@ -658,6 +658,7 @@ async function load(){
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
     loadAffiliate();
+    if(window.maybeAutoPromo) window.maybeAutoPromo(u);   // autotrading upsell popup (throttled)
     return;
   }
 
@@ -952,4 +953,66 @@ txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.pr
 })();
 </script>
 <!--End Kasandra Assistant-->
+<!--Autotrading upsell popup-->
+<script>
+(function(){
+if(window.maybeAutoPromo) return;
+var NEXT_KEY='kas_autopromo_next';
+var COOLDOWN_DISMISS=3*86400*1000;   // 3 days after "maybe later"
+var COOLDOWN_ACT=30*86400*1000;      // 30 days after they click through
+var DELAY=25000;                     // let them look at the signals first
+var TG='https://t.me/Kasandra_tech';
+var COPY={
+ en:{q:"Do you like our signals?",
+     b:"If the calls are working for you, you don't have to place every trade by hand. Automate it completely - join Kasandra autotrading on VT Markets and every signal is executed for you, hands-free.",
+     price:"Just 99 USDT / month, on your own VT Markets account.",
+     cta:"Automate my trading →", later:"Maybe later"},
+ mk:{q:"Ти се допаѓаат нашите сигнали?",
+     b:"Ако сигналите ти работат, не мора да ја отвораш секоја трговија рачно. Автоматизирај целосно - приклучи се на Kasandra автоматско тргување на VT Markets и секој сигнал се извршува автоматски за тебе.",
+     price:"Само 99 USDT месечно, на твоја сопствена VT Markets сметка.",
+     cta:"Автоматизирај го тргувањето →", later:"Можеби подоцна"},
+ sr:{q:"Da li ti se sviđaju naši signali?",
+     b:"Ako ti signali rade, ne moraš da otvaraš svaku trgovinu ručno. Automatizuj potpuno - priključi se Kasandra autotrgovanju na VT Markets i svaki signal se izvršava automatski za tebe.",
+     price:"Samo 99 USDT mesečno, na tvom VT Markets nalogu.",
+     cta:"Automatizuj trgovanje →", later:"Možda kasnije"}
+};
+function lang(){var l=localStorage.getItem('k_lang')||'en';return COPY[l]?l:'en';}
+function setNext(ms){try{localStorage.setItem(NEXT_KEY,String(Date.now()+ms));}catch(e){}}
+function build(){
+ var t=COPY[lang()];
+ var ov=document.createElement('div');
+ ov.id='kas-autopromo';
+ ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,5,11,.82);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s';
+ ov.innerHTML=
+  '<div role="dialog" style="position:relative;max-width:430px;width:100%;background:linear-gradient(180deg,#0d1424,#0a0f1c);border:1px solid rgba(230,192,122,.45);border-radius:18px;padding:30px 26px 24px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(230,192,122,.12)">'
+   +'<button aria-label="close" id="kap-x" style="position:absolute;top:12px;right:14px;background:none;border:0;color:#6a7688;font-size:24px;line-height:1;cursor:pointer">&times;</button>'
+   +'<div style="font-size:34px;margin-bottom:8px">⚡</div>'
+   +'<h3 style="font-family:\'Space Grotesk\',system-ui,sans-serif;color:#f6dca6;font-size:21px;font-weight:700;margin:0 0 12px;text-shadow:0 0 20px rgba(230,192,122,.3)">'+t.q+'</h3>'
+   +'<p style="color:#a8b2c1;font-size:13.5px;line-height:1.65;margin:0 0 14px">'+t.b+'</p>'
+   +'<p style="color:#e6c07a;font-size:13px;font-weight:600;margin:0 0 20px">'+t.price+'</p>'
+   +'<a id="kap-cta" href="'+TG+'" target="_blank" rel="noopener" style="display:block;padding:14px 20px;background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border-radius:11px;font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 30px rgba(230,192,122,.35)">'+t.cta+'</a>'
+   +'<button id="kap-later" style="margin-top:14px;background:none;border:0;color:#6a7688;font-size:12.5px;cursor:pointer;text-decoration:underline">'+t.later+'</button>'
+  +'</div>';
+ document.body.appendChild(ov);
+ requestAnimationFrame(function(){ov.style.opacity='1';});
+ function close(cool){setNext(cool);ov.style.opacity='0';setTimeout(function(){ov.remove();},250);}
+ ov.querySelector('#kap-x').onclick=function(){close(COOLDOWN_DISMISS);};
+ ov.querySelector('#kap-later').onclick=function(){close(COOLDOWN_DISMISS);};
+ ov.querySelector('#kap-cta').onclick=function(){close(COOLDOWN_ACT);};   // link still opens in new tab
+ ov.addEventListener('click',function(e){if(e.target===ov)close(COOLDOWN_DISMISS);});
+}
+window.maybeAutoPromo=function(u){
+ try{
+  var next=parseInt(localStorage.getItem(NEXT_KEY)||'0',10);
+  if(Date.now()<next) return;
+  setTimeout(function(){
+   if(document.getElementById('kas-autopromo')) return;
+   if(document.hidden) return;
+   build();
+  },DELAY);
+ }catch(e){}
+};
+})();
+</script>
+<!--End autotrading upsell popup-->
 </body></html>

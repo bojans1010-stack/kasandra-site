@@ -547,6 +547,22 @@ def _load_file():
 def _save_file(m):
     json.dump(m, open(MEMBERS_FILE, "w", encoding="utf-8"), indent=2)
 
+def _delete_member(email):
+    """Permanently remove a member and everything linked to them (referrals, payments, live sessions)."""
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("DELETE FROM members WHERE email=%s", (email,))
+        cur.execute("DELETE FROM commissions WHERE referred=%s OR referrer=%s", (email, email))
+        cur.execute("DELETE FROM payments WHERE email=%s", (email,))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        m = _load_file()
+        if email in m:
+            del m[email]; _save_file(m)
+    # kill any live login sessions belonging to this member
+    for tok in [t for t, v in list(_SESSIONS.items()) if (v[0] if isinstance(v, (tuple, list)) else v) == email]:
+        _SESSIONS.pop(tok, None)
+
 def _hash(pw, salt): return hashlib.sha256((salt + pw).encode()).hexdigest()
 
 def _new_session(email):
@@ -969,6 +985,12 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         else:
             m = _load_file(); m[email]["salt"] = salt; m[email]["pw"] = rec["pw"]; _save_file(m)
         return {"ok": True, "email": email, "msg": "password reset"}
+    elif action == "delete":
+        rec = _get_member(email)
+        if _member_is_admin(rec) and not body.get("force"):
+            return JSONResponse({"ok": False, "error": "This is an admin account - re-confirm to delete it."})
+        _delete_member(email)
+        return {"ok": True, "email": email, "msg": "member permanently deleted", "deleted": True}
     return JSONResponse({"ok": False, "error": "bad action"})
 
 SITE_VERSION = "day-picker-academy-1"   # bump on notable deploys; check at /api/version

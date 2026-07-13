@@ -272,6 +272,13 @@ td .muted{font-size:12px}
         <div class="mm-btn" id="mm-admin" onclick="mmAdmin()">Make admin</div>
       </div>
     </div>
+    <div class="mm-sec">
+      <div class="lbl" style="color:var(--red)">Danger zone</div>
+      <div class="mm-grid">
+        <div class="mm-btn red" onclick="mmDelete()">Delete member permanently</div>
+      </div>
+      <div style="color:var(--dim);font-size:11px;margin-top:6px">Erases the account, its logins, referrals and payment records. Cannot be undone.</div>
+    </div>
     <div class="mm-msg" id="mm-msg"></div>
   </div>
 </div>
@@ -562,6 +569,16 @@ function mmGrant(){ if(!MM)return; const days=document.getElementById('mm-days')
 function mmExpiry(){ if(!MM)return; const date=document.getElementById('mm-date').value; if(!date){document.getElementById('mm-msg').style.color='var(--red)';document.getElementById('mm-msg').textContent='✕ pick a date';return;} mmSend({email:MM.email,action:'set_expiry',date,plan:(MM.plan&&MM.plan!=='none')?MM.plan:'paid'}); }
 async function mmReset(){ if(!MM)return; const np=prompt('New password for '+MM.email+' (min 6):'); if(np===null)return; if(np.length<6){alert('min 6 chars');return;} mmSend({email:MM.email,action:'reset_password',new_password:np},'password reset'); }
 function mmAdmin(){ if(!MM)return; const make=!MM.is_admin; if(!confirm((make?'GIVE':'REMOVE')+' admin access '+(make?'to':'from')+' '+MM.email+'?'))return; mmSend({email:MM.email,action:make?'make_admin':'remove_admin'}); }
+async function mmDelete(){
+  if(!MM)return;
+  const email=MM.email;
+  const typed=prompt('PERMANENTLY DELETE this member. This cannot be undone.\n\nType the email to confirm:\n'+email);
+  if(typed===null)return;
+  if((typed||'').trim().toLowerCase()!==email.toLowerCase()){alert('Email did not match - nothing was deleted.');return;}
+  const payload={email,action:'delete'};
+  if(MM.is_admin){ if(!confirm('This is an ADMIN account. Delete it anyway?'))return; payload.force=true; }
+  mmSend(payload,'member deleted');
+}
 async function resetPw(email){
   const np=prompt('New password for '+email+' (min 6 chars):');
   if(np===null) return;

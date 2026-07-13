@@ -19,6 +19,11 @@ INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "").strip()
 # admin password: env var on Railway, else local file
 ADMIN_PW_FILE = os.path.join(SITE, "admin_pw.txt")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+# Kasandra AI assistant (Claude). Set ANTHROPIC_API_KEY on Railway to enable.
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+CHAT_MODEL = os.environ.get("CHAT_MODEL", "claude-haiku-4-5").strip()
+CHAT_ENABLED = bool(ANTHROPIC_API_KEY)
+_chat_rate = {}   # ip -> [timestamps] simple per-IP throttle
 # Cryptomus crypto payments (set these env vars on Railway; the code never hardcodes them)
 CRYPTOMUS_MERCHANT = os.environ.get("CRYPTOMUS_MERCHANT", "").strip()
 CRYPTOMUS_API_KEY = os.environ.get("CRYPTOMUS_API_KEY", "").strip()
@@ -1160,6 +1165,85 @@ def _page(name, media_type=None):
     resp = FileResponse(os.path.join(SITE, name), media_type=media_type)
     resp.headers["Cache-Control"] = "no-cache, must-revalidate"
     return resp
+
+# ==================== Kasandra AI assistant ====================
+KASANDRA_KB = """You are the Kasandra Assistant, the AI support agent for Kasandra (kasandra.app),
+an automated gold (XAU/USD) trading-signal service. You answer visitors and members warmly, briefly,
+and accurately. Match the user's language (English, Macedonian, or Serbian).
+
+WHAT KASANDRA IS
+- A rules-based automated system that trades gold (XAU/USD) and publishes every signal live: entry zone, stop-loss, and three take-profit targets (TP1/TP2/TP3).
+- Members trade the signals in their OWN broker account. Kasandra never touches or holds anyone's money. Funds stay with the broker in the member's name.
+- Membership is 99 USDT per month. There is a 7-day free trial.
+
+HOW IT WORKS
+- The system watches gold around the clock and arms "zones" at key levels. When price reaches a zone it becomes a live signal.
+- Each signal: enter in the zone, stop-loss ~100 pips, targets TP1 (+50 pips), TP2 (+100), TP3 (+200). Suggested management: move stop to breakeven after TP1.
+- Signals go to the members site (live chart + history), and paid members also get an instant private Telegram channel with get-ready -> firm entry -> TP/SL updates.
+- You place the trades yourself, in your own time — it is not a managed account.
+
+THE RECORD (be precise, never inflate)
+- The public track record is broker-verified: all 165 signals in the June-July 2026 window were replayed against the broker's own price bars, and the record was found CONSERVATIVE (it under-claimed — published 28 losses where broker data showed only 11). A downloadable audit report exists.
+- Past performance never guarantees future results. Trading gold/CFDs is high risk; only risk capital you can afford to lose.
+
+BROKERS
+- Members open an account with a partner broker (VT Markets is the main one; QUO Markets, PU Prime, and TradeQuo also supported). There are invite links and a "connect" step on the site.
+
+PAYMENTS
+- Card via Stripe, or crypto (USDT). Access activates automatically on payment. Manual crypto payment is possible via @Kasandra_tech on Telegram.
+
+CONTACT / HUMAN HANDOFF
+- For anything you cannot answer, account/payment issues, or if the user asks for a human: point them to Telegram @Kasandra_tech, or this live chat where the team also replies.
+
+STRICT RULES
+- NEVER give personalized financial or investment advice, position sizing for someone's specific account, or predictions ("gold will go up"). If asked, say you can't advise and point to the Risk Management page.
+- NEVER reveal the internal strategy logic, the exact indicator, EMA settings, or any proprietary detail. It's a rules-based system; that's all you disclose.
+- Don't invent numbers, promotions, or guarantees. If you don't know, say so and offer the human contact.
+- Keep replies short (2-4 sentences). Be encouraging but honest about risk."""
+
+@app.post("/api/chat")
+async def chat(request: Request):
+    if not CHAT_ENABLED:
+        return JSONResponse({"ok": False, "error": "assistant offline"}, status_code=503)
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
+    now = time.time()
+    hits = [t for t in _chat_rate.get(ip, []) if now - t < 60]
+    if len(hits) >= 12:
+        return JSONResponse({"ok": False, "error": "Slow down a moment and try again."}, status_code=429)
+    hits.append(now); _chat_rate[ip] = hits
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
+    history = body.get("messages") or []
+    msgs = []
+    for m in history[-10:]:
+        role = "assistant" if m.get("role") == "assistant" else "user"
+        text = str(m.get("content") or "")[:2000]
+        if text.strip():
+            msgs.append({"role": role, "content": text})
+    if not msgs or msgs[-1]["role"] != "user":
+        return JSONResponse({"ok": False, "error": "no message"}, status_code=400)
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        resp = client.messages.create(
+            model=CHAT_MODEL,
+            max_tokens=500,
+            system=[{"type": "text", "text": KASANDRA_KB, "cache_control": {"type": "ephemeral"}}],
+            messages=msgs,
+        )
+        reply = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text").strip()
+        if not reply:
+            reply = "Sorry, could you rephrase that? For anything urgent you can reach the team on Telegram @Kasandra_tech."
+        return {"ok": True, "reply": reply}
+    except Exception as e:
+        print("chat error:", e)
+        return JSONResponse({"ok": False, "error": "The assistant is busy right now — please message @Kasandra_tech on Telegram."}, status_code=502)
+
+@app.get("/api/chat/status")
+def chat_status():
+    return {"enabled": CHAT_ENABLED}
 
 @app.get("/")
 def home(): return _page("index.html")

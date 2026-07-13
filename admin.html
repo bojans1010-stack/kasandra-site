@@ -143,6 +143,7 @@ td .muted{font-size:12px}
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
     <div class="tab" id="tab-affiliates" onclick="switchTab('affiliates')">Affiliates</div>
     <div class="tab" id="tab-payments" onclick="switchTab('payments')">Payments</div>
+    <div class="tab" id="tab-chats" onclick="switchTab('chats')">AI Chats</div>
   </div>
 
   <!-- ============ OVERVIEW ============ -->
@@ -215,6 +216,18 @@ td .muted{font-size:12px}
         <tbody id="paybody"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
       </table>
     </div>
+  </div>
+
+  <div class="view" id="view-chats">
+    <div class="section" style="display:flex;height:70vh;padding:0;overflow:hidden">
+      <div style="width:290px;border-right:1px solid var(--border-soft);overflow-y:auto;flex-shrink:0" id="chat-list">
+        <div class="empty" style="padding:20px">loading...</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px" id="chat-thread">
+        <div class="empty" style="margin:auto">Pick a conversation on the left.</div>
+      </div>
+    </div>
+    <div class="meta" id="chat-meta" style="margin-top:8px"></div>
   </div>
 
 </div></div>
@@ -322,6 +335,7 @@ function switchTab(t){
   });
   if(t==='affiliates') loadAffiliates();
   if(t==='payments') loadPayments();
+  if(t==='chats') loadChats();
 }
 
 // ---------- OVERVIEW ----------
@@ -419,6 +433,44 @@ async function loadPayments(){
     '<td><span class="oc '+(cls[p.status]||'BE')+'">'+(p.status||'?')+'</span></td>'+
     '<td class="mono muted" style="font-size:11px">'+(p.order_id||'')+'</td></tr>').join('');
 }
+
+// ---------- AI CHATS ----------
+var CHATS=[], CHAT_CUR=null;
+function chEsc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+async function loadChats(){
+  try{
+    const r=await fetch('/api/admin/chats'); if(r.status===401){gate();return;}
+    const d=await r.json(); CHATS=d.conversations||[];
+    document.getElementById('chat-meta').textContent=(d.count||0)+' conversations · '+(d.messages||0)+' messages · refreshes every 10s';
+    renderChatList();
+    if(CHAT_CUR){const c=CHATS.find(x=>x.session===CHAT_CUR); if(c) renderChatThread(c);}
+  }catch(e){ document.getElementById('chat-list').innerHTML='<div class="empty" style="padding:20px">error loading</div>'; }
+}
+function renderChatList(){
+  const el=document.getElementById('chat-list');
+  if(!CHATS.length){ el.innerHTML='<div class="empty" style="padding:20px">No chats yet</div>'; return; }
+  el.innerHTML=CHATS.map(function(c){
+    var lastU=c.messages.slice().reverse().find(function(m){return m.role==='user';});
+    var on=c.session===CHAT_CUR;
+    return '<div onclick="pickChat(\''+c.session+'\')" style="padding:11px 15px;border-bottom:1px solid var(--border-soft);cursor:pointer;'+(on?'background:rgba(0,212,255,.06);border-left:3px solid var(--accent)':'')+'">'
+      +'<div style="font-size:12px;color:var(--gold);font-weight:600">'+chEsc(c.session.slice(0,18))+'</div>'
+      +'<div style="font-size:12px;color:var(--dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+chEsc((lastU?lastU.content:'').slice(0,52))+'</div>'
+      +'<div style="font-size:10px;color:var(--dim);margin-top:4px">'+c.messages.length+' msgs · '+chEsc(c.last)+'</div></div>';
+  }).join('');
+}
+function pickChat(s){ CHAT_CUR=s; renderChatList(); var c=CHATS.find(function(x){return x.session===s;}); if(c) renderChatThread(c); }
+function renderChatThread(c){
+  var t=document.getElementById('chat-thread');
+  t.innerHTML=c.messages.map(function(m){
+    var ai=m.role==='assistant';
+    return '<div style="max-width:78%;padding:9px 13px;border-radius:11px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;'
+      +(ai?'align-self:flex-end;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2)':'align-self:flex-start;background:rgba(0,212,255,.07);border:1px solid var(--border-soft)')+'">'
+      +'<div style="font-size:10px;color:var(--dim);margin-bottom:4px">'+(ai?'AI':'customer')+' · '+chEsc(m.created)+'</div>'
+      +chEsc(m.content)+'</div>';
+  }).join('');
+  t.scrollTop=t.scrollHeight;
+}
+setInterval(function(){ if(document.getElementById('tab-chats').classList.contains('active')) loadChats(); }, 10000);
 
 // ---------- USER MANAGEMENT ----------
 async function loadMembers(){

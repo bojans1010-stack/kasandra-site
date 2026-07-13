@@ -943,7 +943,7 @@ function toggle(){var o=w.classList.toggle("open");if(o&&!greeted){greeted=true;
 b.onclick=toggle;document.getElementById("kas-x").onclick=toggle;
 async function send(){var v=txt.value.trim();if(!v||busy)return;txt.value="";add("user",v);hist.push({role:"user",content:v});busy=true;
 var t=document.createElement("div");t.className="kas-typ";t.textContent="typing...";msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
-try{var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist})});var d=await r.json();t.remove();
+try{var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist,session_id:(localStorage.KSID||(localStorage.KSID="s-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)))})});var d=await r.json();t.remove();
 var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Kasandra_tech.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
 catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Kasandra_tech.");}
 busy=false;}

@@ -97,6 +97,8 @@ def _init_db():
         status TEXT, created TEXT, fulfilled BOOLEAN DEFAULT FALSE)""")
     cur.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS network TEXT")
     cur.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS txid TEXT")
+    cur.execute("""CREATE TABLE IF NOT EXISTS chat_logs(
+        id SERIAL PRIMARY KEY, session TEXT, ip TEXT, role TEXT, content TEXT, created TEXT)""")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -1201,6 +1203,27 @@ STRICT RULES
 - Don't invent numbers, promotions, or guarantees. If you don't know, say so and offer the human contact.
 - Keep replies short (2-4 sentences). Be encouraging but honest about risk."""
 
+CHAT_LOG_FILE = os.path.join(SITE, "chat_logs.json")
+
+def _log_chat(session, ip, role, content):
+    created = time.strftime("%Y-%m-%d %H:%M:%S")
+    row = {"session": session, "ip": ip, "role": role, "content": content[:4000], "created": created}
+    try:
+        if _USE_DB:
+            conn = _db(); cur = conn.cursor()
+            cur.execute("INSERT INTO chat_logs(session,ip,role,content,created) VALUES(%s,%s,%s,%s,%s)",
+                        (session, ip, role, row["content"], created))
+            conn.commit(); cur.close(); conn.close()
+        else:
+            data = []
+            if os.path.exists(CHAT_LOG_FILE):
+                try: data = json.load(open(CHAT_LOG_FILE, encoding="utf-8"))
+                except Exception: data = []
+            data.append(row); data = data[-5000:]
+            json.dump(data, open(CHAT_LOG_FILE, "w", encoding="utf-8"))
+    except Exception as e:
+        print("chat log error:", e)
+
 @app.post("/api/chat")
 async def chat(request: Request):
     if not CHAT_ENABLED:
@@ -1216,6 +1239,7 @@ async def chat(request: Request):
     except Exception:
         return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
     history = body.get("messages") or []
+    session = (str(body.get("session_id") or "")[:40]) or ("ip-" + str(abs(hash(ip)) % 10**8))
     msgs = []
     for m in history[-10:]:
         role = "assistant" if m.get("role") == "assistant" else "user"
@@ -1224,6 +1248,7 @@ async def chat(request: Request):
             msgs.append({"role": role, "content": text})
     if not msgs or msgs[-1]["role"] != "user":
         return JSONResponse({"ok": False, "error": "no message"}, status_code=400)
+    _log_chat(session, ip, "user", msgs[-1]["content"])
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -1236,6 +1261,7 @@ async def chat(request: Request):
         reply = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text").strip()
         if not reply:
             reply = "Sorry, could you rephrase that? For anything urgent you can reach the team on Telegram @Kasandra_tech."
+        _log_chat(session, ip, "assistant", reply)
         return {"ok": True, "reply": reply}
     except Exception as e:
         print("chat error:", e)
@@ -1244,6 +1270,31 @@ async def chat(request: Request):
 @app.get("/api/chat/status")
 def chat_status():
     return {"enabled": CHAT_ENABLED}
+
+@app.get("/api/admin/chats")
+def admin_chats(k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    rows = []
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("SELECT session,ip,role,content,created FROM chat_logs ORDER BY id DESC LIMIT 2000")
+        rows = [dict(r) for r in cur.fetchall()]; cur.close(); conn.close()
+        rows.reverse()
+    elif os.path.exists(CHAT_LOG_FILE):
+        try: rows = json.load(open(CHAT_LOG_FILE, encoding="utf-8"))[-2000:]
+        except Exception: rows = []
+    convos = {}
+    for r in rows:
+        s = r.get("session", "?")
+        c = convos.setdefault(s, {"session": s, "ip": r.get("ip", ""), "last": r.get("created", ""), "messages": []})
+        c["messages"].append({"role": r.get("role"), "content": r.get("content"), "created": r.get("created")})
+        c["last"] = r.get("created", c["last"])
+    out = sorted(convos.values(), key=lambda c: c["last"], reverse=True)
+    return {"conversations": out, "count": len(out), "messages": len(rows)}
+
+@app.get("/chatlog")
+def chatlog_page(): return _page("chatlog.html")
 
 @app.get("/")
 def home(): return _page("index.html")

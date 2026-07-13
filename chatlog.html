@@ -1,0 +1,71 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasandra · AI Chat Monitor</title>
+<style>
+:root{--bg:#070b14;--card:#0d1424;--gold:#c9a13b;--gold-hi:#e9c767;--dim:#5a6478;--txt:#dde4f0;--line:#1c2740;--u:#16233d;--a:#0f2a1e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:16px;color:var(--gold-hi);letter-spacing:1px}
+.meta{color:var(--dim);font-size:12px}
+.wrap{flex:1;display:flex;min-height:0}
+.list{width:300px;border-right:1px solid var(--line);overflow-y:auto;flex-shrink:0}
+.conv{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.conv:hover{background:var(--card)}.conv.on{background:var(--card);border-left:3px solid var(--gold)}
+.conv .t{font-size:12px;color:var(--gold);font-weight:600}
+.conv .p{font-size:12px;color:var(--dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv .n{font-size:10px;color:var(--dim);margin-top:4px}
+.thread{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:75%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.msg.user{background:var(--u);align-self:flex-start;border-bottom-left-radius:3px}
+.msg.assistant{background:var(--a);align-self:flex-end;border-bottom-right-radius:3px}
+.msg .r{font-size:10px;color:var(--dim);margin-bottom:4px;letter-spacing:.5px}
+.empty{color:var(--dim);margin:auto;text-align:center;font-size:14px;padding:40px}
+button{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer}
+button:hover{border-color:var(--gold)}
+.pill{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(0,224,138,.12);color:#00e08a}
+</style></head><body>
+<header>
+  <h1>&#128172; KASANDRA · AI CHAT MONITOR</h1>
+  <span class="meta" id="stat">loading&hellip;</span>
+  <span style="flex:1"></span>
+  <label class="meta"><input type="checkbox" id="auto" checked> auto-refresh</label>
+  <button onclick="load()">Refresh</button>
+</header>
+<div class="wrap">
+  <div class="list" id="list"></div>
+  <div class="thread" id="thread"><div class="empty">Pick a conversation on the left.</div></div>
+</div>
+<script>
+let convos=[],cur=null;
+function esc(s){return String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+async function load(){
+  try{
+    const r=await fetch('/api/admin/chats',{cache:'no-store'});
+    if(r.status===401){document.getElementById('stat').textContent='Not logged in — open kasandra.app/admin and log in first, then reload this page.';return;}
+    const d=await r.json();
+    convos=d.conversations||[];
+    document.getElementById('stat').textContent=d.count+' conversations · '+d.messages+' messages';
+    renderList();
+    if(cur){const c=convos.find(x=>x.session===cur); if(c) renderThread(c);}
+  }catch(e){document.getElementById('stat').textContent='error loading';}
+}
+function renderList(){
+  document.getElementById('list').innerHTML=convos.map(c=>{
+    const lastUser=[...c.messages].reverse().find(m=>m.role==='user');
+    return '<div class="conv'+(c.session===cur?' on':'')+'" onclick="pick(\''+c.session+'\')">'
+      +'<div class="t">'+esc(c.session.slice(0,18))+'</div>'
+      +'<div class="p">'+esc((lastUser?lastUser.content:'').slice(0,60))+'</div>'
+      +'<div class="n">'+c.messages.length+' msgs · '+esc(c.last)+'</div></div>';
+  }).join('')||'<div class="empty" style="padding:20px">No chats yet.</div>';
+}
+function pick(s){cur=s;const c=convos.find(x=>x.session===s);renderList();if(c)renderThread(c);}
+function renderThread(c){
+  document.getElementById('thread').innerHTML=c.messages.map(m=>
+    '<div class="msg '+(m.role==='assistant'?'assistant':'user')+'">'
+    +'<div class="r">'+(m.role==='assistant'?'&#129302; AI':'&#128100; customer')+' · '+esc(m.created)+'</div>'
+    +esc(m.content)+'</div>').join('');
+  const t=document.getElementById('thread');t.scrollTop=t.scrollHeight;
+}
+load();
+setInterval(()=>{if(document.getElementById('auto').checked)load();},10000);
+</script></body></html>

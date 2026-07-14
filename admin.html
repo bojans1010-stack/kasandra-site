@@ -148,6 +148,27 @@ td .muted{font-size:12px}
 
   <!-- ============ OVERVIEW ============ -->
   <div class="view active" id="view-overview">
+    <div class="section" id="risk-admin" style="border:1px solid rgba(255,170,0,.35)">
+      <div class="h"><div class="t"><span class="dot" style="background:#ffaa00"></span>MEMBER RISK ALERT</div><div class="meta" id="risk-state">off</div></div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label style="color:#8a94a6;font-size:12px">Level</label>
+          <select id="risk-level" onchange="riskPreset()" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:8px 10px;font-size:13px">
+            <option value="elevated">Elevated Risk</option>
+            <option value="high" selected>High Risk</option>
+            <option value="very_high">Very High Risk</option>
+          </select>
+          <input id="risk-title" placeholder="Headline (optional - defaults to the level name)" style="flex:1;min-width:220px;background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:8px 10px;font-size:13px">
+        </div>
+        <textarea id="risk-msg" rows="2" placeholder="Message shown to members..." style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:10px 12px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button onclick="saveRisk(true)" style="background:linear-gradient(135deg,#ffb733,#ff8c00);color:#241a06;border:0;border-radius:9px;padding:10px 20px;font-weight:700;font-size:13px;cursor:pointer">Publish alert to members</button>
+          <button onclick="saveRisk(false)" style="background:transparent;border:1px solid #3a4459;color:#a8b2c1;border-radius:9px;padding:10px 18px;font-size:13px;cursor:pointer">Turn off</button>
+          <span id="risk-msg-out" style="font-size:12.5px"></span>
+        </div>
+        <div style="color:#5a6478;font-size:11px">Shows a banner at the top of the members area. Members see it within ~60s. Turning it off hides it immediately.</div>
+      </div>
+    </div>
     <div class="cards" id="ov-cards"></div>
 
     <div class="section">
@@ -333,7 +354,46 @@ function showPanel(){
   document.getElementById('panel').style.display='block';
   loadOverview();
   loadMembers();
+  loadRisk();
   if(!window._ovTimer) window._ovTimer=setInterval(loadOverview,45000);
+}
+// ---------- RISK ALERT ----------
+const RISK_PRESET={
+  elevated:"Elevated risk: news flow is picking up. Trade smaller and keep stops tight.",
+  high:"High risk today: major news, geopolitical tension and political headlines are moving gold. Reduce size and be selective.",
+  very_high:"Very high risk due to news, geopolitical tensions and political figures influencing the markets. Consider trading smaller or standing aside until conditions calm."
+};
+function riskPreset(){
+  const lvl=document.getElementById('risk-level').value;
+  const msg=document.getElementById('risk-msg');
+  if(!msg.value.trim()||Object.values(RISK_PRESET).includes(msg.value.trim())) msg.value=RISK_PRESET[lvl]||'';
+}
+async function loadRisk(){
+  try{
+    const d=await fetch('/api/risk_alert?t='+Date.now()).then(r=>r.json());
+    const st=document.getElementById('risk-state');
+    if(d.enabled){
+      document.getElementById('risk-level').value=d.level||'high';
+      document.getElementById('risk-title').value=d.title||'';
+      document.getElementById('risk-msg').value=d.message||'';
+      st.textContent='LIVE · '+(d.level||'high').replace('_',' ')+' · '+(d.updated||'');
+      st.style.color='#ffaa00';
+    }else{
+      if(!document.getElementById('risk-msg').value) riskPreset();
+      st.textContent='off';st.style.color='';
+    }
+  }catch(e){}
+}
+async function saveRisk(enabled){
+  const out=document.getElementById('risk-msg-out');
+  const payload={enabled,level:document.getElementById('risk-level').value,
+    title:document.getElementById('risk-title').value,message:document.getElementById('risk-msg').value};
+  if(enabled&&!payload.message.trim()){out.style.color='#ff3366';out.textContent='✕ add a message first';return;}
+  if(enabled&&!confirm('Publish this risk alert to all members?'))return;
+  const r=await fetch('/api/admin/risk_alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d=await r.json();
+  if(d.ok){out.style.color=enabled?'#00ff88':'#a8b2c1';out.textContent=enabled?'✓ published to members':'✓ alert turned off';loadRisk();}
+  else{out.style.color='#ff3366';out.textContent='✕ '+(d.error||'error');}
 }
 function switchTab(t){
   ['overview','members','affiliates','payments'].forEach(x=>{

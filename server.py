@@ -99,6 +99,7 @@ def _init_db():
     cur.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS txid TEXT")
     cur.execute("""CREATE TABLE IF NOT EXISTS chat_logs(
         id SERIAL PRIMARY KEY, session TEXT, ip TEXT, role TEXT, content TEXT, created TEXT)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)""")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -565,6 +566,34 @@ def _delete_member(email):
 
 def _hash(pw, salt): return hashlib.sha256((salt + pw).encode()).hexdigest()
 
+# ---------- global key/value settings (risk banner, etc.) ----------
+SETTINGS_FILE = os.path.join(SITE, "settings.json")
+def _get_setting(key, default=None):
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("SELECT value FROM settings WHERE key=%s", (key,))
+        row = cur.fetchone(); cur.close(); conn.close()
+        if not row: return default
+        val = row["value"] if isinstance(row, dict) else row[0]
+    else:
+        try: val = json.load(open(SETTINGS_FILE, encoding="utf-8")).get(key)
+        except Exception: val = None
+        if val is None: return default
+    try: return json.loads(val)
+    except Exception: return val
+def _set_setting(key, value):
+    val = json.dumps(value)
+    if _USE_DB:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("""INSERT INTO settings(key,value) VALUES(%s,%s)
+            ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value""", (key, val))
+        conn.commit(); cur.close(); conn.close()
+    else:
+        try: data = json.load(open(SETTINGS_FILE, encoding="utf-8"))
+        except Exception: data = {}
+        data[key] = val
+        json.dump(data, open(SETTINGS_FILE, "w", encoding="utf-8"))
+
 def _new_session(email):
     tok = secrets.token_urlsafe(32)
     _SESSIONS[tok] = (email, time.time() + SESSION_DAYS * 86400)
@@ -992,6 +1021,32 @@ async def admin_set_status(request: Request, k_admin: str = Cookie(None)):
         _delete_member(email)
         return {"ok": True, "email": email, "msg": "member permanently deleted", "deleted": True}
     return JSONResponse({"ok": False, "error": "bad action"})
+
+RISK_LEVELS = {"elevated", "high", "very_high"}
+@app.get("/api/risk_alert")
+def risk_alert():
+    """Current members-area risk banner (public - it is a safety notice, not secret)."""
+    a = _get_setting("risk_alert") or {}
+    if not a.get("enabled"):
+        return {"enabled": False}
+    return {"enabled": True, "level": a.get("level", "high"),
+            "title": a.get("title", ""), "message": a.get("message", ""),
+            "updated": a.get("updated", "")}
+
+@app.post("/api/admin/risk_alert")
+async def admin_risk_alert(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    body = await request.json()
+    enabled = bool(body.get("enabled"))
+    level = (body.get("level") or "high").strip().lower()
+    if level not in RISK_LEVELS: level = "high"
+    alert = {"enabled": enabled, "level": level,
+             "title": (body.get("title") or "").strip()[:120],
+             "message": (body.get("message") or "").strip()[:600],
+             "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}
+    _set_setting("risk_alert", alert)
+    return {"ok": True, "alert": alert}
 
 SITE_VERSION = "day-picker-academy-1"   # bump on notable deploys; check at /api/version
 

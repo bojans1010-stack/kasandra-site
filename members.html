@@ -181,6 +181,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="nav-right"><span style="display:inline-flex;gap:6px;margin-right:8px"><a class="signout" href="/members" style="color:var(--accent);border-color:var(--accent);font-weight:700">GOLD</a><a class="signout" href="/us30">US30</a></span><a class="signout" href="/academy">🎓 Academy</a><a class="signout" href="/risk" style="color:var(--accent);border-color:var(--accent)">🛡️ Risk Management</a><span data-lang-dropdown></span><span class="who" id="who">...</span><a class="signout" onclick="changePw()" data-i18n="mem.changePw">Change password</a><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
 </div></nav>
 <div class="wrap">
+  <div id="risk-banner" style="display:none"></div>
   <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
   <div class="kpis">
     <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Pips · Signal History</div></div>
@@ -953,6 +954,42 @@ txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.pr
 })();
 </script>
 <!--End Kasandra Assistant-->
+<!--Risk alert banner-->
+<script>
+(function(){
+ var LVL={
+  very_high:{c:'#ff3366',bg:'rgba(255,51,102,.10)',bd:'rgba(255,51,102,.55)',ic:'⛔',
+    en:'VERY HIGH RISK',mk:'МНОГУ ВИСОК РИЗИК',sr:'VEOMA VISOK RIZIK'},
+  high:{c:'#ffaa00',bg:'rgba(255,170,0,.10)',bd:'rgba(255,170,0,.5)',ic:'⚠️',
+    en:'HIGH RISK',mk:'ВИСОК РИЗИК',sr:'VISOK RIZIK'},
+  elevated:{c:'#f6dca6',bg:'rgba(230,192,122,.10)',bd:'rgba(230,192,122,.45)',ic:'⚠️',
+    en:'ELEVATED RISK',mk:'ЗГОЛЕМЕН РИЗИК',sr:'POVIŠEN RIZIK'}
+ };
+ function esc(s){var t=document.createElement('div');t.textContent=(s==null?'':String(s));return t.innerHTML;}
+ function lang(){var l=localStorage.getItem('k_lang')||'en';return LVL.high[l]?l:'en';}
+ async function loadRiskBanner(){
+  try{
+   var r=await fetch('/api/risk_alert?t='+Date.now());var d=await r.json();
+   var el=document.getElementById('risk-banner');if(!el)return;
+   if(!d||!d.enabled){el.style.display='none';el.innerHTML='';return;}
+   var lv=LVL[d.level]||LVL.high;var L=lang();
+   var label=d.title||lv[L]||lv.en;
+   el.innerHTML='<div style="display:flex;gap:14px;align-items:flex-start;background:'+lv.bg+';border:1px solid '+lv.bd+';border-left:5px solid '+lv.c+';border-radius:12px;padding:16px 18px;margin-bottom:20px">'
+     +'<div style="font-size:26px;line-height:1">'+lv.ic+'</div>'
+     +'<div style="flex:1;min-width:0">'
+       +'<div style="color:'+lv.c+';font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;margin-bottom:'+(d.message?'5px':'0')+'">'+esc(label)+'</div>'
+       +(d.message?'<div style="color:var(--text-2);font-size:13.5px;line-height:1.6">'+esc(d.message)+'</div>':'')
+       +(d.updated?'<div style="color:var(--dim);font-size:11px;margin-top:7px">Updated '+esc(d.updated)+'</div>':'')
+     +'</div></div>';
+   el.style.display='block';
+  }catch(e){}
+ }
+ window.loadRiskBanner=loadRiskBanner;
+ loadRiskBanner();
+ setInterval(loadRiskBanner,60000);
+})();
+</script>
+<!--End risk alert banner-->
 <!--Autotrading upsell popup-->
 <script>
 (function(){

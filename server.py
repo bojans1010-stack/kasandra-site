@@ -805,12 +805,34 @@ async def ingest_signals(request: Request):
     if body.get("engine") != "nypipeline":
         return JSONResponse({"ok": False, "error": "legacy engine payload ignored"}, status_code=409)
     # only keep the safe public fields; never trust arbitrary keys
-    hist = body.get("history") or []
-    if not isinstance(hist, list): hist = []
     candles = body.get("candles") or []
     if not isinstance(candles, list): candles = []
     open_trades = body.get("open_trades") or []
     if not isinstance(open_trades, list): open_trades = []
+
+    # ---- the track record is APPEND-ONLY ----
+    # This endpoint used to overwrite the published history with whatever the PC sent. On
+    # 2026-07-14 a crash wiped the PC's state file, it pushed an empty history, and the entire
+    # published record was erased in one 60s cycle. The record may now only grow: a push that
+    # omits history, or carries fewer trades than we already hold, leaves the stored record
+    # untouched. A deliberate correction must be explicit (history_replace: true).
+    try:
+        stored = json.load(open(SIGNALS_FILE, encoding="utf-8")) if os.path.exists(SIGNALS_FILE) else {}
+    except Exception:
+        stored = {}
+    kept = stored.get("history") or []
+    if not isinstance(kept, list): kept = []
+
+    hist = body.get("history")
+    replace = bool(body.get("history_replace"))
+    if not isinstance(hist, list):
+        hist, note = kept, "history omitted by pusher; kept stored record"
+    elif len(hist) < len(kept) and not replace:
+        note = f"REFUSED history shrink {len(kept)} -> {len(hist)}; kept stored record"
+        hist = kept
+    else:
+        note = None
+
     safe = {
         "generated_utc": body.get("generated_utc"),
         "price": body.get("price"),
@@ -826,7 +848,10 @@ async def ingest_signals(request: Request):
         json.dump(safe, open(SIGNALS_FILE, "w", encoding="utf-8"), indent=2)
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-    return {"ok": True, "count": len(safe["signals"])}
+    out = {"ok": True, "count": len(safe["signals"]), "history": len(safe["history"])}
+    if note:
+        out["warning"] = note
+    return out
 
 TICK_FILE = os.path.join(SITE, "tick.json")
 

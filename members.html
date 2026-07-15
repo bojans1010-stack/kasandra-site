@@ -804,7 +804,8 @@ async function loadSignals(){
     // live trades: show which TPs are already banked (you keep the highest one hit)
     const prog = live ? '<div class="tpprog">'+['tp1','tp2','tp3'].map((k,n)=>
         '<span class="'+(h[k]?'on':'off')+'">'+(h[k]?'\u2713':'\u25CB')+' TP'+(n+1)+'</span>').join('')+'</div>' : '';
-    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
+    const distDir = (s.dist_above===true)?kT('mem.sigAbove'):(s.dist_above===false)?kT('mem.sigBelow'):(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'));
+    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+distDir):'';
     const tplv=(k,label,val)=>'<div class="lv tp'+(h[k]?' hit':'')+'"><span class="lk">'+label+'</span><span class="vv">'+val+'</span></div>';
     return '<div class="sigcard '+s.side+(live?(sec>=1?' live secured':' live'):'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+

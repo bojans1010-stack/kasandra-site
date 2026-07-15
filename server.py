@@ -660,8 +660,11 @@ async def register(request: Request):
         return JSONResponse({"ok": False, "error": "First and last name are required"})
     if not EMAIL_RE.match(email):
         return JSONResponse({"ok": False, "error": "Enter a valid email"})
-    if not country:
-        return JSONResponse({"ok": False, "error": "Country is required"})
+    if not country or country.strip().lower() == "other":
+        # "Other" used to be the only option that fit non-Balkan members, so 73% of the base
+        # landed there and real geography was invisible. The dropdown now lists every country;
+        # reject the empty pick and the legacy "Other" so a stale cached page can't reintroduce it.
+        return JSONResponse({"ok": False, "error": "Please select your country"})
     if len(phone) < 5:
         return JSONResponse({"ok": False, "error": "A valid phone number is required"})
     if len(pw) < 6:

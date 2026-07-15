@@ -129,7 +129,9 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .rbadge.NOTRADE{background:rgba(120,130,150,.18);color:var(--dim)}
 .rbadge.ACTIVE{background:rgba(255,170,0,.18);color:var(--amber);animation:pulse 1.6s infinite}
 .rbadge.NEXT{background:rgba(0,212,255,.14);color:var(--accent)}
+.rbadge.SECURED{background:rgba(0,255,136,.16);color:var(--green)}
 .sigcard.live{border-left-color:var(--amber);border-color:rgba(255,170,0,.35);background:rgba(255,170,0,.05);box-shadow:0 0 22px rgba(255,170,0,.10)}
+.sigcard.secured{border-left-color:var(--green);border-color:rgba(0,255,136,.30);background:rgba(0,255,136,.05);box-shadow:0 0 22px rgba(0,255,136,.10)}
 .cchip{display:inline-block;font-size:10px;letter-spacing:.05em;padding:3px 9px;border-radius:10px;margin-left:6px;border:1px solid var(--border-soft);color:var(--dim);white-space:nowrap}
 .cchip.live{color:var(--amber);border-color:rgba(255,170,0,.45);background:rgba(255,170,0,.08)}
 .cchip.next{color:var(--accent);border-color:rgba(0,212,255,.35)}
@@ -778,7 +780,12 @@ async function loadSignals(){
   const chipsEl = document.getElementById('chart-chips');
   if(chipsEl) chipsEl.innerHTML = sigs.map((s,i)=>{
     const ema = zoneLabel(s) || ('Zone '+(i+1));
-    if(isLive(s)) return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
+    if(isLive(s)){
+      const hh=s.hits||{};
+      if(hh.tp2) return '<span class="cchip secured">\u2713 '+ema+' TP2 SECURED \u00B7 RUNNING</span>';
+      if(hh.tp1) return '<span class="cchip secured">\u2713 '+ema+' TP1 SECURED \u00B7 RUNNING</span>';
+      return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
+    }
     if(i===firstWaitIdx) return '<span class="cchip next">\u25B6 '+ema+' NEXT</span>';
     return '<span class="cchip">\u23F3 '+ema+'</span>';
   }).join('');
@@ -786,16 +793,20 @@ async function loadSignals(){
     const rb=(s.risk||'').replace(' ','').toUpperCase();      // "NO TRADE"->"NOTRADE"
     const rbTxt=s.risk||'';
     const live=isLive(s);
-    const badge = live ? '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>'
+    const h=s.hits||{};
+    const sec = live ? (h.tp2?2:h.tp1?1:0) : 0;   // TPs already banked on a running trade
+    const badge = live
+      ? (sec>=2 ? '<span class="rbadge SECURED">\u2713 TP2 SECURED \u00B7 RUNNING</span>'
+       : sec>=1 ? '<span class="rbadge SECURED">\u2713 TP1 SECURED \u00B7 RUNNING</span>'
+       :          '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>')
       : (i===firstWaitIdx ? '<span class="rbadge NEXT">\u25B6 NEXT</span>' : '');
     const types=(s.types||[]).join(' + ');
-    const h=s.hits||{};
     // live trades: show which TPs are already banked (you keep the highest one hit)
     const prog = live ? '<div class="tpprog">'+['tp1','tp2','tp3'].map((k,n)=>
         '<span class="'+(h[k]?'on':'off')+'">'+(h[k]?'\u2713':'\u25CB')+' TP'+(n+1)+'</span>').join('')+'</div>' : '';
     const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
     const tplv=(k,label,val)=>'<div class="lv tp'+(h[k]?' hit':'')+'"><span class="lk">'+label+'</span><span class="vv">'+val+'</span></div>';
-    return '<div class="sigcard '+s.side+(live?' live':'')+'">'+
+    return '<div class="sigcard '+s.side+(live?(sec>=1?' live secured':' live'):'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
       '<span>'+badge+' <span class="rbadge '+rb+'">'+rbTxt+'</span></span></div>'+
       prog+

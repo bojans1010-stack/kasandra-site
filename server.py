@@ -37,30 +37,6 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 STRIPE_ENABLED = bool(STRIPE_PAYMENT_LINK)          # show the card button
 STRIPE_AUTO = bool(STRIPE_PAYMENT_LINK and STRIPE_WEBHOOK_SECRET)   # auto-grant on webhook
 
-# --- Email verification (6-digit code at signup). DORMANT until SMTP creds are set on Railway. ---
-# Works with any SMTP provider: set SMTP_HOST / SMTP_USER / SMTP_PASS (+ optional SMTP_PORT, SMTP_FROM).
-# Until all three are present, EMAIL_ENABLED=False and signup keeps its current behaviour (no lockouts).
-SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
-SMTP_USER = os.environ.get("SMTP_USER", "").strip()
-SMTP_PASS = os.environ.get("SMTP_PASS", "").strip()
-SMTP_FROM = os.environ.get("SMTP_FROM", "Kasandra <noreply@kasandra.app>").strip()
-# Brevo HTTP email API (works from Railway; SMTP ports are firewalled off there). Set BREVO_API_KEY
-# on Railway. Sender must be a Brevo-verified address (verify by clicking a link — no DNS needed).
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
-EMAIL_ENABLED = bool(BREVO_API_KEY or (SMTP_HOST and SMTP_USER and SMTP_PASS))
-
-def _from_parts():
-    """Split SMTP_FROM ('Kasandra <addr>' or 'addr') into (name, email)."""
-    f = SMTP_FROM
-    if "<" in f and ">" in f:
-        name = f.split("<")[0].strip() or "Kasandra"
-        addr = f.split("<")[1].split(">")[0].strip()
-        return name, addr
-    return "Kasandra", (f.strip() or SMTP_USER)
-CODE_TTL = 900          # a verification code is valid for 15 minutes
-CODE_MAX_TRIES = 5      # wrong-code attempts before the code is burned
-
 # Private Telegram signals channel (paid members only). The invite link is served
 # only to authenticated members with active access — never embedded in public HTML.
 TELEGRAM_INVITE_LINK = os.environ.get("TELEGRAM_INVITE_LINK", "https://t.me/+2r11N5pC8LcwZjlk").strip()
@@ -113,12 +89,6 @@ def _init_db():
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS ref_code TEXT")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS referred_by TEXT")
-    # Email verification. DEFAULT TRUE grandfathers every pre-existing member (they never see a code);
-    # only accounts created after this goes live are set FALSE at register() and must verify.
-    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT TRUE")
-    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_code TEXT")
-    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_exp DOUBLE PRECISION DEFAULT 0")
-    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_tries INTEGER DEFAULT 0")
     cur.execute("""CREATE TABLE IF NOT EXISTS commissions(
         id SERIAL PRIMARY KEY, referrer TEXT, referred TEXT,
         amount DOUBLE PRECISION, created TEXT, status TEXT DEFAULT 'pending')""")
@@ -629,69 +599,6 @@ def _new_session(email):
     _SESSIONS[tok] = (email, time.time() + SESSION_DAYS * 86400)
     return tok
 
-# ---------- email verification ----------
-def _gen_code():
-    return f"{secrets.randbelow(900000) + 100000}"   # always 6 digits, no leading-zero loss
-
-def _smtp_login():
-    """Open an authenticated SMTP session, forcing IPv4. Railway containers often have no IPv6
-       route, so connecting by hostname picks an AAAA address and dies with 'Network is
-       unreachable'. We resolve the A (IPv4) address ourselves, connect to it, but keep the real
-       hostname for TLS SNI/cert verification."""
-    import smtplib, socket, ssl
-    ipv4 = socket.getaddrinfo(SMTP_HOST, SMTP_PORT, socket.AF_INET, socket.SOCK_STREAM)[0][4][0]
-    s = smtplib.SMTP(ipv4, SMTP_PORT, timeout=20)
-    s._host = SMTP_HOST                       # so starttls verifies against the hostname, not the IP
-    s.starttls(context=ssl.create_default_context())
-    s.login(SMTP_USER, SMTP_PASS)
-    return s
-
-def _send_email_brevo(to_addr, subject, body_text):
-    """Send via Brevo's HTTPS API (port 443 — not blocked on Railway like SMTP is)."""
-    name, addr = _from_parts()
-    payload = json.dumps({
-        "sender": {"name": name, "email": addr},
-        "to": [{"email": to_addr}],
-        "subject": subject,
-        "textContent": body_text,
-    }).encode()
-    req = urllib.request.Request("https://api.brevo.com/v3/smtp/email", data=payload, method="POST",
-                                 headers={"api-key": BREVO_API_KEY, "content-type": "application/json",
-                                          "accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return r.status in (200, 201)
-
-def _send_email(to_addr, subject, body_text):
-    """Send a plain-text email. Prefers the Brevo HTTP API (works on Railway); falls back to SMTP
-       for local/other hosts. Returns True on success, False (no-op) if nothing is configured."""
-    if not EMAIL_ENABLED:
-        return False
-    try:
-        if BREVO_API_KEY:
-            return _send_email_brevo(to_addr, subject, body_text)
-        from email.message import EmailMessage
-        msg = EmailMessage()
-        msg["Subject"] = subject; msg["From"] = SMTP_FROM; msg["To"] = to_addr
-        msg.set_content(body_text)
-        s = _smtp_login(); s.send_message(msg); s.quit()
-        return True
-    except Exception as e:
-        print(f"[email] send failed to {to_addr}: {e}")
-        return False
-
-def _send_verify_code(email, first=""):
-    """Generate a fresh code, store it on the member, and email it. Returns True if the mail went out."""
-    code = _gen_code()
-    _set_member_field(email, "verify_code", code)
-    _set_member_field(email, "verify_exp", time.time() + CODE_TTL)
-    _set_member_field(email, "verify_tries", 0)
-    hi = f"Hi {first}," if first else "Hi,"
-    body = (f"{hi}\n\nYour Kasandra verification code is:\n\n    {code}\n\n"
-            f"Enter it on the signup page to activate your account. "
-            f"It expires in {CODE_TTL // 60} minutes.\n\n"
-            f"If you didn't request this, you can ignore this email.\n\nKasandra Technologies")
-    return _send_email(email, "Your Kasandra verification code", body)
-
 def _session_email(tok):
     if not tok: return None
     rec = _SESSIONS.get(tok)
@@ -774,96 +681,10 @@ async def register(request: Request):
     ref = (body.get("ref") or "").strip().upper()[:12]
     if ref and _member_by_ref(ref):
         _set_member_field(email, "referred_by", ref)
-
-    # EMAIL VERIFICATION: when SMTP is configured, hold the account unverified and email a code
-    # instead of logging the user straight in. No session is issued until the code is confirmed.
-    if EMAIL_ENABLED:
-        _set_member_field(email, "verified", False)
-        sent = _send_verify_code(email, first)
-        if not sent:
-            # mail failed to leave — don't strand the user; let them retry from the verify screen
-            return JSONResponse({"ok": True, "verify": True, "email": email,
-                                 "warn": "We couldn't send the code just now. Tap Resend."})
-        return JSONResponse({"ok": True, "verify": True, "email": email})
-
-    # SMTP not configured yet -> preserve the original behaviour (auto-verified, logged straight in)
     tok = _new_session(email)
     resp = JSONResponse({"ok": True})
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
     return resp
-
-@app.get("/api/_diag_smtp")
-def diag_smtp(k: str = ""):
-    """TEMPORARY diagnostic — token-gated. Tests the SMTP login and reports the exact error
-       without exposing any secret. Remove after email is confirmed working."""
-    if k != "kx7v2diag":
-        return JSONResponse({"error": "nope"}, status_code=404)
-    name, addr = _from_parts()
-    info = {"EMAIL_ENABLED": EMAIL_ENABLED, "method": "brevo" if BREVO_API_KEY else "smtp",
-            "brevo_key_set": bool(BREVO_API_KEY), "sender_name": name, "sender_email": addr}
-    if not EMAIL_ENABLED:
-        info["result"] = "not configured (set BREVO_API_KEY)"
-        return JSONResponse(info)
-    try:
-        if BREVO_API_KEY:
-            req = urllib.request.Request("https://api.brevo.com/v3/account",
-                                         headers={"api-key": BREVO_API_KEY, "accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=20) as r:
-                acct = json.loads(r.read())
-            info["result"] = "BREVO KEY OK — API reachable"
-            info["brevo_plan"] = acct.get("plan") and "present"
-        else:
-            s = _smtp_login(); s.quit()
-            info["result"] = "SMTP LOGIN OK"
-    except urllib.error.HTTPError as e:
-        info["result"] = f"FAILED: HTTP {e.code} — {e.read()[:120].decode(errors='ignore')}"
-    except Exception as e:
-        info["result"] = f"FAILED: {type(e).__name__}: {e}"
-    return JSONResponse(info)
-
-@app.post("/api/verify")
-async def verify(request: Request):
-    body = await request.json()
-    email = (body.get("email") or "").strip().lower()
-    code = (body.get("code") or "").strip()
-    u = _get_member(email)
-    if not u:
-        return JSONResponse({"ok": False, "error": "No account found for this email"})
-    if u.get("verified") is not False:
-        # already verified (or grandfathered) -> just log them in
-        tok = _new_session(email)
-        resp = JSONResponse({"ok": True})
-        resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
-        return resp
-    if int(u.get("verify_tries") or 0) >= CODE_MAX_TRIES:
-        return JSONResponse({"ok": False, "error": "Too many attempts. Tap Resend for a new code."})
-    if not u.get("verify_code") or time.time() > float(u.get("verify_exp") or 0):
-        return JSONResponse({"ok": False, "error": "Code expired. Tap Resend for a new one."})
-    if code != u.get("verify_code"):
-        _set_member_field(email, "verify_tries", int(u.get("verify_tries") or 0) + 1)
-        return JSONResponse({"ok": False, "error": "Incorrect code"})
-    # success: mark verified, clear the code, issue the session
-    _set_member_field(email, "verified", True)
-    _set_member_field(email, "verify_code", None)
-    tok = _new_session(email)
-    resp = JSONResponse({"ok": True})
-    resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
-    return resp
-
-_resend_rate = {}   # email -> last-send timestamp (30s floor between resends)
-
-@app.post("/api/resend-code")
-async def resend_code(request: Request):
-    body = await request.json()
-    email = (body.get("email") or "").strip().lower()
-    u = _get_member(email)
-    if not u or u.get("verified") is not False:
-        return JSONResponse({"ok": True})   # don't reveal whether the email exists / is already done
-    if time.time() - _resend_rate.get(email, 0) < 30:
-        return JSONResponse({"ok": False, "error": "Please wait a moment before requesting another code"})
-    _resend_rate[email] = time.time()
-    _send_verify_code(email, u.get("first_name", ""))
-    return JSONResponse({"ok": True})
 
 @app.post("/api/auth")
 async def auth(request: Request):
@@ -873,11 +694,6 @@ async def auth(request: Request):
     u = _get_member(email)
     if not u or _hash(pw, u["salt"]) != u["pw"]:
         return JSONResponse({"ok": False, "error": "Wrong email or password"})
-    # correct password but never verified -> send a fresh code and route to the verify screen
-    if EMAIL_ENABLED and u.get("verified") is False:
-        _send_verify_code(email, u.get("first_name", ""))
-        return JSONResponse({"ok": False, "verify": True, "email": email,
-                             "error": "Please verify your email. We just sent you a new code."})
     tok = _new_session(email)
     resp = JSONResponse({"ok": True})
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")

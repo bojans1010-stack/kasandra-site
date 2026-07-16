@@ -45,7 +45,19 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
 SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASS = os.environ.get("SMTP_PASS", "").strip()
 SMTP_FROM = os.environ.get("SMTP_FROM", "Kasandra <noreply@kasandra.app>").strip()
-EMAIL_ENABLED = bool(SMTP_HOST and SMTP_USER and SMTP_PASS)
+# Brevo HTTP email API (works from Railway; SMTP ports are firewalled off there). Set BREVO_API_KEY
+# on Railway. Sender must be a Brevo-verified address (verify by clicking a link — no DNS needed).
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+EMAIL_ENABLED = bool(BREVO_API_KEY or (SMTP_HOST and SMTP_USER and SMTP_PASS))
+
+def _from_parts():
+    """Split SMTP_FROM ('Kasandra <addr>' or 'addr') into (name, email)."""
+    f = SMTP_FROM
+    if "<" in f and ">" in f:
+        name = f.split("<")[0].strip() or "Kasandra"
+        addr = f.split("<")[1].split(">")[0].strip()
+        return name, addr
+    return "Kasandra", (f.strip() or SMTP_USER)
 CODE_TTL = 900          # a verification code is valid for 15 minutes
 CODE_MAX_TRIES = 5      # wrong-code attempts before the code is burned
 
@@ -634,20 +646,34 @@ def _smtp_login():
     s.login(SMTP_USER, SMTP_PASS)
     return s
 
+def _send_email_brevo(to_addr, subject, body_text):
+    """Send via Brevo's HTTPS API (port 443 — not blocked on Railway like SMTP is)."""
+    name, addr = _from_parts()
+    payload = json.dumps({
+        "sender": {"name": name, "email": addr},
+        "to": [{"email": to_addr}],
+        "subject": subject,
+        "textContent": body_text,
+    }).encode()
+    req = urllib.request.Request("https://api.brevo.com/v3/smtp/email", data=payload, method="POST",
+                                 headers={"api-key": BREVO_API_KEY, "content-type": "application/json",
+                                          "accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.status in (200, 201)
+
 def _send_email(to_addr, subject, body_text):
-    """Send a plain-text email via SMTP (STARTTLS, IPv4-forced). Returns True on success.
-       No-op (False) when SMTP creds aren't configured, so the caller can fall back safely."""
+    """Send a plain-text email. Prefers the Brevo HTTP API (works on Railway); falls back to SMTP
+       for local/other hosts. Returns True on success, False (no-op) if nothing is configured."""
     if not EMAIL_ENABLED:
         return False
-    from email.message import EmailMessage
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = SMTP_FROM
-    msg["To"] = to_addr
-    msg.set_content(body_text)
     try:
-        s = _smtp_login()
-        s.send_message(msg); s.quit()
+        if BREVO_API_KEY:
+            return _send_email_brevo(to_addr, subject, body_text)
+        from email.message import EmailMessage
+        msg = EmailMessage()
+        msg["Subject"] = subject; msg["From"] = SMTP_FROM; msg["To"] = to_addr
+        msg.set_content(body_text)
+        s = _smtp_login(); s.send_message(msg); s.quit()
         return True
     except Exception as e:
         print(f"[email] send failed to {to_addr}: {e}")
@@ -772,15 +798,25 @@ def diag_smtp(k: str = ""):
        without exposing any secret. Remove after email is confirmed working."""
     if k != "kx7v2diag":
         return JSONResponse({"error": "nope"}, status_code=404)
-    info = {"EMAIL_ENABLED": EMAIL_ENABLED, "host": SMTP_HOST, "port": SMTP_PORT,
-            "user": SMTP_USER, "from": SMTP_FROM,
-            "pass_len": len(SMTP_PASS), "pass_has_space": (" " in SMTP_PASS)}
+    name, addr = _from_parts()
+    info = {"EMAIL_ENABLED": EMAIL_ENABLED, "method": "brevo" if BREVO_API_KEY else "smtp",
+            "brevo_key_set": bool(BREVO_API_KEY), "sender_name": name, "sender_email": addr}
     if not EMAIL_ENABLED:
-        info["result"] = "SMTP not configured (one of HOST/USER/PASS is empty)"
+        info["result"] = "not configured (set BREVO_API_KEY)"
         return JSONResponse(info)
     try:
-        s = _smtp_login(); s.quit()
-        info["result"] = "LOGIN OK — credentials accepted, IPv4 connect works"
+        if BREVO_API_KEY:
+            req = urllib.request.Request("https://api.brevo.com/v3/account",
+                                         headers={"api-key": BREVO_API_KEY, "accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                acct = json.loads(r.read())
+            info["result"] = "BREVO KEY OK — API reachable"
+            info["brevo_plan"] = acct.get("plan") and "present"
+        else:
+            s = _smtp_login(); s.quit()
+            info["result"] = "SMTP LOGIN OK"
+    except urllib.error.HTTPError as e:
+        info["result"] = f"FAILED: HTTP {e.code} — {e.read()[:120].decode(errors='ignore')}"
     except Exception as e:
         info["result"] = f"FAILED: {type(e).__name__}: {e}"
     return JSONResponse(info)

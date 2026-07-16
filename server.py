@@ -756,6 +756,27 @@ async def register(request: Request):
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
     return resp
 
+@app.get("/api/_diag_smtp")
+def diag_smtp(k: str = ""):
+    """TEMPORARY diagnostic — token-gated. Tests the SMTP login and reports the exact error
+       without exposing any secret. Remove after email is confirmed working."""
+    if k != "kx7v2diag":
+        return JSONResponse({"error": "nope"}, status_code=404)
+    info = {"EMAIL_ENABLED": EMAIL_ENABLED, "host": SMTP_HOST, "port": SMTP_PORT,
+            "user": SMTP_USER, "from": SMTP_FROM,
+            "pass_len": len(SMTP_PASS), "pass_has_space": (" " in SMTP_PASS)}
+    if not EMAIL_ENABLED:
+        info["result"] = "SMTP not configured (one of HOST/USER/PASS is empty)"
+        return JSONResponse(info)
+    import smtplib
+    try:
+        s = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15)
+        s.starttls(); s.login(SMTP_USER, SMTP_PASS); s.quit()
+        info["result"] = "LOGIN OK — credentials accepted"
+    except Exception as e:
+        info["result"] = f"FAILED: {type(e).__name__}: {e}"
+    return JSONResponse(info)
+
 @app.post("/api/verify")
 async def verify(request: Request):
     body = await request.json()

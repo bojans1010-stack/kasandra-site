@@ -621,12 +621,24 @@ def _new_session(email):
 def _gen_code():
     return f"{secrets.randbelow(900000) + 100000}"   # always 6 digits, no leading-zero loss
 
+def _smtp_login():
+    """Open an authenticated SMTP session, forcing IPv4. Railway containers often have no IPv6
+       route, so connecting by hostname picks an AAAA address and dies with 'Network is
+       unreachable'. We resolve the A (IPv4) address ourselves, connect to it, but keep the real
+       hostname for TLS SNI/cert verification."""
+    import smtplib, socket, ssl
+    ipv4 = socket.getaddrinfo(SMTP_HOST, SMTP_PORT, socket.AF_INET, socket.SOCK_STREAM)[0][4][0]
+    s = smtplib.SMTP(ipv4, SMTP_PORT, timeout=20)
+    s._host = SMTP_HOST                       # so starttls verifies against the hostname, not the IP
+    s.starttls(context=ssl.create_default_context())
+    s.login(SMTP_USER, SMTP_PASS)
+    return s
+
 def _send_email(to_addr, subject, body_text):
-    """Send a plain-text email via SMTP (STARTTLS). Returns True on success.
+    """Send a plain-text email via SMTP (STARTTLS, IPv4-forced). Returns True on success.
        No-op (False) when SMTP creds aren't configured, so the caller can fall back safely."""
     if not EMAIL_ENABLED:
         return False
-    import smtplib
     from email.message import EmailMessage
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -634,10 +646,8 @@ def _send_email(to_addr, subject, body_text):
     msg["To"] = to_addr
     msg.set_content(body_text)
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as s:
-            s.starttls()
-            s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
+        s = _smtp_login()
+        s.send_message(msg); s.quit()
         return True
     except Exception as e:
         print(f"[email] send failed to {to_addr}: {e}")
@@ -768,11 +778,9 @@ def diag_smtp(k: str = ""):
     if not EMAIL_ENABLED:
         info["result"] = "SMTP not configured (one of HOST/USER/PASS is empty)"
         return JSONResponse(info)
-    import smtplib
     try:
-        s = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15)
-        s.starttls(); s.login(SMTP_USER, SMTP_PASS); s.quit()
-        info["result"] = "LOGIN OK — credentials accepted"
+        s = _smtp_login(); s.quit()
+        info["result"] = "LOGIN OK — credentials accepted, IPv4 connect works"
     except Exception as e:
         info["result"] = f"FAILED: {type(e).__name__}: {e}"
     return JSONResponse(info)

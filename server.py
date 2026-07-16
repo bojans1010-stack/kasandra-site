@@ -37,6 +37,18 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 STRIPE_ENABLED = bool(STRIPE_PAYMENT_LINK)          # show the card button
 STRIPE_AUTO = bool(STRIPE_PAYMENT_LINK and STRIPE_WEBHOOK_SECRET)   # auto-grant on webhook
 
+# --- Email verification (6-digit code at signup). DORMANT until SMTP creds are set on Railway. ---
+# Works with any SMTP provider: set SMTP_HOST / SMTP_USER / SMTP_PASS (+ optional SMTP_PORT, SMTP_FROM).
+# Until all three are present, EMAIL_ENABLED=False and signup keeps its current behaviour (no lockouts).
+SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
+SMTP_USER = os.environ.get("SMTP_USER", "").strip()
+SMTP_PASS = os.environ.get("SMTP_PASS", "").strip()
+SMTP_FROM = os.environ.get("SMTP_FROM", "Kasandra <noreply@kasandra.app>").strip()
+EMAIL_ENABLED = bool(SMTP_HOST and SMTP_USER and SMTP_PASS)
+CODE_TTL = 900          # a verification code is valid for 15 minutes
+CODE_MAX_TRIES = 5      # wrong-code attempts before the code is burned
+
 # Private Telegram signals channel (paid members only). The invite link is served
 # only to authenticated members with active access — never embedded in public HTML.
 TELEGRAM_INVITE_LINK = os.environ.get("TELEGRAM_INVITE_LINK", "https://t.me/+2r11N5pC8LcwZjlk").strip()
@@ -89,6 +101,12 @@ def _init_db():
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS ref_code TEXT")
     cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS referred_by TEXT")
+    # Email verification. DEFAULT TRUE grandfathers every pre-existing member (they never see a code);
+    # only accounts created after this goes live are set FALSE at register() and must verify.
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT TRUE")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_code TEXT")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_exp DOUBLE PRECISION DEFAULT 0")
+    cur.execute("ALTER TABLE members ADD COLUMN IF NOT EXISTS verify_tries INTEGER DEFAULT 0")
     cur.execute("""CREATE TABLE IF NOT EXISTS commissions(
         id SERIAL PRIMARY KEY, referrer TEXT, referred TEXT,
         amount DOUBLE PRECISION, created TEXT, status TEXT DEFAULT 'pending')""")
@@ -599,6 +617,45 @@ def _new_session(email):
     _SESSIONS[tok] = (email, time.time() + SESSION_DAYS * 86400)
     return tok
 
+# ---------- email verification ----------
+def _gen_code():
+    return f"{secrets.randbelow(900000) + 100000}"   # always 6 digits, no leading-zero loss
+
+def _send_email(to_addr, subject, body_text):
+    """Send a plain-text email via SMTP (STARTTLS). Returns True on success.
+       No-op (False) when SMTP creds aren't configured, so the caller can fall back safely."""
+    if not EMAIL_ENABLED:
+        return False
+    import smtplib
+    from email.message import EmailMessage
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = SMTP_FROM
+    msg["To"] = to_addr
+    msg.set_content(body_text)
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as s:
+            s.starttls()
+            s.login(SMTP_USER, SMTP_PASS)
+            s.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[email] send failed to {to_addr}: {e}")
+        return False
+
+def _send_verify_code(email, first=""):
+    """Generate a fresh code, store it on the member, and email it. Returns True if the mail went out."""
+    code = _gen_code()
+    _set_member_field(email, "verify_code", code)
+    _set_member_field(email, "verify_exp", time.time() + CODE_TTL)
+    _set_member_field(email, "verify_tries", 0)
+    hi = f"Hi {first}," if first else "Hi,"
+    body = (f"{hi}\n\nYour Kasandra verification code is:\n\n    {code}\n\n"
+            f"Enter it on the signup page to activate your account. "
+            f"It expires in {CODE_TTL // 60} minutes.\n\n"
+            f"If you didn't request this, you can ignore this email.\n\nKasandra Technologies")
+    return _send_email(email, "Your Kasandra verification code", body)
+
 def _session_email(tok):
     if not tok: return None
     rec = _SESSIONS.get(tok)
@@ -681,10 +738,67 @@ async def register(request: Request):
     ref = (body.get("ref") or "").strip().upper()[:12]
     if ref and _member_by_ref(ref):
         _set_member_field(email, "referred_by", ref)
+
+    # EMAIL VERIFICATION: when SMTP is configured, hold the account unverified and email a code
+    # instead of logging the user straight in. No session is issued until the code is confirmed.
+    if EMAIL_ENABLED:
+        _set_member_field(email, "verified", False)
+        sent = _send_verify_code(email, first)
+        if not sent:
+            # mail failed to leave — don't strand the user; let them retry from the verify screen
+            return JSONResponse({"ok": True, "verify": True, "email": email,
+                                 "warn": "We couldn't send the code just now. Tap Resend."})
+        return JSONResponse({"ok": True, "verify": True, "email": email})
+
+    # SMTP not configured yet -> preserve the original behaviour (auto-verified, logged straight in)
     tok = _new_session(email)
     resp = JSONResponse({"ok": True})
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
     return resp
+
+@app.post("/api/verify")
+async def verify(request: Request):
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    code = (body.get("code") or "").strip()
+    u = _get_member(email)
+    if not u:
+        return JSONResponse({"ok": False, "error": "No account found for this email"})
+    if u.get("verified") is not False:
+        # already verified (or grandfathered) -> just log them in
+        tok = _new_session(email)
+        resp = JSONResponse({"ok": True})
+        resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
+        return resp
+    if int(u.get("verify_tries") or 0) >= CODE_MAX_TRIES:
+        return JSONResponse({"ok": False, "error": "Too many attempts. Tap Resend for a new code."})
+    if not u.get("verify_code") or time.time() > float(u.get("verify_exp") or 0):
+        return JSONResponse({"ok": False, "error": "Code expired. Tap Resend for a new one."})
+    if code != u.get("verify_code"):
+        _set_member_field(email, "verify_tries", int(u.get("verify_tries") or 0) + 1)
+        return JSONResponse({"ok": False, "error": "Incorrect code"})
+    # success: mark verified, clear the code, issue the session
+    _set_member_field(email, "verified", True)
+    _set_member_field(email, "verify_code", None)
+    tok = _new_session(email)
+    resp = JSONResponse({"ok": True})
+    resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")
+    return resp
+
+_resend_rate = {}   # email -> last-send timestamp (30s floor between resends)
+
+@app.post("/api/resend-code")
+async def resend_code(request: Request):
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    u = _get_member(email)
+    if not u or u.get("verified") is not False:
+        return JSONResponse({"ok": True})   # don't reveal whether the email exists / is already done
+    if time.time() - _resend_rate.get(email, 0) < 30:
+        return JSONResponse({"ok": False, "error": "Please wait a moment before requesting another code"})
+    _resend_rate[email] = time.time()
+    _send_verify_code(email, u.get("first_name", ""))
+    return JSONResponse({"ok": True})
 
 @app.post("/api/auth")
 async def auth(request: Request):
@@ -694,6 +808,11 @@ async def auth(request: Request):
     u = _get_member(email)
     if not u or _hash(pw, u["salt"]) != u["pw"]:
         return JSONResponse({"ok": False, "error": "Wrong email or password"})
+    # correct password but never verified -> send a fresh code and route to the verify screen
+    if EMAIL_ENABLED and u.get("verified") is False:
+        _send_verify_code(email, u.get("first_name", ""))
+        return JSONResponse({"ok": False, "verify": True, "email": email,
+                             "error": "Please verify your email. We just sent you a new code."})
     tok = _new_session(email)
     resp = JSONResponse({"ok": True})
     resp.set_cookie("k_session", tok, httponly=True, max_age=SESSION_DAYS*86400, samesite="lax")

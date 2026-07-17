@@ -1635,6 +1635,27 @@ def admin_payments(k_admin: str = Cookie(None)):
             "revenue": revenue, "enabled": PAY_ENABLED or STRIPE_AUTO,
             "crypto": PAY_ENABLED, "stripe": STRIPE_AUTO}
 
+@app.post("/api/admin/payment_assign")
+async def admin_payment_assign(request: Request, k_admin: str = Cookie(None)):
+    """Attach an UNMATCHED crypto payment to a member and fulfil it (grants the paid month).
+       Needed when a buyer opened several pending orders and then sent a rounded amount, so the
+       auto-matcher couldn't tell which order the money belonged to and parked it as 'unmatched'."""
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    body = await request.json()
+    order_id = (body.get("order_id") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+    p = _get_payment(order_id)
+    if not p:
+        return JSONResponse({"ok": False, "error": "no such payment"})
+    if p.get("fulfilled"):
+        return JSONResponse({"ok": False, "error": "already fulfilled"})
+    if not _get_member(email):
+        return JSONResponse({"ok": False, "error": "no member with that email"})
+    ok = _fulfill_payment(order_id, email, float(p.get("amount") or PRICE_USDT))
+    return {"ok": bool(ok), "email": email, "order_id": order_id,
+            "msg": f"assigned to {email} — 30 days granted" if ok else "could not fulfil"}
+
 @app.get("/api/admin/overview")
 def admin_overview(k_admin: str = Cookie(None)):
     """Everything the admin needs to see at a glance, no member account needed:

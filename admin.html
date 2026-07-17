@@ -498,7 +498,22 @@ async function loadPayments(){
     '<td>'+(p.email||'—')+'</td>'+
     '<td class="mono">$'+Math.round(p.amount||0)+'</td>'+
     '<td><span class="oc '+(cls[p.status]||'BE')+'">'+(p.status||'?')+'</span></td>'+
-    '<td class="mono muted" style="font-size:11px">'+(p.order_id||'')+'</td></tr>').join('');
+    '<td class="mono muted" style="font-size:11px">'+(p.order_id||'')+
+      (p.status==='unmatched' && !p.fulfilled
+        ? ' <button class="mm-go" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="payAssign(\''+p.order_id+'\')">assign to member</button>'
+        : '')+
+    '</td></tr>').join('');
+}
+
+// Attach an unmatched crypto payment to the member who actually sent it, and fulfil it.
+async function payAssign(order_id){
+  const email=prompt('This payment landed but could not be matched automatically.\n\nEnter the member email who paid it — they will be granted 30 days (paid):');
+  if(!email) return;
+  const r=await fetch('/api/admin/payment_assign',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({order_id, email:email.trim()})});
+  const d=await r.json();
+  alert(d.ok ? ('✓ '+d.msg) : ('✕ '+(d.error||'failed')));
+  if(d.ok) loadPayments();
 }
 
 // ---------- AI CHATS ----------

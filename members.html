@@ -262,7 +262,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
       <li data-i18n="mem.connStep1">Open a PU Prime account through our partner link</li>
-      <li><span data-i18n="mem.connStep2pre">Deposit 300 USD or more and your membership is free</span></li>
+      <li><span data-i18n="mem.connStep2pre">Deposit 100 USD or more and your membership is free (account must be actively traded)</span></li>
       <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/Milan_FxInnerSupport" target="_blank">@Milan_FxInnerSupport</a> or <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
     </ol>
     <a class="btn" href="https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=" target="_blank" data-i18n="mem.connBtn">OPEN PU PRIME ACCOUNT &rarr;</a>
@@ -680,6 +680,7 @@ async function load(){
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
+  if(window.maybeAutoPromo) window.maybeAutoPromo(u);   // free-membership offer for expired/pending members
 }
 // ---------- market status banner (around the chart, trilingual, no strategy details) ----------
 const BANNER={
@@ -1017,19 +1018,26 @@ var COOLDOWN_DISMISS=3*86400*1000;   // 3 days after "maybe later"
 var COOLDOWN_ACT=30*86400*1000;      // 30 days after they click through
 var DELAY=25000;                     // let them look at the signals first
 var TG='https://t.me/Milan_FxInnerSupport';
+var PU='https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=';
 var COPY={
- en:{q:"Do you like our signals?",
-     b:"If the calls are working for you, you don't have to place every trade by hand. Automate it completely - join Kasandra autotrading on PU Prime and every signal is executed for you, hands-free.",
-     price:"Open PU Prime through our link, deposit 300 USD, and it is free.",
-     cta:"Automate my trading →", later:"Maybe later"},
- mk:{q:"Ти се допаѓаат нашите сигнали?",
-     b:"Ако сигналите ти работат, не мора да ја отвораш секоја трговија рачно. Автоматизирај целосно - приклучи се на Kasandra автоматско тргување на PU Prime и секој сигнал се извршува автоматски за тебе.",
-     price:"Отвори PU Prime преку нашиот линк, депонирај 300 USD, и е бесплатно.",
-     cta:"Автоматизирај го тргувањето →", later:"Можеби подоцна"},
- sr:{q:"Da li ti se sviđaju naši signali?",
-     b:"Ako ti signali rade, ne moraš da otvaraš svaku trgovinu ručno. Automatizuj potpuno - priključi se Kasandra autotrgovanju na PU Prime i svaki signal se izvršava automatski za tebe.",
-     price:"Otvori PU Prime preko našeg linka, uplati 300 USD, i besplatno je.",
-     cta:"Automatizuj trgovanje →", later:"Možda kasnije"}
+ en:{q:"Get your membership for free",
+     b:"You do not have to pay 99 USDT a month. Open a PU Prime account through our link and deposit 100 USD or more, and your Kasandra membership is free for as long as you trade it.",
+     bonus:"PU Prime also gives a 100% one time deposit bonus on deposits up to 1000 USD.",
+     price:"You also get access to our private Telegram community.",
+     note:"The account must be actively traded. We monitor for misuse and free membership is revoked on accounts that never trade.",
+     cta:"Open PU Prime & claim it →", later:"Maybe later"},
+ mk:{q:"Земи го членството бесплатно",
+     b:"Не мора да плаќаш 99 USDT месечно. Отвори PU Prime сметка преку нашиот линк и депонирај 100 USD или повеќе, и твоето Kasandra членство е бесплатно се додека тргуваш на неа.",
+     bonus:"PU Prime дава и 100% еднократен бонус на депозит до 1000 USD.",
+     price:"Добиваш и пристап до нашата приватна Telegram заедница.",
+     note:"Сметката мора активно да се тргува. Ја следиме злоупотребата и бесплатното членство се укинува на сметки што не тргуваат.",
+     cta:"Отвори PU Prime и земи го →", later:"Можеби подоцна"},
+ sr:{q:"Uzmi članstvo besplatno",
+     b:"Ne moraš da plaćaš 99 USDT mesečno. Otvori PU Prime nalog preko našeg linka i uplati 100 USD ili više, i tvoje Kasandra članstvo je besplatno dok god trguješ na njemu.",
+     bonus:"PU Prime takođe daje 100% jednokratni bonus na depozit do 1000 USD.",
+     price:"Dobijaš i pristup našoj privatnoj Telegram zajednici.",
+     note:"Nalog mora aktivno da se trguje. Pratimo zloupotrebe i besplatno članstvo se ukida na nalozima koji ne trguju.",
+     cta:"Otvori PU Prime i uzmi →", later:"Možda kasnije"}
 };
 function lang(){var l=localStorage.getItem('k_lang')||'en';return COPY[l]?l:'en';}
 function setNext(ms){try{localStorage.setItem(NEXT_KEY,String(Date.now()+ms));}catch(e){}}
@@ -1043,10 +1051,13 @@ function build(){
    +'<button aria-label="close" id="kap-x" style="position:absolute;top:12px;right:14px;background:none;border:0;color:#6a7688;font-size:24px;line-height:1;cursor:pointer">&times;</button>'
    +'<div style="font-size:34px;margin-bottom:8px">⚡</div>'
    +'<h3 style="font-family:\'Space Grotesk\',system-ui,sans-serif;color:#f6dca6;font-size:21px;font-weight:700;margin:0 0 12px;text-shadow:0 0 20px rgba(230,192,122,.3)">'+t.q+'</h3>'
-   +'<p style="color:#a8b2c1;font-size:13.5px;line-height:1.65;margin:0 0 14px">'+t.b+'</p>'
-   +'<p style="color:#e6c07a;font-size:13px;font-weight:600;margin:0 0 20px">'+t.price+'</p>'
-   +'<a id="kap-cta" href="'+TG+'" target="_blank" rel="noopener" style="display:block;padding:14px 20px;background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border-radius:11px;font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 30px rgba(230,192,122,.35)">'+t.cta+'</a>'
-   +'<button id="kap-later" style="margin-top:14px;background:none;border:0;color:#6a7688;font-size:12.5px;cursor:pointer;text-decoration:underline">'+t.later+'</button>'
+   +'<p style="color:#a8b2c1;font-size:13.5px;line-height:1.65;margin:0 0 12px">'+t.b+'</p>'
+   +'<p style="color:#00ff88;font-size:13px;font-weight:600;margin:0 0 10px">'+t.bonus+'</p>'
+   +'<p style="color:#e6c07a;font-size:13px;font-weight:600;margin:0 0 14px">'+t.price+'</p>'
+   +'<p style="color:#6a7688;font-size:11.5px;line-height:1.5;margin:0 0 18px">'+t.note+'</p>'
+   +'<a id="kap-cta" href="'+PU+'" target="_blank" rel="noopener" style="display:block;padding:14px 20px;background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border-radius:11px;font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 30px rgba(230,192,122,.35)">'+t.cta+'</a>'
+   +'<a href="'+TG+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:#229ED9;font-size:12.5px;text-decoration:none;font-weight:600">Already deposited? Message support to claim &rarr;</a>'
+   +'<button id="kap-later" style="margin-top:12px;background:none;border:0;color:#6a7688;font-size:12.5px;cursor:pointer;text-decoration:underline">'+t.later+'</button>'
   +'</div>';
  document.body.appendChild(ov);
  requestAnimationFrame(function(){ov.style.opacity='1';});
@@ -1058,6 +1069,9 @@ function build(){
 }
 window.maybeAutoPromo=function(u){
  try{
+  // UNPAID members only: trial, free, expired, pending. Paid members already have access.
+  var lbl=(u&&u.access_label)||'';
+  if(lbl==='active') return;
   var next=parseInt(localStorage.getItem(NEXT_KEY)||'0',10);
   if(Date.now()<next) return;
   setTimeout(function(){

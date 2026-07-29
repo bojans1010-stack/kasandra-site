@@ -215,14 +215,11 @@ tr:hover td{background:rgba(0,212,255,.03)}
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
-      <li data-i18n="mem.connStep1">Open a VT Markets account through our partner link</li>
-      <li><span data-i18n="mem.connStep2pre">Enter invite code</span> <span class="code" onclick="copyCode()">uKdrW9fs</span> <span data-i18n="mem.connStep2post">during signup</span></li>
+      <li data-i18n="mem.connStep1">Open a PU Prime account through our partner link</li>
+      <li><span data-i18n="mem.connStep2pre">Deposit 300 USD or more and your membership is free</span></li>
       <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/Kasandra_tech" target="_blank">@Kasandra_tech</a> or <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
     </ol>
-    <a class="btn" href="https://www.vtmarkets.com/en/promotions/deposit-bonus/?affid=MjIyMDEwNTg=&invitecode=uKdrW9fs" target="_blank" data-i18n="mem.connBtn">OPEN VT MARKETS ACCOUNT &rarr;</a>
-    <a class="btn" href="https://my.quomarkets.com/register?regnew=0197b524-a822-720a-ad73-61ccec9bdfb9" target="_blank" style="margin-left:10px;margin-top:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">QUO MARKETS &rarr;</a>
-    <a class="btn" href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" style="margin-left:10px;margin-top:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">PU PRIME &rarr;</a>
-    <a class="btn" href="https://my.tradequo.com/register?referral=019e607c-ef8b-72ee-bfa5-2f57d59917f4" target="_blank" style="margin-left:10px;margin-top:10px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none">TRADEQUO &rarr;</a>
+    <a class="btn" href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" data-i18n="mem.connBtn">OPEN PU PRIME ACCOUNT &rarr;</a>
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
@@ -471,7 +468,6 @@ async function pollTick(){
 }
 </script>
 <script>
-function copyCode(){navigator.clipboard.writeText('uKdrW9fs').then(()=>{const t=document.getElementById('copied');t.textContent=kT('copied');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
 async function changePw(){
   const cur=prompt(kT('mem.pwCurrent'));

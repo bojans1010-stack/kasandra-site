@@ -386,7 +386,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
         <div class="st-ic" data-i18n="join.s1ic">Open account</div>
         <h3 data-i18n="join.s1h">Create your PU Prime account</h3>
         <p data-i18n="join.s1p">Open a live account through our partner link below. Takes a few minutes.</p>
-        <a href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" class="btn-primary" style="margin-top:18px;display:inline-block;padding:12px 24px;font-size:13px" data-i18n="join.s1btn">OPEN PU PRIME ACCOUNT &rarr;</a>
+        <a href="https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=" target="_blank" class="btn-primary" style="margin-top:18px;display:inline-block;padding:12px 24px;font-size:13px" data-i18n="join.s1btn">OPEN PU PRIME ACCOUNT &rarr;</a>
       </div>
       <div class="step">
         <div class="st-ic" data-i18n="join.s2ic">Deposit</div>
@@ -399,7 +399,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
         <div class="st-ic" data-i18n="join.s3ic">Connect</div>
         <h3 data-i18n="join.s3h">Message us to go live</h3>
         <p data-i18n="join.s3p">Once your account is open and funded, contact us on Telegram to get connected and started.</p>
-        <p style="margin-top:16px">&rarr; <a href="https://t.me/Kasandra_tech" target="_blank" class="tg">@Kasandra_tech</a> <span style="color:var(--dim)">or</span> <a href="https://t.me/vanja_milanov" target="_blank" class="tg">@vanja_milanov</a></p>
+        <p style="margin-top:16px">&rarr; <a href="https://t.me/Milan_FxInnerSupport" target="_blank" class="tg">@Milan_FxInnerSupport</a> <span style="color:var(--dim)">or</span> <a href="https://t.me/vanja_milanov" target="_blank" class="tg">@vanja_milanov</a></p>
       </div>
     </div>
   </div>
@@ -411,7 +411,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
       <h2 data-i18n="cta.h2">Trade with a system that shows its work.</h2>
       <p data-i18n="cta.p">Open your account, deposit, message us. That is it.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" class="btn-primary" data-i18n="cta.btn">GET STARTED WITH PU PRIME &rarr;</a>
+        <a href="https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=" target="_blank" class="btn-primary" data-i18n="cta.btn">GET STARTED WITH PU PRIME &rarr;</a>
       </div>
     </div>
     <div class="disclaimer">
@@ -427,7 +427,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
       <a href="#how" data-i18n="foot.how">How it works</a>
       <a href="#trades" data-i18n="foot.trades">Live Trades</a>
       <a href="/login" data-i18n="foot.login">Member Login</a>
-      <a href="https://t.me/Kasandra_tech" target="_blank" data-i18n="foot.contact">Contact</a>
+      <a href="https://t.me/Milan_FxInnerSupport" target="_blank" data-i18n="foot.contact">Contact</a>
     </div>
     <div class="copy">&copy; 2026 Kasandra Technologies</div>
   </div>
@@ -589,8 +589,8 @@ b.onclick=toggle;document.getElementById("kas-x").onclick=toggle;
 async function send(){var v=txt.value.trim();if(!v||busy)return;txt.value="";add("user",v);hist.push({role:"user",content:v});busy=true;
 var t=document.createElement("div");t.className="kas-typ";t.textContent="typing...";msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
 try{var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist,session_id:(localStorage.KSID||(localStorage.KSID="s-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)))})});var d=await r.json();t.remove();
-var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Kasandra_tech.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
-catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Kasandra_tech.");}
+var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Milan_FxInnerSupport.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
+catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Milan_FxInnerSupport.");}
 busy=false;}
 document.getElementById("kas-snd").onclick=send;
 txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});

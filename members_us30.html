@@ -217,9 +217,9 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <ol>
       <li data-i18n="mem.connStep1">Open a PU Prime account through our partner link</li>
       <li><span data-i18n="mem.connStep2pre">Deposit 300 USD or more and your membership is free</span></li>
-      <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/Kasandra_tech" target="_blank">@Kasandra_tech</a> or <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
+      <li><span data-i18n="mem.connStep3pre">Message</span> <a href="https://t.me/Milan_FxInnerSupport" target="_blank">@Milan_FxInnerSupport</a> or <a href="https://t.me/vanja_milanov" target="_blank">@vanja_milanov</a> <span data-i18n="mem.connStep3post">on Telegram to get connected</span></li>
     </ol>
-    <a class="btn" href="https://www.puprime.partners/forex-trading-account/?affid=MjMyMTU5Nzk=" target="_blank" data-i18n="mem.connBtn">OPEN PU PRIME ACCOUNT &rarr;</a>
+    <a class="btn" href="https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=" target="_blank" data-i18n="mem.connBtn">OPEN PU PRIME ACCOUNT &rarr;</a>
   </div>
 </div>
 <div class="copied" id="copied">Code copied &#10003;</div>
@@ -505,7 +505,7 @@ async function load(){
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Kasandra_tech" target="_blank" style="color:var(--accent);font-weight:600">@Kasandra_tech</a> '+kT('mem.expiredP2post')+'</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Milan_FxInnerSupport" target="_blank" style="color:var(--accent);font-weight:600">@Milan_FxInnerSupport</a> '+kT('mem.expiredP2post')+'</p></div>');
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
@@ -736,8 +736,8 @@ b.onclick=toggle;document.getElementById("kas-x").onclick=toggle;
 async function send(){var v=txt.value.trim();if(!v||busy)return;txt.value="";add("user",v);hist.push({role:"user",content:v});busy=true;
 var t=document.createElement("div");t.className="kas-typ";t.textContent="typing...";msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
 try{var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist,session_id:(localStorage.KSID||(localStorage.KSID="s-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)))})});var d=await r.json();t.remove();
-var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Kasandra_tech.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
-catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Kasandra_tech.");}
+var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Milan_FxInnerSupport.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
+catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Milan_FxInnerSupport.");}
 busy=false;}
 document.getElementById("kas-snd").onclick=send;
 txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});

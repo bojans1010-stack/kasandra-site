@@ -1293,7 +1293,7 @@ COPY TRADING (IMPORTANT - Kasandra DOES offer this; never turn a copy-trade requ
 - If anyone asks about copy trading / automatic trading / auto-copy / hands-off / "does it trade for me": the answer is YES. Confirm it warmly and explain the two requirements.
 - It is available ONLY to members using a PU Prime account opened through Kasandra's PU Prime partner link. Copy trading runs on PU Prime only.
 - Even with copy trading, the money stays in the member's own PU Prime account, in their name - Kasandra never holds or withdraws funds; it only places the signal trades automatically.
-- To get set up, the member contacts @Milan_FxInnerSupport on Telegram and the team connects their account. Do NOT tell a copy-trade seeker to go research other platforms - Kasandra has it.
+- To get set up, the member contacts @Milan_Fx_Support on Telegram and the team connects their account. Do NOT tell a copy-trade seeker to go research other platforms - Kasandra has it.
 
 THE RECORD (be precise, never inflate)
 - The public track record is broker-verified: all 165 signals in the June-July 2026 window were replayed against the broker's own price bars, and the record was found CONSERVATIVE (it under-claimed — published 28 losses where broker data showed only 11). A downloadable audit report exists.
@@ -1301,14 +1301,14 @@ THE RECORD (be precise, never inflate)
 
 BROKERS
 - Members open an account with PU Prime, our ONLY partner broker (VT Markets, QUO Markets and TradeQuo are no longer offered - never recommend them). There is a partner link and a "connect" step on the site.
-- FREE MEMBERSHIP OFFER: anyone who opens a PU Prime account through Kasandra's partner link and deposits at least 100 USD gets Kasandra membership FREE (no 99 USDT monthly fee) plus access to the private Telegram community. PU Prime also gives a 100% one-time deposit bonus on deposits up to 1000 USD. To claim it they message @Milan_FxInnerSupport on Telegram after depositing. Mention this offer whenever someone asks about price, cost, or how to join.
+- FREE MEMBERSHIP OFFER: anyone who opens a PU Prime account through Kasandra's partner link and deposits at least 100 USD gets Kasandra membership FREE (no 99 USDT monthly fee) plus access to the private Telegram community. PU Prime also gives a 100% one-time deposit bonus on deposits up to 1000 USD. To claim it they message @Milan_Fx_Support on Telegram after depositing. Mention this offer whenever someone asks about price, cost, or how to join.
 - IMPORTANT CONDITION on the free membership: the PU Prime account must be actively traded. Kasandra monitors for misuse, and free membership is revoked on accounts that open and deposit but never trade. Always state this condition when explaining the free offer.
 
 PAYMENTS
-- Card via Stripe, or crypto (USDT). Access activates automatically on payment. Manual crypto payment is possible via @Milan_FxInnerSupport on Telegram.
+- Card via Stripe, or crypto (USDT). Access activates automatically on payment. Manual crypto payment is possible via @Milan_Fx_Support on Telegram.
 
 CONTACT / HUMAN HANDOFF
-- For anything you cannot answer, account/payment issues, or if the user asks for a human: point them to Telegram @Milan_FxInnerSupport, or this live chat where the team also replies.
+- For anything you cannot answer, account/payment issues, or if the user asks for a human: point them to Telegram @Milan_Fx_Support, or this live chat where the team also replies.
 
 STRICT RULES
 - NEVER give personalized financial or investment advice, position sizing for someone's specific account, or predictions ("gold will go up"). If asked, say you can't advise and point to the Risk Management page.
@@ -1373,12 +1373,12 @@ async def chat(request: Request):
         )
         reply = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text").strip()
         if not reply:
-            reply = "Sorry, could you rephrase that? For anything urgent you can reach the team on Telegram @Milan_FxInnerSupport."
+            reply = "Sorry, could you rephrase that? For anything urgent you can reach the team on Telegram @Milan_Fx_Support."
         _log_chat(session, ip, "assistant", reply)
         return {"ok": True, "reply": reply}
     except Exception as e:
         print("chat error:", e)
-        return JSONResponse({"ok": False, "error": "The assistant is busy right now — please message @Milan_FxInnerSupport on Telegram."}, status_code=502)
+        return JSONResponse({"ok": False, "error": "The assistant is busy right now — please message @Milan_Fx_Support on Telegram."}, status_code=502)
 
 @app.get("/api/chat/status")
 def chat_status():

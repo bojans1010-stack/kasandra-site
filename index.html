@@ -399,7 +399,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
         <div class="st-ic" data-i18n="join.s3ic">Connect</div>
         <h3 data-i18n="join.s3h">Message us to go live</h3>
         <p data-i18n="join.s3p">Once your account is open and funded, contact us on Telegram to get connected and started.</p>
-        <p style="margin-top:16px">&rarr; <a href="https://t.me/Milan_FxInnerSupport" target="_blank" class="tg">@Milan_FxInnerSupport</a> <span style="color:var(--dim)">or</span> <a href="https://t.me/vanja_milanov" target="_blank" class="tg">@vanja_milanov</a></p>
+        <p style="margin-top:16px">&rarr; <a href="https://t.me/Milan_Fx_Support" target="_blank" class="tg">@Milan_Fx_Support</a> <span style="color:var(--dim)">or</span> <a href="https://t.me/vanja_milanov" target="_blank" class="tg">@vanja_milanov</a></p>
       </div>
     </div>
   </div>
@@ -427,7 +427,7 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
       <a href="#how" data-i18n="foot.how">How it works</a>
       <a href="#trades" data-i18n="foot.trades">Live Trades</a>
       <a href="/login" data-i18n="foot.login">Member Login</a>
-      <a href="https://t.me/Milan_FxInnerSupport" target="_blank" data-i18n="foot.contact">Contact</a>
+      <a href="https://t.me/Milan_Fx_Support" target="_blank" data-i18n="foot.contact">Contact</a>
     </div>
     <div class="copy">&copy; 2026 Kasandra Technologies</div>
   </div>
@@ -589,8 +589,8 @@ b.onclick=toggle;document.getElementById("kas-x").onclick=toggle;
 async function send(){var v=txt.value.trim();if(!v||busy)return;txt.value="";add("user",v);hist.push({role:"user",content:v});busy=true;
 var t=document.createElement("div");t.className="kas-typ";t.textContent="typing...";msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
 try{var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist,session_id:(localStorage.KSID||(localStorage.KSID="s-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)))})});var d=await r.json();t.remove();
-var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Milan_FxInnerSupport.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
-catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Milan_FxInnerSupport.");}
+var reply=d.ok?d.reply:(d.error||"Something went wrong. Reach us on Telegram @Milan_Fx_Support.");add("assistant",reply);hist.push({role:"assistant",content:reply});}
+catch(e){t.remove();add("assistant","Connection issue. You can also reach us on Telegram @Milan_Fx_Support.");}
 busy=false;}
 document.getElementById("kas-snd").onclick=send;
 txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});

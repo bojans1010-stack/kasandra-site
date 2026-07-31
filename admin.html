@@ -200,13 +200,26 @@ td .muted{font-size:12px}
   <div class="view" id="view-members">
     <div class="cards" id="mem-cards"></div>
     <div class="section">
-      <div class="search">
-        <input id="mem-search" placeholder="Search name, email, country..." oninput="renderMembers()">
+      <div class="search" style="flex-wrap:wrap;gap:8px;align-items:center">
+        <input id="mem-search" placeholder="Search name, email, country, phone..." oninput="renderMembers()" style="flex:1;min-width:200px">
         <button class="filterbtn on" data-f="all" onclick="setFilter('all')">All</button>
         <button class="filterbtn" data-f="pending" onclick="setFilter('pending')">Pending</button>
         <button class="filterbtn" data-f="trial" onclick="setFilter('trial')">Trial</button>
         <button class="filterbtn" data-f="active" onclick="setFilter('active')">Paid</button>
+        <button class="filterbtn" data-f="free" onclick="setFilter('free')">Free</button>
         <button class="filterbtn" data-f="expired" onclick="setFilter('expired')">Expired</button>
+        <button class="filterbtn" data-f="expiring" onclick="setFilter('expiring')">Expiring &le;7d</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 4px;font-size:12.5px;color:#8a94a6">
+        <select id="f-country" onchange="renderMembers()" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:7px 9px;font-size:12.5px"><option value="">All countries</option></select>
+        <select id="f-plan" onchange="renderMembers()" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:7px 9px;font-size:12.5px"><option value="">Any plan</option><option value="trial">Trial</option><option value="paid">Paid</option><option value="free">Free</option><option value="comp">Comp</option><option value="none">None</option></select>
+        <span>Joined</span>
+        <input type="date" id="f-from" onchange="renderMembers()" title="Joined from" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:6px 8px;font-size:12.5px;color-scheme:dark">
+        <span>to</span>
+        <input type="date" id="f-to" onchange="renderMembers()" title="Joined to" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:6px 8px;font-size:12.5px;color-scheme:dark">
+        <select id="f-sort" onchange="renderMembers()" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:7px 9px;font-size:12.5px"><option value="joined_desc">Newest first</option><option value="joined_asc">Oldest first</option><option value="name">Name A-Z</option><option value="country">Country</option><option value="expiry_asc">Expiry soonest</option></select>
+        <button class="filterbtn" onclick="clearMemFilters()" style="border-color:#3a4459;color:#a8b2c1">Clear</button>
+        <span id="mem-count" style="margin-left:auto;color:#6a7688"></span>
       </div>
       <table>
         <thead><tr><th>Member</th><th>Contact</th><th>Country</th><th>Status</th><th>Plan</th><th>Expires</th><th>Joined</th><th>Actions</th></tr></thead>
@@ -569,19 +582,56 @@ async function loadMembers(){
     card('green',d.free||0,'Free / Comp')+
     card('red',d.expiring||0,'Expiring ≤7d')+
     card('accent',d.new7||0,'New (7d)');
+  fillCountryFilter();
   renderMembers();
 }
-function setFilter(f){FILTER=f;document.querySelectorAll('.filterbtn').forEach(b=>b.classList.toggle('on',b.dataset.f===f));renderMembers();}
+function setFilter(f){FILTER=f;document.querySelectorAll('.filterbtn[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===f));renderMembers();}
+function clearMemFilters(){
+  document.getElementById('mem-search').value='';
+  document.getElementById('f-country').value='';
+  document.getElementById('f-plan').value='';
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  document.getElementById('f-sort').value='joined_desc';
+  setFilter('all');
+}
+function fillCountryFilter(){
+  const sel=document.getElementById('f-country'); if(!sel)return;
+  const cur=sel.value;
+  const cs=[...new Set(MEMBERS.map(m=>(m.country||'').trim()).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All countries</option>'+cs.map(c=>'<option>'+c+'</option>').join('');
+  sel.value=cur;
+}
 function renderMembers(){
   const q=(document.getElementById('mem-search').value||'').toLowerCase();
+  const fc=(document.getElementById('f-country')||{}).value||'';
+  const fp=(document.getElementById('f-plan')||{}).value||'';
+  const ff=(document.getElementById('f-from')||{}).value||'';
+  const ft=(document.getElementById('f-to')||{}).value||'';
+  const fs=(document.getElementById('f-sort')||{}).value||'joined_desc';
   let list=MEMBERS.filter(m=>{
     if(FILTER==='pending'&&m.access_label!=='pending')return false;
     if(FILTER==='trial'&&m.access_label!=='trial')return false;
     if(FILTER==='active'&&m.access_label!=='active')return false;
+    if(FILTER==='free'&&m.access_label!=='free')return false;
     if(FILTER==='expired'&&m.access_label!=='expired')return false;
+    if(FILTER==='expiring'&&!(m.days_left>0&&m.days_left<=7&&m.access_label!=='expired'))return false;
+    if(fc&&(m.country||'')!==fc)return false;
+    if(fp&&(m.plan||'none')!==fp)return false;
+    const jd=(m.joined||'').slice(0,10);
+    if(ff&&(!jd||jd<ff))return false;
+    if(ft&&(!jd||jd>ft))return false;
     if(q){const hay=(m.first_name+' '+m.last_name+' '+m.email+' '+(m.country||'')+' '+(m.phone||'')).toLowerCase();if(!hay.includes(q))return false;}
     return true;
   });
+  list.sort((a,b)=>{
+    if(fs==='joined_asc')return (a.joined||'').localeCompare(b.joined||'');
+    if(fs==='name')return ((a.first_name+' '+a.last_name).trim()||a.email).localeCompare((b.first_name+' '+b.last_name).trim()||b.email);
+    if(fs==='country')return (a.country||'~').localeCompare(b.country||'~')||(b.joined||'').localeCompare(a.joined||'');
+    if(fs==='expiry_asc')return (a.access_until||'9999').localeCompare(b.access_until||'9999');
+    return (b.joined||'').localeCompare(a.joined||'');
+  });
+  const cnt=document.getElementById('mem-count'); if(cnt)cnt.textContent=list.length+' of '+MEMBERS.length+' shown';
   const body=document.getElementById('mbody');
   if(!list.length){body.innerHTML='<tr><td colspan="8" class="empty">No members match</td></tr>';return;}
   body.innerHTML=list.map(m=>{

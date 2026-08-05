@@ -143,6 +143,7 @@ td .muted{font-size:12px}
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
     <div class="tab" id="tab-affiliates" onclick="switchTab('affiliates')">Affiliates</div>
     <div class="tab" id="tab-payments" onclick="switchTab('payments')">Payments</div>
+    <div class="tab" id="tab-codes" onclick="switchTab('codes')">Access Codes</div>
     <div class="tab" id="tab-chats" onclick="switchTab('chats')">AI Chats</div>
   </div>
 
@@ -248,6 +249,34 @@ td .muted{font-size:12px}
       <table>
         <thead><tr><th>When</th><th>Member</th><th>Amount</th><th>Status</th><th>Order</th></tr></thead>
         <tbody id="paybody"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="view" id="view-codes">
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot" style="background:var(--gold)"></span>CREATE ACCESS CODE</div></div>
+      <div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+        <div><label style="display:block;color:#8a94a6;font-size:11px;margin-bottom:4px">Code (blank = auto)</label>
+          <input id="cd-code" placeholder="KASANDRAFX052026" style="background:#0a0e16;border:1px solid #2a3346;color:#e6c07a;border-radius:8px;padding:9px 11px;font-family:monospace;font-size:13px;text-transform:uppercase;width:200px"></div>
+        <div><label style="display:block;color:#8a94a6;font-size:11px;margin-bottom:4px">Days</label>
+          <input id="cd-days" type="number" value="30" min="1" max="3650" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:9px 11px;font-size:13px;width:80px"></div>
+        <div><label style="display:block;color:#8a94a6;font-size:11px;margin-bottom:4px">Plan</label>
+          <select id="cd-plan" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:9px 11px;font-size:13px"><option value="paid">Paid</option><option value="free">Free</option><option value="comp">Comp</option><option value="trial">Trial</option></select></div>
+        <div><label style="display:block;color:#8a94a6;font-size:11px;margin-bottom:4px">Max uses (0=∞)</label>
+          <input id="cd-max" type="number" value="0" min="0" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:9px 11px;font-size:13px;width:110px"></div>
+        <div><label style="display:block;color:#8a94a6;font-size:11px;margin-bottom:4px">Note (optional)</label>
+          <input id="cd-note" placeholder="e.g. August promo" style="background:#0a0e16;border:1px solid #2a3346;color:#e6ebf2;border-radius:8px;padding:9px 11px;font-size:13px;width:160px"></div>
+        <button onclick="createCode()" style="background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border:0;border-radius:9px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer">Create code</button>
+        <span id="cd-msg" style="font-size:12.5px;align-self:center"></span>
+      </div>
+      <div style="color:#5a6478;font-size:11px;padding:0 16px 12px">Members enter the code in their dashboard to unlock access. Single-use = max uses 1. Each member can redeem a given code only once.</div>
+    </div>
+    <div class="section">
+      <div class="h"><div class="t"><span class="dot"></span>ALL CODES</div><div class="meta" id="cd-count"></div></div>
+      <table>
+        <thead><tr><th>Code</th><th>Grants</th><th>Plan</th><th>Used</th><th>Status</th><th>Note</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody id="cdbody"><tr><td colspan="8" class="empty">loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -409,14 +438,48 @@ async function saveRisk(enabled){
   else{out.style.color='#ff3366';out.textContent='✕ '+(d.error||'error');}
 }
 function switchTab(t){
-  ['overview','members','affiliates','payments'].forEach(x=>{
-    document.getElementById('tab-'+x).classList.toggle('active',t===x);
-    document.getElementById('view-'+x).classList.toggle('active',t===x);
+  ['overview','members','affiliates','payments','codes','chats'].forEach(x=>{
+    var tb=document.getElementById('tab-'+x), vw=document.getElementById('view-'+x);
+    if(tb) tb.classList.toggle('active',t===x);
+    if(vw) vw.classList.toggle('active',t===x);
   });
   if(t==='affiliates') loadAffiliates();
   if(t==='payments') loadPayments();
+  if(t==='codes') loadCodes();
   if(t==='chats') loadChats();
 }
+async function createCode(){
+  const out=document.getElementById('cd-msg');
+  const payload={code:document.getElementById('cd-code').value,days:+document.getElementById('cd-days').value,
+    plan:document.getElementById('cd-plan').value,max_uses:+document.getElementById('cd-max').value,
+    note:document.getElementById('cd-note').value};
+  const r=await fetch('/api/admin/codes/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d=await r.json();
+  if(d.ok){ out.style.color='#00ff88'; out.textContent='✓ '+d.code+' created ('+d.days+'d)';
+    document.getElementById('cd-code').value=''; document.getElementById('cd-note').value=''; loadCodes(); }
+  else{ out.style.color='#ff3366'; out.textContent='✕ '+(d.error||'error'); }
+}
+async function loadCodes(){
+  const r=await fetch('/api/admin/codes'); if(r.status===401){gate();return;}
+  const d=await r.json(); const list=d.codes||[];
+  document.getElementById('cd-count').textContent=list.length+' codes';
+  const b=document.getElementById('cdbody');
+  if(!list.length){ b.innerHTML='<tr><td colspan="8" class="empty">No codes yet</td></tr>'; return; }
+  b.innerHTML=list.map(c=>{
+    const uses=c.max_uses>0?(c.used+' / '+c.max_uses):(c.used+' / ∞');
+    const st=c.active?'<span class="badge active">active</span>':'<span class="badge expired">off</span>';
+    return '<tr><td class="mono" style="color:#e6c07a;font-weight:600;cursor:pointer" onclick="cdCopy(\''+c.code+'\')" title="click to copy">'+c.code+'</td>'+
+      '<td class="mono">'+c.days+'d</td><td class="muted">'+c.plan+'</td>'+
+      '<td class="mono">'+uses+'</td><td>'+st+'</td>'+
+      '<td class="muted" style="font-size:11px">'+(c.note||'—')+'</td>'+
+      '<td class="muted mono" style="font-size:11px">'+(c.created||'')+'</td>'+
+      '<td><button class="act neutral" onclick="cdToggle(\''+c.code+'\')">'+(c.active?'Disable':'Enable')+'</button>'+
+      '<button class="act revoke" onclick="cdDelete(\''+c.code+'\')">Delete</button></td></tr>';
+  }).join('');
+}
+function cdCopy(code){ navigator.clipboard.writeText(code).then(()=>{const m=document.getElementById('cd-msg');m.style.color='#00ff88';m.textContent='✓ '+code+' copied';}); }
+async function cdToggle(code){ await fetch('/api/admin/codes/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,action:'toggle'})}); loadCodes(); }
+async function cdDelete(code){ if(!confirm('Delete code '+code+'? Members can no longer redeem it.'))return; await fetch('/api/admin/codes/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,action:'delete'})}); loadCodes(); }
 
 // ---------- OVERVIEW ----------
 async function loadOverview(){

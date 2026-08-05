@@ -1076,6 +1076,123 @@ async def admin_risk_alert(request: Request, k_admin: str = Cookie(None)):
     _set_setting("risk_alert", alert)
     return {"ok": True, "alert": alert}
 
+# ---------- access codes (redeem for N days) ----------
+def _norm_code(c):
+    return "".join(ch for ch in (c or "").upper() if ch.isalnum())
+
+def _codes():
+    return _get_setting("access_codes") or {}
+def _save_codes(d):
+    _set_setting("access_codes", d)
+
+def _redeem_code(email, code):
+    """Redeem an access code for a member. Returns (ok, msg, days)."""
+    code = _norm_code(code)
+    if not code:
+        return (False, "Enter a code", 0)
+    codes = _codes()
+    c = codes.get(code)
+    if not c or not c.get("active", True):
+        return (False, "Invalid or inactive code", 0)
+    if c.get("expires"):
+        try:
+            if time.strftime("%Y-%m-%d", time.gmtime()) > c["expires"]:
+                return (False, "This code has expired", 0)
+        except Exception:
+            pass
+    redeemers = c.get("redeemers") or []
+    if email in redeemers:
+        return (False, "You have already used this code", 0)
+    mx = int(c.get("max_uses") or 0)
+    if mx > 0 and len(redeemers) >= mx:
+        return (False, "This code has reached its usage limit", 0)
+    days = int(c.get("days") or 30)
+    plan = (c.get("plan") or "paid").strip().lower()
+    if plan not in ("paid", "free", "trial", "comp"):
+        plan = "paid"
+    _grant_access(email, days, plan)
+    redeemers.append(email)
+    c["redeemers"] = redeemers
+    c["used"] = len(redeemers)
+    codes[code] = c
+    _save_codes(codes)
+    return (True, f"{days} days unlocked", days)
+
+@app.post("/api/redeem")
+async def redeem(request: Request, k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email:
+        return JSONResponse({"ok": False, "error": "Please log in first"}, status_code=401)
+    body = await request.json()
+    ok, msg, days = _redeem_code(email, body.get("code"))
+    return {"ok": ok, "msg": msg, "days": days} if ok else JSONResponse({"ok": False, "error": msg})
+
+@app.get("/api/admin/codes")
+def admin_codes(k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    codes = _codes()
+    out = []
+    for code, c in codes.items():
+        out.append({"code": code, "days": c.get("days", 30), "plan": c.get("plan", "paid"),
+                    "max_uses": c.get("max_uses", 0), "used": len(c.get("redeemers") or []),
+                    "active": c.get("active", True), "created": c.get("created", ""),
+                    "expires": c.get("expires", ""), "note": c.get("note", "")})
+    out.sort(key=lambda x: x["created"], reverse=True)
+    return {"ok": True, "codes": out}
+
+@app.post("/api/admin/codes/create")
+async def admin_codes_create(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    body = await request.json()
+    code = _norm_code(body.get("code"))
+    if not code:
+        code = "KASANDRAFX" + secrets.token_hex(3).upper()
+    if len(code) > 40:
+        return JSONResponse({"ok": False, "error": "code too long"})
+    try:
+        days = int(body.get("days") or 30)
+    except Exception:
+        return JSONResponse({"ok": False, "error": "days must be a number"})
+    if days < 1 or days > 3650:
+        return JSONResponse({"ok": False, "error": "days out of range (1-3650)"})
+    try:
+        max_uses = int(body.get("max_uses") or 0)
+    except Exception:
+        max_uses = 0
+    plan = (body.get("plan") or "paid").strip().lower()
+    if plan not in ("paid", "free", "trial", "comp"):
+        plan = "paid"
+    codes = _codes()
+    if code in codes:
+        return JSONResponse({"ok": False, "error": "code already exists"})
+    codes[code] = {"days": days, "plan": plan, "max_uses": max_uses, "active": True,
+                   "redeemers": [], "used": 0, "created": time.strftime("%Y-%m-%d %H:%M"),
+                   "expires": (body.get("expires") or "").strip(), "note": (body.get("note") or "").strip()[:120]}
+    _save_codes(codes)
+    return {"ok": True, "code": code, "days": days, "plan": plan, "max_uses": max_uses}
+
+@app.post("/api/admin/codes/update")
+async def admin_codes_update(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    body = await request.json()
+    code = _norm_code(body.get("code"))
+    action = body.get("action")
+    codes = _codes()
+    if code not in codes:
+        return JSONResponse({"ok": False, "error": "no such code"})
+    if action == "toggle":
+        codes[code]["active"] = not codes[code].get("active", True)
+        _save_codes(codes)
+        return {"ok": True, "active": codes[code]["active"]}
+    if action == "delete":
+        del codes[code]
+        _save_codes(codes)
+        return {"ok": True, "deleted": True}
+    return JSONResponse({"ok": False, "error": "bad action"})
+
 SITE_VERSION = "day-picker-academy-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):

@@ -195,6 +195,15 @@ tr:hover td{background:rgba(0,212,255,.03)}
     </span>
     <span style="flex:0 0 auto;color:#fff;background:#229ED9;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;white-space:nowrap" data-i18n="mem.loungeBtn">Join &rarr;</span>
   </a>
+  <div id="redeem-box" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:rgba(230,192,122,.06);border:1px solid var(--gold-dim);border-radius:12px;padding:14px 18px;margin-bottom:20px">
+    <span style="color:var(--gold);font-weight:600;font-size:13.5px" data-i18n="mem.redeemLabel">Have an access code?</span>
+    <input id="redeem-code" type="text" placeholder="KASANDRAFX..." autocomplete="off"
+      style="flex:1;min-width:150px;background:#0a0e16;border:1px solid var(--gold-dim);border-radius:9px;padding:10px 13px;color:var(--gold);font-family:var(--mono);font-size:13px;letter-spacing:1px;text-transform:uppercase"
+      onkeydown="if(event.key==='Enter')redeemCode()">
+    <button onclick="redeemCode()" data-i18n="mem.redeemBtn"
+      style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border:0;border-radius:9px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Redeem</button>
+    <span id="redeem-msg" style="width:100%;font-size:12.5px;display:none"></span>
+  </div>
   <div class="kpis">
     <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Pips · Signal History</div></div>
     <div class="kpi"><div class="v" id="k-win">—</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
@@ -644,6 +653,25 @@ async function loadTelegram(){
       'onmouseout="this.style.background=\'linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05))\'">'+
       '📢 '+kT('mem.tgAlerts')+'</a>');
   }catch(e){}
+}
+async function redeemCode(){
+  const inp=document.getElementById('redeem-code'), msg=document.getElementById('redeem-msg');
+  const code=(inp.value||'').trim();
+  msg.style.display='block';
+  if(!code){ msg.style.color='var(--red)'; msg.textContent=(kT('mem.redeemEnter')||'Enter a code'); return; }
+  msg.style.color='var(--dim)'; msg.textContent='...';
+  try{
+    const r=await fetch('/api/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    const d=await r.json();
+    if(d.ok){
+      msg.style.color='var(--green)';
+      msg.textContent='✓ '+(d.days? (d.days+' '+(kT('mem.redeemDays')||'days unlocked')) : (kT('mem.redeemOk')||'unlocked'));
+      inp.value='';
+      setTimeout(()=>location.reload(),1400);
+    }else{
+      msg.style.color='var(--red)'; msg.textContent='✕ '+(d.error||'invalid code');
+    }
+  }catch(e){ msg.style.color='var(--red)'; msg.textContent='✕ connection error'; }
 }
 async function load(){
   window.PAY=await fetch('/api/pay/status').then(r=>r.json()).catch(()=>({enabled:false,price:99}));

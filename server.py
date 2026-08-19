@@ -1193,6 +1193,42 @@ async def admin_codes_update(request: Request, k_admin: str = Cookie(None)):
         return {"ok": True, "deleted": True}
     return JSONResponse({"ok": False, "error": "bad action"})
 
+# ---------- bot bridge (Telegram onboarding bot calls these; shared-secret auth) ----------
+BOT_SHARED_SECRET = os.environ.get("BOT_SHARED_SECRET", "")
+def _bot_ok(body):
+    return bool(BOT_SHARED_SECRET) and body.get("secret") == BOT_SHARED_SECRET
+
+@app.post("/api/bot/check_email")
+async def bot_check_email(request: Request):
+    body = await request.json()
+    if not _bot_ok(body):
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    email = (body.get("email") or "").strip().lower()
+    rec = _get_member(email)
+    if not rec:
+        return {"ok": True, "found": False}
+    has, label, days = _access_state(rec)
+    return {"ok": True, "found": True, "label": label, "days_left": days, "name": rec.get("name", "")}
+
+@app.post("/api/bot/grant")
+async def bot_grant(request: Request):
+    body = await request.json()
+    if not _bot_ok(body):
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    email = (body.get("email") or "").strip().lower()
+    if not _get_member(email):
+        return JSONResponse({"ok": False, "error": "email not found on site"})
+    try:
+        days = int(body.get("days") or 30)
+    except Exception:
+        days = 30
+    plan = (body.get("plan") or "free").strip().lower()
+    if plan not in ("paid", "free", "trial", "comp"):
+        plan = "free"
+    nu = _grant_access(email, days, plan)
+    return {"ok": True, "email": email, "days": days, "plan": plan,
+            "until": time.strftime("%Y-%m-%d", time.gmtime(nu))}
+
 SITE_VERSION = "day-picker-academy-1"   # bump on notable deploys; check at /api/version
 
 def _trade_points(r):

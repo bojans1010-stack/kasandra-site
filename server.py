@@ -1196,7 +1196,11 @@ async def admin_codes_update(request: Request, k_admin: str = Cookie(None)):
 # ---------- bot bridge (Telegram onboarding bot calls these; shared-secret auth) ----------
 BOT_SHARED_SECRET = os.environ.get("BOT_SHARED_SECRET", "")
 def _bot_ok(body):
-    return bool(BOT_SHARED_SECRET) and body.get("secret") == BOT_SHARED_SECRET
+    s = body.get("secret")
+    # accept the dedicated bot secret OR the existing INGEST_TOKEN (already set on Railway),
+    # so the onboarding bot needs no new env var configured.
+    return bool(s) and ((BOT_SHARED_SECRET and s == BOT_SHARED_SECRET) or
+                        (INGEST_TOKEN and s == INGEST_TOKEN))
 
 @app.post("/api/bot/check_email")
 async def bot_check_email(request: Request):

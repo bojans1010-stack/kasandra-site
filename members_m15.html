@@ -179,14 +179,14 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
   <div class="panel" id="lotpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>1 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot · backtested through 24 Aug 2026, live thereafter</div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>0.01 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot · backtested through 24 Aug 2026, live thereafter</div></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px">
-      <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 1 lot</div></div>
+      <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 0.01 lot</div></div>
       <div style="text-align:center"><div id="lot-avg" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--text)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Avg per signal</div></div>
       <div style="text-align:center"><div id="lot-best" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Best signal</div></div>
       <div style="text-align:center"><div id="lot-worst" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--red)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Worst signal</div></div>
     </div>
-    <div class="sig-disc">Simulation of the published signals executed with a fixed 1.00 lot, partial exits in thirds at TP1/TP2/TP3 and stop moved to break-even after TP1. Spread and slippage not included. Not financial advice.</div>
+    <div class="sig-disc">Simulation of the published signals executed with a fixed 0.01 lot, partial exits in thirds at TP1/TP2/TP3 and stop moved to break-even after TP1. Spread and slippage not included. Not financial advice.</div>
   </div>
   <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
@@ -210,7 +210,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
       <b style="color:var(--accent)">Backtested &amp; live.</b> Results through <b>24 Aug 2026</b> are <b>backtested</b> on real historical gold prices (simulated, not live-executed). Signals are <b>live-tracked</b> from that date forward. Simulated results are not a guarantee of future performance.
     </div>
     <div class="hist-sum" id="hist-sum"></div>
-    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
+    <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>0.01 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
   </div><!-- /sidecol -->
@@ -623,7 +623,7 @@ async function loadSignals(){
   renderHistory(d.history||[]);
 }
 
-// dollar result of one signal at 1.00 lot ($100/point on gold), thirds model
+// dollar result of one signal at 0.01 lot ($1/point on gold), thirds model
 function tradeUsd(r){
   let pts;
   if(r.entry!=null && r.sl!=null && r.tp1!=null && r.tp2!=null && r.tp3!=null){

@@ -179,7 +179,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
   <div class="panel" id="lotpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>1 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot = $1 per $1 move · ride: BE → lock TP1 → lock TP2</div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>1 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot · backtested through 24 Aug 2026, live thereafter</div></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px">
       <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 1 lot</div></div>
       <div style="text-align:center"><div id="lot-avg" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--text)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Avg per signal</div></div>
@@ -206,6 +206,9 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
   <div class="panel" id="histpanel" style="display:none">
     <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div class="upd" id="hist-upd"></div></div>
+    <div style="margin:6px 0 10px;padding:9px 12px;border:1px solid var(--accent);border-radius:8px;background:rgba(212,175,55,.08);font-size:12px;line-height:1.5;color:var(--muted)">
+      <b style="color:var(--accent)">Backtested &amp; live.</b> Results through <b>24 Aug 2026</b> are <b>backtested</b> on real historical gold prices (simulated, not live-executed). Signals are <b>live-tracked</b> from that date forward. Simulated results are not a guarantee of future performance.
+    </div>
     <div class="hist-sum" id="hist-sum"></div>
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>

@@ -15,3 +15,5 @@ live_chart.png
 tick.json
 commissions.json
 payments.json
+live_signals_m15.json
+tick_m15.json

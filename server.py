@@ -1410,6 +1410,144 @@ def us30_page(k_session: str = Cookie(None)):
     return _page("members_us30.html")
 # ==================== end US30 mirror ====================
 
+# ==================== 15M SWING — isolated mirror of the gold pipeline ====================
+# Separate state files and separate /api/m15/* endpoints. The gold and US30 endpoints/files
+# are never read or written here. Same auth/access gating, same INGEST_TOKEN.
+# History is APPEND-ONLY (same protection the gold feed got after the 2026-07-14 wipe).
+SIGNALS_FILE_M15 = os.path.join(SITE, "live_signals_m15.json")
+TICK_FILE_M15 = os.path.join(SITE, "tick_m15.json")
+
+@app.post("/api/m15/ingest_signals")
+async def ingest_signals_m15(request: Request):
+    if not INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "ingest disabled"}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False, "error": "bad token"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    if body.get("engine") != "nypipeline":
+        return JSONResponse({"ok": False, "error": "legacy payload ignored"}, status_code=409)
+    candles = body.get("candles") or []
+    if not isinstance(candles, list): candles = []
+    open_trades = body.get("open_trades") or []
+    if not isinstance(open_trades, list): open_trades = []
+    # ---- APPEND-ONLY history: never let a push shrink the published record ----
+    try:
+        stored = json.load(open(SIGNALS_FILE_M15, encoding="utf-8")) if os.path.exists(SIGNALS_FILE_M15) else {}
+    except Exception:
+        stored = {}
+    kept = stored.get("history") or []
+    if not isinstance(kept, list): kept = []
+    hist = body.get("history")
+    replace = bool(body.get("history_replace"))
+    if not isinstance(hist, list):
+        hist, note = kept, "history omitted by pusher; kept stored record"
+    elif len(hist) < len(kept) and not replace:
+        note = f"REFUSED history shrink {len(kept)} -> {len(hist)}; kept stored record"
+        hist = kept
+    else:
+        note = None
+    safe = {
+        "generated_utc": body.get("generated_utc"), "price": body.get("price"),
+        "trend": body.get("trend"), "news_status": body.get("news_status"),
+        "next_event": body.get("next_event"), "signals": body.get("signals") or [],
+        "history": hist[-5000:], "open_trades": open_trades[:8], "candles": candles[-400:],
+    }
+    try:
+        json.dump(safe, open(SIGNALS_FILE_M15, "w", encoding="utf-8"), indent=2)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    out = {"ok": True, "count": len(safe["signals"]), "history": len(safe["history"])}
+    if note: out["warning"] = note
+    return out
+
+@app.get("/api/m15/signals")
+def signals_m15(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, label, days_left = _access_state(u)
+    if not has_access: return JSONResponse({"error": label}, status_code=403)
+    if not os.path.exists(SIGNALS_FILE_M15):
+        return {"signals": [], "price": None, "trend": None, "generated_utc": None, "stale": True}
+    try:
+        data = json.load(open(SIGNALS_FILE_M15, encoding="utf-8"))
+    except Exception:
+        return {"signals": [], "stale": True}
+    try:
+        age = time.time() - os.path.getmtime(SIGNALS_FILE_M15)
+        data["stale"] = age > 2400   # 15m feed: stale after 40 min (writes each 15m candle close)
+        data["age_seconds"] = int(age)
+    except Exception:
+        data["stale"] = False
+    return data
+
+@app.post("/api/m15/ingest_tick")
+async def ingest_tick_m15(request: Request):
+    if not INGEST_TOKEN: return JSONResponse({"ok": False}, status_code=403)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"ok": False}, status_code=401)
+    try:
+        body = await request.json(); price = float(body.get("price"))
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    try:
+        with open(TICK_FILE_M15, "w") as f:
+            json.dump({"price": price, "t": time.time()}, f)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True}
+
+@app.get("/api/m15/tick")
+def tick_m15(k_session: str = Cookie(None)):
+    email = _session_email(k_session)
+    if not email: return JSONResponse({"error": "members only"}, status_code=401)
+    u = _get_member(email) or {}
+    has_access, _, _ = _access_state(u)
+    if not has_access: return JSONResponse({"error": "no access"}, status_code=403)
+    try:
+        d = json.load(open(TICK_FILE_M15))
+        return {"price": d.get("price"), "age": round(time.time() - d.get("t", 0), 1)}
+    except Exception:
+        return {"price": None, "age": None}
+
+@app.get("/api/m15/public_stats")
+def public_stats_m15():
+    hist = []
+    if os.path.exists(SIGNALS_FILE_M15):
+        try:
+            hist = (json.load(open(SIGNALS_FILE_M15, encoding="utf-8")) or {}).get("history") or []
+        except Exception:
+            hist = []
+    trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
+    for r in hist:
+        o = r.get("outcome"); pts = _trade_points(r)
+        pips_total += pts * 10
+        if o == "SL": sl_count += 1
+        else:
+            wins += 1
+            if o == "TP3": tp3_count += 1
+        cu = (r.get("closed_utc") or "")
+        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
+        trades.append({"date": cu[:10], "time": cu[11:16], "side": r.get("side", ""),
+            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
+            "pips": round(pts * 10), "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
+    total = len(trades)
+    return {"total": total, "wins": wins,
+        "win_rate": round(wins * 100 / total) if total else 0,
+        "sl_count": sl_count, "tp3_count": tp3_count,
+        "pips_total": round(pips_total), "usd_1lot": round(pips_total * 10),
+        "trades": list(reversed(trades))[:1000],
+        "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}
+
+@app.get("/m15")
+def m15_page(k_session: str = Cookie(None)):
+    if not _session_email(k_session): return RedirectResponse("/login")
+    return _page("members_m15.html")
+# ==================== end 15M SWING mirror ====================
+
 @app.get("/api/version")
 def version():
     return {"version": SITE_VERSION}

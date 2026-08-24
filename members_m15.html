@@ -211,14 +211,14 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
   <div class="panel" id="lotpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>0.01 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot = $1 per point · partials in thirds, SL to BE after TP1</div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>0.01 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot = $1 per point · one position held to target</div></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px">
       <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 0.01 lot</div></div>
       <div style="text-align:center"><div id="lot-avg" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--text)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Avg per signal</div></div>
       <div style="text-align:center"><div id="lot-best" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Best signal</div></div>
       <div style="text-align:center"><div id="lot-worst" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--red)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Worst signal</div></div>
     </div>
-    <div class="sig-disc">Simulation of the published signals executed with a fixed 0.01 lot, partial exits in thirds at TP1/TP2/TP3 and stop moved to break-even after TP1. Spread and slippage not included. Not financial advice.</div>
+    <div class="sig-disc">Simulation of the published signals executed as a single 0.01 lot held to target (no partials) — each trade closed at the level it reached. Spread and slippage not included. Not financial advice.</div>
   </div>
   <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
@@ -750,7 +750,7 @@ function updateMarketStatus(d){
 document.addEventListener('langchange',()=>updateMarketStatus(_lastSig));
 
 // ---- live performance banner (gold price + cumulative equity sparkline) ----
-function rowPts(r){ return ({TP3:11.7,TP2:5,TP1:1.7,BE:0,SL:-10})[r&&r.outcome] || 0; }
+function rowPts(r){ return ({TP3:40,TP2:20,TP1:10,BE:0,SL:-20})[r&&r.outcome] || 0; }
 function heroBanner(d){
   const tr=document.getElementById('hero-trend');
   if(tr){ const t=(d.trend||'').toUpperCase();
@@ -864,9 +864,9 @@ function tradeUsd(r){
   let pts;
   if(r.entry!=null && r.sl!=null && r.tp1!=null && r.tp2!=null && r.tp3!=null){
     const d1=Math.abs(r.tp1-r.entry), d2=Math.abs(r.tp2-r.entry), d3=Math.abs(r.tp3-r.entry), ds=Math.abs(r.sl-r.entry);
-    pts = r.outcome==='TP3' ? (d1+d2+d3)/3 : r.outcome==='TP2' ? (d1+d2)/3 : r.outcome==='TP1' ? d1/3 : r.outcome==='BE' ? 0 : -ds;
+    pts = r.outcome==='TP3' ? d3 : r.outcome==='TP2' ? d2 : r.outcome==='TP1' ? d1 : r.outcome==='BE' ? 0 : -ds;
   } else {
-    pts = ({TP3:11.7, TP2:5, TP1:1.7, BE:0, SL:-10})[r.outcome] || 0;
+    pts = ({TP3:40, TP2:20, TP1:10, BE:0, SL:-20})[r.outcome] || 0;
   }
   return pts;
 }
@@ -929,9 +929,9 @@ function renderHistory(hist){
     '<span class="hs">BE <b>'+cnt.BE+'</b></span>'+
     '<span class="hs">SL <b>'+cnt.SL+'</b></span>';
   // KPI cards: computed live from the chart system's own signal history
-  // thirds at TP1/2/3, BE after TP1 (TP3 +11.7, TP2 +5, TP1 +1.7, SL -10 points)
+  // single 0.01 lot held to target (TP3 +40, TP2 +20, TP1 +10, SL -20 points)
   // displayed in pips: 1 point = 10 pips
-  const pts = Math.round(cnt.TP3*11.7 + cnt.TP2*5 + cnt.TP1*1.7 + cnt.SL*-10);
+  const pts = Math.round(cnt.TP3*40 + cnt.TP2*20 + cnt.TP1*10 + cnt.SL*-20);
   const pips = pts*10;
   const roiEl = document.getElementById('k-roi');
   roiEl.textContent = (pips>=0?'+':'')+pips+' pips';

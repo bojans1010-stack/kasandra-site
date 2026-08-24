@@ -55,15 +55,25 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .connect .code{display:inline-block;background:rgba(0,212,255,.1);border:1px dashed rgba(0,212,255,.5);padding:2px 10px;border-radius:6px;color:var(--accent);font-weight:700;cursor:pointer}
 .btn{display:inline-block;margin-top:14px;padding:12px 26px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border-radius:10px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.03em;text-decoration:none;box-shadow:0 8px 26px var(--gold-glow);transition:transform .2s,box-shadow .2s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px var(--gold-glow)}
-/* desktop dashboard: wide grid, tall chart, sticky signal rail */
-#maingrid{display:grid;grid-template-columns:1fr;gap:0}
-@media(min-width:1400px){
-  .wrap{max-width:min(1780px,95vw)}
-  .nav-in{max-width:min(1780px,95vw)}
-  #maingrid{grid-template-columns:minmax(0,2.2fr) minmax(400px,1fr);gap:20px;align-items:start;margin-bottom:20px}
-  #maingrid .panel{margin-bottom:0}
-  #sidecol{display:flex;flex-direction:column;gap:20px;position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
-  #kchart{height:calc(100vh - 320px) !important;min-height:560px;max-height:860px}
+/* dashboard: single stacked column — signals → chart → history */
+#maingrid{display:flex;flex-direction:column;gap:20px;margin-bottom:20px}
+#sigpanel{order:1} #chartpanel{order:2} #histpanel{order:3}
+#maingrid .panel{margin-bottom:0}
+/* live performance banner atop the chart */
+#chart-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--border-soft);background:linear-gradient(160deg,rgba(230,192,122,.06),transparent 72%)}
+.chero-lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.chero-row{display:flex;align-items:baseline;gap:12px;margin-top:5px}
+#hero-price{font-size:34px;font-weight:700;line-height:1;color:var(--gold);text-shadow:0 0 22px var(--gold-glow);letter-spacing:-1px;transition:color .25s}
+#hero-trend{font-size:11px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:6px;color:var(--dim)}
+#hero-trend.bull{color:var(--green);background:rgba(0,255,136,.12)}
+#hero-trend.bear{color:var(--red);background:rgba(255,51,102,.12)}
+.chero-r{flex:1;min-width:200px;max-width:380px}
+#hero-eq{display:block;width:100%;height:56px;overflow:visible}
+.chero-eqlbl{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);letter-spacing:.04em;margin-top:3px}
+.chero-eqlbl #hero-eq-val{color:var(--gold);font-weight:600;font-family:var(--mono)}
+@media(max-width:620px){#hero-price{font-size:27px}.chero-r{min-width:100%;max-width:none}}
+@media(min-width:900px){
+  #kchart{height:540px !important}
   .kpis{grid-template-columns:repeat(4,1fr);gap:20px}
   .kpi .v{font-size:38px}
   .welcome h1{font-size:32px}
@@ -119,7 +129,9 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .rbadge.NOTRADE{background:rgba(120,130,150,.18);color:var(--dim)}
 .rbadge.ACTIVE{background:rgba(255,170,0,.18);color:var(--amber);animation:pulse 1.6s infinite}
 .rbadge.NEXT{background:rgba(0,212,255,.14);color:var(--accent)}
+.rbadge.SECURED{background:rgba(0,255,136,.16);color:var(--green)}
 .sigcard.live{border-left-color:var(--amber);border-color:rgba(255,170,0,.35);background:rgba(255,170,0,.05);box-shadow:0 0 22px rgba(255,170,0,.10)}
+.sigcard.secured{border-left-color:var(--green);border-color:rgba(0,255,136,.30);background:rgba(0,255,136,.05);box-shadow:0 0 22px rgba(0,255,136,.10)}
 .cchip{display:inline-block;font-size:10px;letter-spacing:.05em;padding:3px 9px;border-radius:10px;margin-left:6px;border:1px solid var(--border-soft);color:var(--dim);white-space:nowrap}
 .cchip.live{color:var(--amber);border-color:rgba(255,170,0,.45);background:rgba(255,170,0,.08)}
 .cchip.next{color:var(--accent);border-color:rgba(0,212,255,.35)}
@@ -168,10 +180,30 @@ tr:hover td{background:rgba(0,212,255,.03)}
 </style></head><body>
 <nav><div class="nav-in">
   <div class="brand"><span class="dot"></span>KASANDRA</div>
-  <div class="nav-right"><span style="display:inline-flex;gap:6px;margin-right:8px"><a class="signout" href="/members">GOLD</a><a class="signout" href="/m15" style="color:var(--accent);border-color:var(--accent);font-weight:700">15M SWING</a></span><a class="signout" href="/academy">🎓 Academy</a><a class="signout" href="/risk" style="color:var(--accent);border-color:var(--accent)">🛡️ Risk Management</a><span data-lang-dropdown></span><span class="who" id="who">...</span><a class="signout" onclick="changePw()" data-i18n="mem.changePw">Change password</a><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
+  <div class="nav-right"><span style="display:inline-flex;gap:6px;margin-right:8px"><a class="signout" href="/members">GOLD</a><a class="signout" href="/m15" style="color:var(--accent);border-color:var(--accent);font-weight:700">15M</a></span><a class="signout" href="/academy">🎓 Academy</a><a class="signout" href="/risk" style="color:var(--accent);border-color:var(--accent)">🛡️ Risk Management</a><span data-lang-dropdown></span><span class="who" id="who">...</span><a class="signout" onclick="changePw()" data-i18n="mem.changePw">Change password</a><a class="signout" onclick="signout()" data-i18n="mem.signout">Sign out</a></div>
 </div></nav>
 <div class="wrap">
+  <div id="risk-banner" style="display:none"></div>
   <div class="welcome"><h1><span data-i18n="mem.welcome">Welcome,</span> <span id="name">member</span>.</h1><p data-i18n="mem.intro">Live performance of the Kasandra gold system. Read-only. Updated as the system trades.</p></div>
+  <a href="https://t.me/+GnN6l2B3MkthMjM0" target="_blank" rel="noopener" class="lounge-cta" style="display:flex;align-items:center;gap:14px;text-decoration:none;background:linear-gradient(135deg,rgba(34,158,217,.14),rgba(230,192,122,.05));border:1px solid rgba(34,158,217,.45);border-radius:12px;padding:14px 18px;margin-bottom:20px;transition:border-color .15s,transform .15s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(34,158,217,.8)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(34,158,217,.45)'">
+    <span style="flex:0 0 auto;width:42px;height:42px;border-radius:50%;background:#229ED9;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+    </span>
+    <span style="flex:1;min-width:0">
+      <span style="display:block;color:var(--gold-2,#f6dca6);font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;font-size:14.5px" data-i18n="mem.loungeTitle">Join the Kasandra Public Lounge</span>
+      <span style="display:block;color:var(--text-2);font-size:12.5px;margin-top:2px" data-i18n="mem.loungeSub">Notifications and announcements for all members, free and paid.</span>
+    </span>
+    <span style="flex:0 0 auto;color:#fff;background:#229ED9;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;white-space:nowrap" data-i18n="mem.loungeBtn">Join &rarr;</span>
+  </a>
+  <div id="redeem-box" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:rgba(230,192,122,.06);border:1px solid var(--gold-dim);border-radius:12px;padding:14px 18px;margin-bottom:20px">
+    <span style="color:var(--gold);font-weight:600;font-size:13.5px" data-i18n="mem.redeemLabel">Have an access code?</span>
+    <input id="redeem-code" type="text" placeholder="KASANDRAFX..." autocomplete="off"
+      style="flex:1;min-width:150px;background:#0a0e16;border:1px solid var(--gold-dim);border-radius:9px;padding:10px 13px;color:var(--gold);font-family:var(--mono);font-size:13px;letter-spacing:1px;text-transform:uppercase"
+      onkeydown="if(event.key==='Enter')redeemCode()">
+    <button onclick="redeemCode()" data-i18n="mem.redeemBtn"
+      style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border:0;border-radius:9px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Redeem</button>
+    <span id="redeem-msg" style="width:100%;font-size:12.5px;display:none"></span>
+  </div>
   <div class="kpis">
     <div class="kpi green"><div class="v green" id="k-roi">—</div><div class="l" id="k-roi-l">Pips · Signal History</div></div>
     <div class="kpi"><div class="v" id="k-win">—</div><div class="l" data-i18n="mem.kWin">Win Rate</div></div>
@@ -179,7 +211,7 @@ tr:hover td{background:rgba(0,212,255,.03)}
     <div class="kpi"><div class="v" id="k-tr">—</div><div class="l" id="k-tr-l">Signals</div></div>
   </div>
   <div class="panel" id="lotpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>0.01 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot · backtested through 24 Aug 2026, live thereafter</div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>0.01 LOT SIMULATION</span></div><div class="upd">GOLD 15M · 0.01 lot = $1 per point · partials in thirds, SL to BE after TP1</div></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px">
       <div style="text-align:center"><div id="lot-net" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--green)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Net P&amp;L · 0.01 lot</div></div>
       <div style="text-align:center"><div id="lot-avg" style="font-family:var(--display);font-size:30px;font-weight:700;color:var(--text)">—</div><div style="font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:8px">Avg per signal</div></div>
@@ -190,31 +222,54 @@ tr:hover td{background:rgba(0,212,255,.03)}
   </div>
   <div id="maingrid">
   <div class="panel" id="chartpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · GOLD 15M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE CHART · XAUUSD 15M</span></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span id="chart-chips"></span><span class="upd" id="chart-upd" style="margin-left:8px"></span></div></div>
     <div id="market-status"></div>
+    <div id="chart-hero">
+      <div class="chero-l">
+        <div class="chero-lbl">XAU/USD &middot; live price</div>
+        <div class="chero-row"><span id="hero-price" class="mono">&mdash;</span><span id="hero-trend"></span></div>
+      </div>
+      <div class="chero-r">
+        <svg id="hero-eq" viewBox="0 0 360 56" preserveAspectRatio="none"></svg>
+        <div class="chero-eqlbl"><span>Cumulative result</span><span id="hero-eq-val">&mdash;</span></div>
+      </div>
+    </div>
     <div style="padding:6px;background:#070b14;position:relative">
       <div id="kchart" style="height:480px;width:100%"></div>
       <div id="kchart-legend" style="position:absolute;top:16px;left:18px;z-index:5;font-size:11px;color:var(--text-2);background:rgba(6,9,18,.75);border:1px solid var(--border-soft);border-radius:8px;padding:7px 12px;line-height:1.8;pointer-events:none"></div>
     </div>
   </div>
-  <div id="sidecol">
   <div class="panel" id="sigpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span >LIVE GOLD · 15M SWING</span></div><div class="upd" id="sig-upd"></div></div>
+    <div class="ph"><div class="t"><span class="dot"></span><span>LIVE GOLD · 15M SWING</span></div><div class="upd" id="sig-upd"></div></div>
     <div class="sig-ctx" id="sig-ctx"></div>
     <div class="sig-list" id="sig-list"></div>
     <div class="sig-disc" data-i18n="mem.sigDisc">Signals are generated automatically by the Kasandra gold system. Each level is support (BUY) or resistance (SELL) with a fixed stop and a TP ladder. Not financial advice &mdash; trade your own risk.</div>
   </div>
   <div class="panel" id="histpanel" style="display:none">
-    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div class="upd" id="hist-upd"></div></div>
-    <div style="margin:6px 0 10px;padding:9px 12px;border:1px solid var(--accent);border-radius:8px;background:rgba(212,175,55,.08);font-size:12px;line-height:1.5;color:var(--muted)">
+    <div class="ph"><div class="t"><span class="dot"></span><span data-i18n="mem.histTitle">SIGNAL HISTORY</span></div><div style="display:flex;align-items:center;gap:8px"><select id="hist-day" onchange="onHistDay(this.value)" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:5px 9px;font-family:inherit;font-size:11px;cursor:pointer"><option value="all">All time</option><option value="custom">Custom range…</option></select><span id="hist-range" style="display:none;align-items:center;gap:5px"><input type="date" id="hist-from" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"><span style="color:#6b7686;font-size:11px">→</span><input type="date" id="hist-to" onchange="onHistRange()" style="background:#0d131f;color:#e0e6ed;border:1px solid rgba(0,212,255,.25);border-radius:7px;padding:4px 7px;font-family:inherit;font-size:11px;cursor:pointer"></span><span class="upd" id="hist-upd"></span></div></div>
+    <div style="margin:6px 0 10px;padding:9px 12px;border:1px solid var(--accent);border-radius:8px;background:rgba(0,212,255,.06);font-size:12px;line-height:1.5;color:var(--text-2)">
       <b style="color:var(--accent)">Backtested &amp; live.</b> Results through <b>24 Aug 2026</b> are <b>backtested</b> on real historical gold prices (simulated, not live-executed). Signals are <b>live-tracked</b> from that date forward. Simulated results are not a guarantee of future performance.
     </div>
     <div class="hist-sum" id="hist-sum"></div>
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>0.01 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
   </div>
-  </div><!-- /sidecol -->
   </div><!-- /maingrid -->
+
+  <div class="panel" id="affpanel" style="display:none;margin-bottom:20px">
+    <div class="ph"><div class="t"><span class="dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold)"></span>REFER &amp; EARN &middot; 30% RECURRING</div><span class="upd" id="aff-code"></span></div>
+    <div style="padding:20px 22px">
+      <p style="color:var(--text-2);font-size:13px;line-height:1.65;margin-bottom:16px">Share your link. Every person you refer who becomes a paid member earns you <b style="color:var(--gold)">30% (~30 USDT)</b> for every month they stay subscribed &mdash; paid out in USDT. No limit.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px">
+        <input id="aff-link" readonly onclick="this.select()" style="flex:1;min-width:230px;background:#0a0e16;border:1px solid var(--gold-dim);border-radius:9px;padding:12px 14px;color:var(--gold);font-family:var(--mono);font-size:13px">
+        <button class="btn" style="margin:0" onclick="copyAff()" id="aff-copy">Copy link</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="aff-stats"></div>
+      <div style="font-size:10px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Your referrals</div>
+      <table><thead><tr><th>Member</th><th>Status</th><th>Joined</th></tr></thead><tbody id="aff-refs"><tr><td colspan="3" style="color:var(--dim);padding:16px 0">No referrals yet &mdash; share your link to start earning.</td></tr></tbody></table>
+    </div>
+  </div>
+
   <div class="connect">
     <h3 data-i18n="mem.connNotYet">Not connected yet? Start here.</h3>
     <ol>
@@ -317,10 +372,13 @@ function kchartInit(){
 }
 
 // Signal types arrive anonymised from the pusher: "Zone 1 · in trade" or "Zone 4 zone".
+// Never assume a single-token label — pull the "Zone N" prefix explicitly.
 function zoneLabel(s){ return ((((s||{}).types||[])[0]||'').match(/^Zone\s*\d+/)||[''])[0]; }
 
 function renderKChart(d){
   if(!d.candles || !d.candles.length || typeof LightweightCharts==='undefined'){
+    // no candles / charting lib unavailable: show a notice rather than a chart.
+    // (the old TradingView PNG fallback was removed - it leaked the EMA labels)
     document.getElementById('kchart').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--dim);font-size:13px">Chart unavailable right now. Signals below are live.</div>';
     document.getElementById('chartpanel').style.display='block';
     return;
@@ -337,7 +395,7 @@ function renderKChart(d){
 
   (d.signals||[]).forEach((s,i)=>{
     const sell = s.side==='SELL';
-    const ema = zoneLabel(s);   // "Zone 3" (internals never sent to browser)
+    const ema = zoneLabel(s);   // "Zone 3" (strategy internals are never sent to the browser)
     const zoneColor = sell ? 'rgba(255,51,102,.10)' : 'rgba(0,255,136,.10)';
     try{
       const band = new KZoneBand(s.zone_low, s.zone_high, zoneColor);
@@ -430,7 +488,7 @@ function renderKChart(d){
 
   // legend overlay: organized card
   const sigTop = (d.signals||[])[0];
-  let lg = '<div style="display:flex;gap:10px;align-items:baseline"><b style="color:var(--accent);letter-spacing:.08em">GOLD · 15M</b>'
+  let lg = '<div style="display:flex;gap:10px;align-items:baseline"><b style="color:var(--accent);letter-spacing:.08em">XAUUSD · 15M</b>'
     + (d.price!=null ? '<b id="kchart-price" style="font-size:14px;color:var(--text)">'+d.price+'</b>' : '')
     + (d.trend ? '<span style="font-weight:700;color:'+(d.trend==='BEAR'?'var(--red)':'var(--green)')+'">'+d.trend+'</span>' : '') + '</div>';
   if(sigTop){
@@ -466,11 +524,36 @@ async function pollTick(){
     }
     try{ KC.candles.update(KT.bar); }catch(e){}
     const el = document.getElementById('kchart-price');
-    if(el){ el.textContent = p; el.style.color = (KT.prev!=null && p<KT.prev) ? 'var(--red)' : 'var(--green)'; KT.prev = p; }
+    if(el){ el.textContent = p; el.style.color = (KT.prev!=null && p<KT.prev) ? 'var(--red)' : 'var(--green)'; }
+    const hp = document.getElementById('hero-price');
+    if(hp){ hp.textContent = (typeof p==='number' ? p.toFixed(1) : p); }
+    KT.prev = p;
   }catch(e){}
 }
 </script>
 <script>
+async function loadAffiliate(){
+  try{
+    const r=await fetch('/api/affiliate/me'); if(r.status!==200) return;
+    const d=await r.json();
+    document.getElementById('affpanel').style.display='block';
+    document.getElementById('aff-link').value=location.origin+'/?ref='+d.ref_code;
+    document.getElementById('aff-code').textContent='Your code: '+d.ref_code;
+    const S=(v,l,cls)=>'<div style="background:linear-gradient(150deg,rgba(19,27,46,.6),rgba(11,16,27,.5));border:1px solid var(--border-soft);border-radius:12px;padding:16px 14px;text-align:center"><div class="mono" style="font-size:26px;font-weight:700;color:'+(cls||'var(--accent)')+'">'+v+'</div><div style="font-size:9.5px;letter-spacing:1.3px;color:var(--text-2);text-transform:uppercase;margin-top:6px;font-weight:600">'+l+'</div></div>';
+    document.getElementById('aff-stats').innerHTML=
+      S(d.signups,'Referrals')+S(d.paid,'Paid','var(--green)')+
+      S('$'+d.earned_pending,'Owed to you','var(--gold)')+S('$'+d.earned_settled,'Paid out','var(--text-2)');
+    const refs=d.referrals||[];
+    if(refs.length){
+      const cls={active:'TP3',trial:'TP1',pending:'BE',expired:'SL',free:'TP2'};
+      document.getElementById('aff-refs').innerHTML=refs.map(r=>
+        '<tr><td>'+r.name+' <span style="color:var(--dim);font-size:11px">'+r.email+'</span></td>'+
+        '<td><span class="oc '+(cls[r.status]||'BE')+'">'+r.status+'</span></td>'+
+        '<td class="date">'+(r.joined||'').slice(0,10)+'</td></tr>').join('');
+    }
+  }catch(e){}
+}
+function copyAff(){const el=document.getElementById('aff-link');el.select();navigator.clipboard.writeText(el.value).then(()=>{const b=document.getElementById('aff-copy');b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy link',1500);});}
 async function signout(){await fetch('/api/signout',{method:'POST'});location.href='/';}
 async function changePw(){
   const cur=prompt(kT('mem.pwCurrent'));
@@ -482,7 +565,119 @@ async function changePw(){
   const d=await r.json();
   alert(d.ok ? kT('mem.pwOk') : (d.error||'error'));
 }
+function payBtn(){ const p=window.PAY||{}; if(!p.enabled) return '';
+  let b='';
+  if(p.crypto) b+='<button id="paybtn" class="btn" style="margin:0" onclick="payCrypto()">Pay '+(p.price||99)+' USDT &middot; Crypto</button>';
+  if(p.stripe) b+='<button class="btn" style="margin:0;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);box-shadow:none" onclick="payCard()">Pay by card</button>';
+  if(!b) return '';
+  return '<div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'+b+'</div><div style="font-size:11px;color:var(--dim);margin-top:8px">Instant activation</div>'; }
+async function payCard(){
+  try{ const r=await fetch('/api/pay/stripe',{method:'POST'}); const d=await r.json();
+    if(d.ok&&d.url){ location.href=d.url; return; }
+    alert(d.error||'Card payment is not available right now.');
+  }catch(e){ alert('Could not open card checkout.'); }
+}
+// ---- self-hosted USDT checkout (direct to our wallet, auto-activates on arrival) ----
+let _cryptoPoll=null;
+async function payCrypto(){ openCrypto('tron'); }
+async function openCrypto(network){
+  const P=window.PAY||{};
+  let ov=document.getElementById('cryptoOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='cryptoOv';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(3,5,11,.86);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
+    document.body.appendChild(ov); }
+  ov.innerHTML='<div style="color:var(--text-2);font-size:14px">Opening checkout…</div>';
+  try{
+    const r=await fetch('/api/pay/crypto/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network})});
+    const d=await r.json();
+    if(!d.ok){ ov.innerHTML=cryptoErr(d.error||'Checkout unavailable'); return; }
+    renderCrypto(ov,d,P); startCryptoPoll(d.order_id);
+  }catch(e){ ov.innerHTML=cryptoErr('Could not open checkout'); }
+}
+function cryptoErr(msg){
+  return '<div style="background:#0c1424;border:1px solid var(--gold-dim,#5a4a1e);border-radius:16px;max-width:440px;padding:26px;text-align:center">'
+    +'<p style="color:var(--text-2);margin-bottom:12px">'+msg+'.</p>'
+    +'<p style="color:var(--dim);font-size:12px;margin-bottom:18px">You can also message <a href="https://t.me/Milan_Fx_Support" target="_blank" style="color:var(--gold)">@Milan_Fx_Support</a> to pay manually.</p>'
+    +'<button onclick="closeCrypto()" class="btn" style="margin:0">Close</button></div>';
+}
+function renderCrypto(ov,d,P){
+  const other = d.network==='tron'
+    ? (P.erc20?'<button onclick="openCrypto(\'erc20\')" style="background:none;border:0;color:var(--gold);font-size:12px;cursor:pointer;text-decoration:underline">Pay on Ethereum (ERC20) instead</button>':'')
+    : '<button onclick="openCrypto(\'tron\')" style="background:none;border:0;color:var(--gold);font-size:12px;cursor:pointer;text-decoration:underline">Switch to TRON (TRC20) — much lower fee</button>';
+  const netName=d.network==='tron'?'TRON (TRC20)':'Ethereum (ERC20)';
+  ov.innerHTML='<div style="background:#0c1424;border:1px solid var(--gold-dim,#5a4a1e);border-radius:16px;max-width:460px;width:100%;padding:24px 24px 20px;position:relative">'
+   +'<button onclick="closeCrypto()" style="position:absolute;top:10px;right:14px;background:none;border:0;color:var(--dim);font-size:24px;cursor:pointer;line-height:1">&times;</button>'
+   +'<h3 style="font-family:var(--display,Georgia,serif);color:var(--gold);font-size:19px;margin-bottom:4px">Pay '+d.price+' USDT</h3>'
+   +'<p style="color:var(--dim);font-size:12px;margin-bottom:18px">Send <b style="color:var(--text-2)">'+d.chain+'</b> USDT. Your access activates automatically within ~1–2 min.</p>'
+   +cryptoRow('Send exactly','<span style="color:var(--gold);font-weight:700;font-size:17px">'+d.amount+' USDT</span>',d.amount)
+   +cryptoRow('To this address','<span style="font-family:monospace;font-size:12.5px;word-break:break-all;color:var(--text-2)">'+d.address+'</span>',d.address)
+   +'<div style="background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.25);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--text-2);margin:14px 0 4px;line-height:1.5">'
+     +'&#9888;&#65039; Send the <b>exact amount</b>, and only <b>USDT on '+netName+'</b>. The unique cents let us match the payment to your account.</div>'
+   +'<div id="cryptoStat" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px;color:var(--text-2);font-size:13px">'
+     +'<span style="width:9px;height:9px;border-radius:50%;background:#ffaa00;display:inline-block;animation:kpulse 1.3s infinite"></span> Waiting for payment…</div>'
+   +'<div style="text-align:center;margin-top:14px">'+other+'</div></div>'
+   +'<style>@keyframes kpulse{0%,100%{opacity:.35}50%{opacity:1}}</style>';
+}
+function cryptoRow(label,valueHtml,copyVal){
+  const id='cp'+Math.random().toString(36).slice(2,7);
+  return '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+label+'</div>'
+   +'<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px 12px">'
+   +'<div style="flex:1;min-width:0">'+valueHtml+'</div>'
+   +'<button id="'+id+'" onclick="cryptoCopy(\''+String(copyVal)+'\',\''+id+'\')" style="background:var(--gold-dim,#5a4a1e);border:0;color:var(--gold);border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>'
+   +'</div></div>';
+}
+function cryptoCopy(v,id){ navigator.clipboard.writeText(v).then(()=>{const b=document.getElementById(id);if(b){b.textContent='Copied &#10003;';setTimeout(()=>b.textContent='Copy',1500);}}); }
+function startCryptoPoll(orderId){
+  if(_cryptoPoll) clearInterval(_cryptoPoll);
+  _cryptoPoll=setInterval(async()=>{
+    try{ const r=await fetch('/api/pay/crypto/status?order_id='+encodeURIComponent(orderId)); const d=await r.json();
+      if(d.ok&&d.paid){ clearInterval(_cryptoPoll); cryptoPaid(); }
+    }catch(e){}
+  },8000);
+}
+function cryptoPaid(){ const s=document.getElementById('cryptoStat');
+  if(s) s.innerHTML='<span style="color:#00ff88;font-size:14px">&#9989; Payment received — activating your access…</span>';
+  setTimeout(()=>location.reload(),2200);
+}
+function closeCrypto(){ if(_cryptoPoll){clearInterval(_cryptoPoll);_cryptoPoll=null;} const ov=document.getElementById('cryptoOv'); if(ov) ov.remove(); }
+// ---- private Telegram signals channel (invite link served only to active members) ----
+async function loadTelegram(){
+  try{
+    const r=await fetch('/api/telegram/invite'); if(!r.ok) return;
+    const d=await r.json(); if(!d.ok||!d.url) return;
+    const c=document.querySelector('.connect');
+    c.insertAdjacentHTML('beforebegin',
+      '<a href="'+d.url+'" target="_blank" rel="noopener" '+
+      'style="display:flex;align-items:center;justify-content:center;gap:10px;'+
+      'background:linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05));'+
+      'border:1px solid var(--gold);border-radius:12px;padding:15px 20px;margin-bottom:18px;'+
+      'text-decoration:none;color:var(--gold);font-weight:600;font-size:14.5px;transition:.15s" '+
+      'onmouseover="this.style.background=\'rgba(212,175,55,.22)\'" '+
+      'onmouseout="this.style.background=\'linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05))\'">'+
+      '📢 '+kT('mem.tgAlerts')+'</a>');
+  }catch(e){}
+}
+async function redeemCode(){
+  const inp=document.getElementById('redeem-code'), msg=document.getElementById('redeem-msg');
+  const code=(inp.value||'').trim();
+  msg.style.display='block';
+  if(!code){ msg.style.color='var(--red)'; msg.textContent=(kT('mem.redeemEnter')||'Enter a code'); return; }
+  msg.style.color='var(--dim)'; msg.textContent='...';
+  try{
+    const r=await fetch('/api/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    const d=await r.json();
+    if(d.ok){
+      msg.style.color='var(--green)';
+      msg.textContent='✓ '+(d.days? (d.days+' '+(kT('mem.redeemDays')||'days unlocked')) : (kT('mem.redeemOk')||'unlocked'));
+      inp.value='';
+      setTimeout(()=>location.reload(),1400);
+    }else{
+      msg.style.color='var(--red)'; msg.textContent='✕ '+(d.error||'invalid code');
+    }
+  }catch(e){ msg.style.color='var(--red)'; msg.textContent='✕ connection error'; }
+}
 async function load(){
+  window.PAY=await fetch('/api/pay/status').then(r=>r.json()).catch(()=>({enabled:false,price:99}));
   const me=await fetch('/api/me');
   if(me.status===401){location.href='/login';return;}
   const u=await me.json();
@@ -497,9 +692,13 @@ async function load(){
     let txt=u.access_label==='trial'
       ? '&#9201; '+kT('mem.trialBanner').replace('{days}',u.days_left).replace('{price}',price)
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
-    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+'</div>');
+    const renewBtn=(u.access_label==='trial')?payBtn():'';
+    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+renewBtn+'</div>');
+    loadTelegram();
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s
+    loadAffiliate();
+    if(window.maybeAutoPromo) window.maybeAutoPromo(u);   // autotrading upsell popup (throttled)
     return;
   }
 
@@ -508,10 +707,11 @@ async function load(){
   const c=document.querySelector('.connect');
 
   if(u.access_label==='expired'){
-    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Milan_Fx_Support" target="_blank" style="color:var(--accent);font-weight:600">@Milan_Fx_Support</a> '+kT('mem.expiredP2post')+'</p></div>');
+    c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.4);border-radius:12px;padding:30px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:23px;margin-bottom:12px">'+kT('mem.expiredH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto 18px">'+kT('mem.expiredP1').replace('{price}','<b style="color:var(--accent)">'+price+'</b>')+'</p><p style="color:var(--text-2);line-height:1.7;max-width:540px;margin:0 auto">'+kT('mem.expiredP2pre')+' <a href="https://t.me/Milan_Fx_Support" target="_blank" style="color:var(--accent);font-weight:600">@Milan_Fx_Support</a> '+kT('mem.expiredP2post')+'</p>'+payBtn()+'</div>');
   } else {
     c.insertAdjacentHTML('beforebegin','<div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.35);border-radius:12px;padding:28px;margin-bottom:20px;text-align:center"><h2 style="font-family:var(--display);color:var(--amber);font-size:22px;margin-bottom:10px">&#9203; '+kT('mem.reviewH')+'</h2><p style="color:var(--text-2);line-height:1.7;max-width:520px;margin:0 auto">'+kT('mem.reviewP')+'</p></div>');
   }
+  if(window.maybeAutoPromo) window.maybeAutoPromo(u);   // free-membership offer for expired/pending members
 }
 // ---------- market status banner (around the chart, trilingual, no strategy details) ----------
 const BANNER={
@@ -549,6 +749,31 @@ function updateMarketStatus(d){
 }
 document.addEventListener('langchange',()=>updateMarketStatus(_lastSig));
 
+// ---- live performance banner (gold price + cumulative equity sparkline) ----
+function rowPts(r){ return ({TP3:11.7,TP2:5,TP1:1.7,BE:0,SL:-10})[r&&r.outcome] || 0; }
+function heroBanner(d){
+  const tr=document.getElementById('hero-trend');
+  if(tr){ const t=(d.trend||'').toUpperCase();
+    tr.className = t==='BULL'?'bull':(t==='BEAR'?'bear':'');
+    tr.textContent = t ? (t==='BULL'?'▲ BULL':'▼ BEAR') : 'FLAT'; }
+  const hp=document.getElementById('hero-price');
+  if(hp && d.price!=null && /[—-]/.test(hp.textContent)) hp.textContent=(+d.price).toFixed(1);
+  const svg=document.getElementById('hero-eq'); if(!svg) return;
+  const hist=d.history||[]; let cum=0; const pts=hist.map(r=>{cum+=rowPts(r);return cum;});
+  const val=document.getElementById('hero-eq-val'); if(val) val.textContent=(cum>=0?'+':'')+Math.round(cum*10).toLocaleString('en-US')+' pts';
+  if(pts.length<2){ svg.innerHTML=''; return; }
+  const sig=pts.length+':'+Math.round(cum); if(svg.dataset.sig===sig) return; svg.dataset.sig=sig;   // redraw only on change
+  const W=360,H=56,PAD=6, min=Math.min(0,...pts), max=Math.max(...pts,1), span=(max-min)||1;
+  const X=i=>(i/(pts.length-1))*W, Y=v=>H-PAD-((v-min)/span)*(H-PAD*2);
+  const line=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  const area=line+' L'+W+' '+H+' L0 '+H+' Z';
+  const lx=X(pts.length-1).toFixed(1), ly=Y(pts[pts.length-1]).toFixed(1);
+  svg.innerHTML=
+    '<defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6c07a" stop-opacity="0.32"/><stop offset="1" stop-color="#e6c07a" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#hg)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#e6c07a" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="filter:drop-shadow(0 0 4px rgba(230,192,122,.5))"><animate attributeName="stroke-dashoffset" from="1" to="0" dur="1.3s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1"/></path>'+
+    '<circle cx="'+lx+'" cy="'+ly+'" r="3" fill="#f6dca6" style="filter:drop-shadow(0 0 5px #e6c07a)"><animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/></circle>';
+}
 async function loadSignals(){
   let d;
   try{
@@ -561,6 +786,7 @@ async function loadSignals(){
   const panel=document.getElementById('sigpanel');
   panel.style.display='block';
   renderKChart(d);
+  heroBanner(d);
   // context bar: price, trend, news
   const ctx=document.getElementById('sig-ctx');
   let chips='';
@@ -582,7 +808,7 @@ async function loadSignals(){
     list.innerHTML='<div class="sig-empty">'+kT('mem.sigEmpty')+'</div>';
     const ce = document.getElementById('chart-chips');
     if(ce) ce.innerHTML='<span class="cchip">⏳ zones resting · waiting for the next setup</span>';
-    renderHistory(d.history||[]);
+    HIST_ALL=d.history||[]; buildHistDays(); applyHist();
     return;
   }
   // active = currently in a trade; the first non-active card is "next up"
@@ -592,7 +818,12 @@ async function loadSignals(){
   const chipsEl = document.getElementById('chart-chips');
   if(chipsEl) chipsEl.innerHTML = sigs.map((s,i)=>{
     const ema = zoneLabel(s) || ('Zone '+(i+1));
-    if(isLive(s)) return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
+    if(isLive(s)){
+      const hh=s.hits||{};
+      if(hh.tp2) return '<span class="cchip secured">\u2713 '+ema+' TP2 SECURED \u00B7 RUNNING</span>';
+      if(hh.tp1) return '<span class="cchip secured">\u2713 '+ema+' TP1 SECURED \u00B7 RUNNING</span>';
+      return '<span class="cchip live">\u25CF '+ema+' IN TRADE</span>';
+    }
     if(i===firstWaitIdx) return '<span class="cchip next">\u25B6 '+ema+' NEXT</span>';
     return '<span class="cchip">\u23F3 '+ema+'</span>';
   }).join('');
@@ -600,16 +831,21 @@ async function loadSignals(){
     const rb=(s.risk||'').replace(' ','').toUpperCase();      // "NO TRADE"->"NOTRADE"
     const rbTxt=s.risk||'';
     const live=isLive(s);
-    const badge = live ? '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>'
+    const h=s.hits||{};
+    const sec = live ? (h.tp2?2:h.tp1?1:0) : 0;   // TPs already banked on a running trade
+    const badge = live
+      ? (sec>=2 ? '<span class="rbadge SECURED">\u2713 TP2 SECURED \u00B7 RUNNING</span>'
+       : sec>=1 ? '<span class="rbadge SECURED">\u2713 TP1 SECURED \u00B7 RUNNING</span>'
+       :          '<span class="rbadge ACTIVE">\u25CF IN TRADE</span>')
       : (i===firstWaitIdx ? '<span class="rbadge NEXT">\u25B6 NEXT</span>' : '');
     const types=(s.types||[]).join(' + ');
-    const h=s.hits||{};
     // live trades: show which TPs are already banked (you keep the highest one hit)
     const prog = live ? '<div class="tpprog">'+['tp1','tp2','tp3'].map((k,n)=>
         '<span class="'+(h[k]?'on':'off')+'">'+(h[k]?'\u2713':'\u25CB')+' TP'+(n+1)+'</span>').join('')+'</div>' : '';
-    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'))):'';
+    const distDir = (s.dist_above===true)?kT('mem.sigAbove'):(s.dist_above===false)?kT('mem.sigBelow'):(s.side==='BUY'?kT('mem.sigBelow'):kT('mem.sigAbove'));
+    const dist=(s.dist_pips!=null)?(Math.abs(s.dist_pips*10)+' pips '+distDir):'';
     const tplv=(k,label,val)=>'<div class="lv tp'+(h[k]?' hit':'')+'"><span class="lk">'+label+'</span><span class="vv">'+val+'</span></div>';
-    return '<div class="sigcard '+s.side+(live?' live':'')+'">'+
+    return '<div class="sigcard '+s.side+(live?(sec>=1?' live secured':' live'):'')+'">'+
       '<div class="top"><div class="sd">'+(s.side==='BUY'?'\u25B2':'\u25BC')+' '+kT('mem.sig'+s.side)+' <span class="zone">'+s.zone_low+' \u2013 '+s.zone_high+'</span></div>'+
       '<span>'+badge+' <span class="rbadge '+rb+'">'+rbTxt+'</span></span></div>'+
       prog+
@@ -620,7 +856,7 @@ async function loadSignals(){
       '<div class="meta">'+(types?'<span>'+types+'</span>':'')+(dist?'<span>'+dist+'</span>':'')+'</div>'+
     '</div>';
   }).join('');
-  renderHistory(d.history||[]);
+  HIST_ALL=d.history||[]; buildHistDays(); applyHist();
 }
 
 // dollar result of one signal at 0.01 lot ($1/point on gold), thirds model
@@ -632,10 +868,31 @@ function tradeUsd(r){
   } else {
     pts = ({TP3:11.7, TP2:5, TP1:1.7, BE:0, SL:-10})[r.outcome] || 0;
   }
-  return pts; // GOLD 15M: $1 per $1 move @ 0.01 lot
+  return pts;
 }
 const fmtUsd = v => (v<0?'-$':'+$')+Math.abs(Math.round(v)).toLocaleString('en-US');
 
+let HIST_ALL=[], HIST_DAY='all', HFROM='', HTO='';
+function buildHistDays(){
+  const sel=document.getElementById('hist-day'); if(!sel) return;
+  const days=[...new Set(HIST_ALL.map(t=>(t.closed_utc||'').slice(0,10)).filter(Boolean))].sort().reverse();
+  const cur=HIST_DAY;
+  sel.innerHTML='<option value="all">All time</option><option value="custom">Custom range…</option>'+days.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all'; HIST_DAY=sel.value;
+  toggleHistRange();
+}
+function toggleHistRange(){
+  const box=document.getElementById('hist-range'); if(box) box.style.display = HIST_DAY==='custom' ? 'inline-flex' : 'none';
+}
+function onHistDay(v){ HIST_DAY=v; toggleHistRange(); applyHist(); }
+function onHistRange(){ HFROM=document.getElementById('hist-from').value; HTO=document.getElementById('hist-to').value; applyHist(); }
+function applyHist(){
+  let f;
+  if(HIST_DAY==='all') f=HIST_ALL;
+  else if(HIST_DAY==='custom') f=HIST_ALL.filter(t=>{const d=(t.closed_utc||'').slice(0,10); return d && (!HFROM||d>=HFROM) && (!HTO||d<=HTO);});
+  else f=HIST_ALL.filter(t=>(t.closed_utc||'').slice(0,10)===HIST_DAY);
+  renderHistory(f);
+}
 function renderHistory(hist){
   const panel=document.getElementById('histpanel');
   if(!hist || !hist.length){ panel.style.display='none'; document.getElementById('lotpanel').style.display='none'; return; }
@@ -747,4 +1004,115 @@ txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.pr
 })();
 </script>
 <!--End Kasandra Assistant-->
+<!--Risk alert banner-->
+<script>
+(function(){
+ var LVL={
+  very_high:{c:'#ff3366',bg:'rgba(255,51,102,.10)',bd:'rgba(255,51,102,.55)',ic:'⛔',
+    en:'VERY HIGH RISK',mk:'МНОГУ ВИСОК РИЗИК',sr:'VEOMA VISOK RIZIK'},
+  high:{c:'#ffaa00',bg:'rgba(255,170,0,.10)',bd:'rgba(255,170,0,.5)',ic:'⚠️',
+    en:'HIGH RISK',mk:'ВИСОК РИЗИК',sr:'VISOK RIZIK'},
+  elevated:{c:'#f6dca6',bg:'rgba(230,192,122,.10)',bd:'rgba(230,192,122,.45)',ic:'⚠️',
+    en:'ELEVATED RISK',mk:'ЗГОЛЕМЕН РИЗИК',sr:'POVIŠEN RIZIK'}
+ };
+ function esc(s){var t=document.createElement('div');t.textContent=(s==null?'':String(s));return t.innerHTML;}
+ function lang(){var l=localStorage.getItem('k_lang')||'en';return LVL.high[l]?l:'en';}
+ async function loadRiskBanner(){
+  try{
+   var r=await fetch('/api/risk_alert?t='+Date.now());var d=await r.json();
+   var el=document.getElementById('risk-banner');if(!el)return;
+   if(!d||!d.enabled){el.style.display='none';el.innerHTML='';return;}
+   var lv=LVL[d.level]||LVL.high;var L=lang();
+   var label=d.title||lv[L]||lv.en;
+   el.innerHTML='<div style="display:flex;gap:14px;align-items:flex-start;background:'+lv.bg+';border:1px solid '+lv.bd+';border-left:5px solid '+lv.c+';border-radius:12px;padding:16px 18px;margin-bottom:20px">'
+     +'<div style="font-size:26px;line-height:1">'+lv.ic+'</div>'
+     +'<div style="flex:1;min-width:0">'
+       +'<div style="color:'+lv.c+';font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;margin-bottom:'+(d.message?'5px':'0')+'">'+esc(label)+'</div>'
+       +(d.message?'<div style="color:var(--text-2);font-size:13.5px;line-height:1.6">'+esc(d.message)+'</div>':'')
+       +(d.updated?'<div style="color:var(--dim);font-size:11px;margin-top:7px">Updated '+esc(d.updated)+'</div>':'')
+     +'</div></div>';
+   el.style.display='block';
+  }catch(e){}
+ }
+ window.loadRiskBanner=loadRiskBanner;
+ loadRiskBanner();
+ setInterval(loadRiskBanner,60000);
+})();
+</script>
+<!--End risk alert banner-->
+<!--Autotrading upsell popup-->
+<script>
+(function(){
+if(window.maybeAutoPromo) return;
+var NEXT_KEY='kas_autopromo_next';
+var COOLDOWN_DISMISS=3*86400*1000;   // 3 days after "maybe later"
+var COOLDOWN_ACT=30*86400*1000;      // 30 days after they click through
+var DELAY=25000;                     // let them look at the signals first
+var TG='https://t.me/Milan_Fx_Support';
+var PU='https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=';
+var COPY={
+ en:{q:"Get your membership for free",
+     b:"You do not have to pay 99 USDT a month. Open a PU Prime account through our link and deposit 100 USD or more, and your Kasandra membership is free for as long as you trade it.",
+     bonus:"PU Prime also gives a 100% one time deposit bonus on deposits up to 1000 USD.",
+     price:"You also get access to our private Telegram community.",
+     note:"The account must be actively traded. We monitor for misuse and free membership is revoked on accounts that never trade.",
+     cta:"Open PU Prime & claim it →", later:"Maybe later"},
+ mk:{q:"Земи го членството бесплатно",
+     b:"Не мора да плаќаш 99 USDT месечно. Отвори PU Prime сметка преку нашиот линк и депонирај 100 USD или повеќе, и твоето Kasandra членство е бесплатно се додека тргуваш на неа.",
+     bonus:"PU Prime дава и 100% еднократен бонус на депозит до 1000 USD.",
+     price:"Добиваш и пристап до нашата приватна Telegram заедница.",
+     note:"Сметката мора активно да се тргува. Ја следиме злоупотребата и бесплатното членство се укинува на сметки што не тргуваат.",
+     cta:"Отвори PU Prime и земи го →", later:"Можеби подоцна"},
+ sr:{q:"Uzmi članstvo besplatno",
+     b:"Ne moraš da plaćaš 99 USDT mesečno. Otvori PU Prime nalog preko našeg linka i uplati 100 USD ili više, i tvoje Kasandra članstvo je besplatno dok god trguješ na njemu.",
+     bonus:"PU Prime takođe daje 100% jednokratni bonus na depozit do 1000 USD.",
+     price:"Dobijaš i pristup našoj privatnoj Telegram zajednici.",
+     note:"Nalog mora aktivno da se trguje. Pratimo zloupotrebe i besplatno članstvo se ukida na nalozima koji ne trguju.",
+     cta:"Otvori PU Prime i uzmi →", later:"Možda kasnije"}
+};
+function lang(){var l=localStorage.getItem('k_lang')||'en';return COPY[l]?l:'en';}
+function setNext(ms){try{localStorage.setItem(NEXT_KEY,String(Date.now()+ms));}catch(e){}}
+function build(){
+ var t=COPY[lang()];
+ var ov=document.createElement('div');
+ ov.id='kas-autopromo';
+ ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,5,11,.82);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s';
+ ov.innerHTML=
+  '<div role="dialog" style="position:relative;max-width:430px;width:100%;background:linear-gradient(180deg,#0d1424,#0a0f1c);border:1px solid rgba(230,192,122,.45);border-radius:18px;padding:30px 26px 24px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(230,192,122,.12)">'
+   +'<button aria-label="close" id="kap-x" style="position:absolute;top:12px;right:14px;background:none;border:0;color:#6a7688;font-size:24px;line-height:1;cursor:pointer">&times;</button>'
+   +'<div style="font-size:34px;margin-bottom:8px">⚡</div>'
+   +'<h3 style="font-family:\'Space Grotesk\',system-ui,sans-serif;color:#f6dca6;font-size:21px;font-weight:700;margin:0 0 12px;text-shadow:0 0 20px rgba(230,192,122,.3)">'+t.q+'</h3>'
+   +'<p style="color:#a8b2c1;font-size:13.5px;line-height:1.65;margin:0 0 12px">'+t.b+'</p>'
+   +'<p style="color:#00ff88;font-size:13px;font-weight:600;margin:0 0 10px">'+t.bonus+'</p>'
+   +'<p style="color:#e6c07a;font-size:13px;font-weight:600;margin:0 0 14px">'+t.price+'</p>'
+   +'<p style="color:#6a7688;font-size:11.5px;line-height:1.5;margin:0 0 18px">'+t.note+'</p>'
+   +'<a id="kap-cta" href="'+PU+'" target="_blank" rel="noopener" style="display:block;padding:14px 20px;background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border-radius:11px;font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 30px rgba(230,192,122,.35)">'+t.cta+'</a>'
+   +'<a href="'+TG+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:#229ED9;font-size:12.5px;text-decoration:none;font-weight:600">Already deposited? Message support to claim &rarr;</a>'
+   +'<button id="kap-later" style="margin-top:12px;background:none;border:0;color:#6a7688;font-size:12.5px;cursor:pointer;text-decoration:underline">'+t.later+'</button>'
+  +'</div>';
+ document.body.appendChild(ov);
+ requestAnimationFrame(function(){ov.style.opacity='1';});
+ function close(cool){setNext(cool);ov.style.opacity='0';setTimeout(function(){ov.remove();},250);}
+ ov.querySelector('#kap-x').onclick=function(){close(COOLDOWN_DISMISS);};
+ ov.querySelector('#kap-later').onclick=function(){close(COOLDOWN_DISMISS);};
+ ov.querySelector('#kap-cta').onclick=function(){close(COOLDOWN_ACT);};   // link still opens in new tab
+ ov.addEventListener('click',function(e){if(e.target===ov)close(COOLDOWN_DISMISS);});
+}
+window.maybeAutoPromo=function(u){
+ try{
+  // UNPAID members only: trial, free, expired, pending. Paid members already have access.
+  var lbl=(u&&u.access_label)||'';
+  if(lbl==='active') return;
+  var next=parseInt(localStorage.getItem(NEXT_KEY)||'0',10);
+  if(Date.now()<next) return;
+  setTimeout(function(){
+   if(document.getElementById('kas-autopromo')) return;
+   if(document.hidden) return;
+   build();
+  },DELAY);
+ }catch(e){}
+};
+})();
+</script>
+<!--End autotrading upsell popup-->
 </body></html>

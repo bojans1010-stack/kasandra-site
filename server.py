@@ -1406,8 +1406,8 @@ def public_stats_us30():
 
 @app.get("/us30")
 def us30_page(k_session: str = Cookie(None)):
-    if not _session_email(k_session): return RedirectResponse("/login")
-    return _page("members_us30.html")
+    # US30 retired 2026-08-25 — replaced by the 15M swing feed. Old links land on /m15.
+    return RedirectResponse("/m15")
 # ==================== end US30 mirror ====================
 
 # ==================== 15M SWING — isolated mirror of the gold pipeline ====================

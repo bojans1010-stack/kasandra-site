@@ -2014,6 +2014,9 @@ def login_page(): return _page("login.html")
 @app.get("/signup")
 def signup_page(): return _page("signup.html")
 
+@app.get("/results")
+def results_page(): return _page("results.html")   # PUBLIC proof page: closed-trade stats only, no live signals
+
 @app.get("/connect")
 def connect_page(k_session: str = Cookie(None)):
     if not _session_email(k_session): return RedirectResponse("/login")

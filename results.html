@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kasandra · Live Results</title>
+<meta name="description" content="Kasandra gold signal results — win rate and every closed trade, updated live.">
+<style>
+:root{
+  --bg:#070b14; --card:#0d1524; --card-hi:#111a2c; --border:rgba(255,255,255,.08);
+  --border-soft:rgba(255,255,255,.05); --text:#e6ebf2; --text-2:#9aa6b8; --dim:#5a6478;
+  --gold:#e6c07a; --gold-2:#f6dca6; --accent:#00d4ff; --green:#34d399; --red:#f87171;
+  --mono:'DM Mono',ui-monospace,monospace; --sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);
+  color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:26px 16px 60px}
+.brand{text-align:center;margin-bottom:6px}
+.brand .k{font-size:13px;letter-spacing:6px;text-transform:uppercase;color:var(--gold);font-weight:700}
+h1{text-align:center;font-size:30px;font-weight:700;margin:8px 0 4px;letter-spacing:.3px}
+h1 span{color:var(--gold)}
+.sub{text-align:center;color:var(--text-2);font-size:13.5px;margin-bottom:6px}
+.live{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--green);font-size:12px;margin-bottom:22px}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.tabs{display:flex;gap:8px;margin-bottom:18px;justify-content:center}
+.tab{flex:1;max-width:230px;text-align:center;padding:12px;border-radius:11px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-weight:700;font-size:14px;color:var(--text-2);transition:.15s}
+.tab.active{color:var(--bg);background:linear-gradient(135deg,var(--gold-2),var(--gold));border-color:var(--gold)}
+.tab small{display:block;font-weight:500;font-size:10.5px;opacity:.75;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center}
+.kpi .v{font-size:23px;font-weight:800;font-family:var(--mono)}
+.kpi .v.g{color:var(--green)} .kpi .v.gold{color:var(--gold)}
+.kpi .l{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:5px}
+.panel{background:linear-gradient(135deg,var(--card),var(--card-hi));border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border-soft)}
+.ph .t{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-2);font-weight:600}
+.ph .u{font-size:11px;color:var(--dim)}
+.chartbox{padding:16px 14px 8px}
+.discl{font-size:11px;color:var(--dim);line-height:1.5;padding:0 18px 14px}
+.discl b{color:var(--text-2)}
+.tlist{max-height:460px;overflow-y:auto}
+.trow{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border-soft);font-size:13px}
+.trow:last-child{border-bottom:0}
+.trow .dt{color:var(--dim);font-family:var(--mono);font-size:11.5px;width:96px;flex:0 0 auto}
+.trow .side{font-weight:700;width:44px;flex:0 0 auto}
+.trow .side.buy{color:var(--green)} .trow .side.sell{color:var(--red)}
+.trow .oc{flex:1;font-size:12px}
+.trow .pips{font-family:var(--mono);font-weight:700;text-align:right;width:74px;flex:0 0 auto}
+.trow .pips.win{color:var(--green)} .trow .pips.loss{color:var(--red)}
+.oc-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.oc-badge.w{background:rgba(52,211,153,.14);color:var(--green)}
+.oc-badge.l{background:rgba(248,113,113,.14);color:var(--red)}
+.cta{display:block;text-align:center;text-decoration:none;margin:26px auto 0;max-width:420px;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;font-weight:800;font-size:16px;
+  padding:16px 22px;border-radius:12px;box-shadow:0 6px 24px rgba(230,192,122,.25)}
+.cta small{display:block;font-weight:600;font-size:12px;opacity:.8;margin-top:3px}
+.foot{text-align:center;color:var(--dim);font-size:11px;margin-top:22px;line-height:1.6}
+.empty{padding:26px;text-align:center;color:var(--dim)}
+@media(max-width:520px){ .kpis{grid-template-columns:repeat(2,1fr)} h1{font-size:25px} .trow .dt{width:82px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="k">Kasandra</span></div>
+  <h1>Live <span>Results</span></h1>
+  <div class="sub">Every closed gold signal, win or loss. No cherry-picking.</div>
+  <div class="live"><span class="dot"></span><span id="live-lbl">Updating live</span></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-scalp" onclick="show('scalp')">⚡ SCALP 5M<small>fast intraday</small></div>
+    <div class="tab" id="tab-swing" onclick="show('swing')">🌊 SWING 15M<small>patient swings</small></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v gold" id="k-total">—</div><div class="l">Signals</div></div>
+    <div class="kpi"><div class="v g" id="k-wr">—</div><div class="l">Win Rate</div></div>
+    <div class="kpi"><div class="v gold" id="k-tp3">—</div><div class="l">Full TP3</div></div>
+    <div class="kpi"><div class="v g" id="k-pips">—</div><div class="l">Net Pips</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="t">Cumulative Result (pips)</div><div class="u" id="chart-u"></div></div>
+    <div class="chartbox"><svg id="curve" viewBox="0 0 700 200" width="100%" preserveAspectRatio="none" style="display:block"></svg></div>
+    <div class="discl" id="discl"></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="t">Closed Trades</div><div class="u" id="trades-u"></div></div>
+    <div class="tlist" id="tlist"><div class="empty">loading...</div></div>
+  </div>
+
+  <a class="cta" href="/signup">Start your free 3-day trial<small>Get the live signals in real time · kasandra.app</small></a>
+
+  <div class="foot">
+    Results are the outcomes of closed signals only. Live signals (entry zones, stops, targets) are for members.<br>
+    Trading gold carries risk. Not financial advice. Past performance does not guarantee future results.
+  </div>
+</div>
+
+<script>
+const FEEDS={
+  scalp:{url:'/api/public_stats', label:'Live-tracked results.'},
+  swing:{url:'/api/m15/public_stats', label:'Backtested on historical prices through late Aug 2026, live-tracked since.'}
+};
+let DATA={scalp:null,swing:null}, cur='scalp';
+
+function fmtPips(p){ return (p>=0?'+':'')+p.toLocaleString('en-US'); }
+
+function drawCurve(trades){
+  const svg=document.getElementById('curve');
+  // chronological cumulative pips
+  const chron=trades.slice().reverse();
+  let cum=0; const pts=chron.map(t=>{ cum+=(t.pips||0); return cum; });
+  if(!pts.length){ svg.innerHTML=''; return; }
+  const W=700,H=200,pad=6;
+  const min=Math.min(0,...pts), max=Math.max(0,...pts), range=(max-min)||1;
+  const x=i=>pad+(W-2*pad)*(pts.length<2?0.5:i/(pts.length-1));
+  const y=v=>H-pad-(H-2*pad)*((v-min)/range);
+  const line=pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+  const area=line+' L'+x(pts.length-1).toFixed(1)+' '+(H-pad)+' L'+x(0).toFixed(1)+' '+(H-pad)+' Z';
+  const zeroY=y(0).toFixed(1);
+  svg.innerHTML=
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#e6c07a" stop-opacity=".28"/><stop offset="1" stop-color="#e6c07a" stop-opacity="0"/></linearGradient></defs>'+
+    '<line x1="0" y1="'+zeroY+'" x2="'+W+'" y2="'+zeroY+'" stroke="rgba(255,255,255,.08)" stroke-width="1"/>'+
+    '<path d="'+area+'" fill="url(#g)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#e6c07a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+}
+
+function render(){
+  const d=DATA[cur]; if(!d) return;
+  document.getElementById('k-total').textContent=d.total.toLocaleString('en-US');
+  document.getElementById('k-wr').textContent=d.win_rate+'%';
+  document.getElementById('k-tp3').textContent=d.tp3_count.toLocaleString('en-US');
+  const pe=document.getElementById('k-pips'); pe.textContent=fmtPips(d.pips_total);
+  pe.className='v '+(d.pips_total>=0?'g':'red');
+  document.getElementById('discl').innerHTML='<b>'+FEEDS[cur].label+'</b> Win rate counts any trade that banked a target; a stop is a fixed managed loss.';
+  document.getElementById('chart-u').textContent=d.total+' trades';
+  document.getElementById('trades-u').textContent='newest first';
+  drawCurve(d.trades);
+  const rows=d.trades.slice(0,60);   // recent closed only, no live/open
+  const tl=document.getElementById('tlist');
+  if(!rows.length){ tl.innerHTML='<div class="empty">No closed trades yet.</div>'; return; }
+  tl.innerHTML=rows.map(t=>{
+    const win=t.result==='WIN';
+    const dt=(t.date||'').slice(5)+' '+(t.time||'');
+    const sideCls=(t.side||'').toUpperCase()==='BUY'?'buy':'sell';
+    return '<div class="trow"><span class="dt">'+dt+'</span>'+
+      '<span class="side '+sideCls+'">'+(t.side||'')+'</span>'+
+      '<span class="oc"><span class="oc-badge '+(win?'w':'l')+'">'+(t.outcome||'')+'</span></span>'+
+      '<span class="pips '+(win?'win':'loss')+'">'+fmtPips(t.pips||0)+'p</span></div>';
+  }).join('');
+}
+
+function show(which){
+  cur=which;
+  document.getElementById('tab-scalp').classList.toggle('active',which==='scalp');
+  document.getElementById('tab-swing').classList.toggle('active',which==='swing');
+  render();
+}
+
+async function load(){
+  for(const k of ['scalp','swing']){
+    try{ const r=await fetch(FEEDS[k].url); if(r.ok) DATA[k]=await r.json(); }catch(e){}
+  }
+  render();
+  document.getElementById('live-lbl').textContent='Updated '+new Date().toLocaleTimeString();
+}
+load(); setInterval(load, 60000);
+</script>
+</body>
+</html>

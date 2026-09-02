@@ -1258,20 +1258,27 @@ def public_stats():
     trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
     for r in hist:
         o = r.get("outcome")
-        pts = _trade_points(r)
-        pips = round(pts * 10)
-        pips_total += pts * 10
+        entry = r.get("entry")
+        # exit at the level ACTUALLY reached (not the stop), and pips = the real entry->exit move.
+        # keeps entry / exit / pips consistent per row (1 point = 10 pips).
+        exit_price = {"TP3": r.get("tp3"), "TP2": r.get("tp2"), "TP1": r.get("tp1"),
+                      "BE": entry, "SL": r.get("sl")}.get(o, r.get("sl"))
+        try:
+            move = round(abs(float(exit_price) - float(entry)) * 10)
+            pips = -move if o == "SL" else (0 if o == "BE" else move)
+        except Exception:
+            pips = round(_trade_points(r) * 10)   # fallback for older records missing levels
+        pips_total += pips
         if o == "SL":
             sl_count += 1
         else:
             wins += 1
             if o == "TP3": tp3_count += 1
         cu = (r.get("closed_utc") or "")
-        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
         trades.append({
             "date": cu[:10], "time": cu[11:16],
             "side": r.get("side", ""),
-            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
+            "entry": entry if entry is not None else "", "exit": exit_price if exit_price is not None else "",
             "pips": pips, "result": "LOSS" if o == "SL" else "WIN",
             "outcome": o,
         })
@@ -1385,17 +1392,23 @@ def public_stats_us30():
             hist = []
     trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
     for r in hist:
-        o = r.get("outcome"); pts = _trade_points(r)
-        pips_total += pts * 10
+        o = r.get("outcome"); entry = r.get("entry")
+        exit_price = {"TP3": r.get("tp3"), "TP2": r.get("tp2"), "TP1": r.get("tp1"),
+                      "BE": entry, "SL": r.get("sl")}.get(o, r.get("sl"))
+        try:
+            move = round(abs(float(exit_price) - float(entry)) * 10)
+            pips = -move if o == "SL" else (0 if o == "BE" else move)
+        except Exception:
+            pips = round(_trade_points(r) * 10)
+        pips_total += pips
         if o == "SL": sl_count += 1
         else:
             wins += 1
             if o == "TP3": tp3_count += 1
         cu = (r.get("closed_utc") or "")
-        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
         trades.append({"date": cu[:10], "time": cu[11:16], "side": r.get("side", ""),
-            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
-            "pips": round(pts * 10), "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
+            "entry": entry if entry is not None else "", "exit": exit_price if exit_price is not None else "",
+            "pips": pips, "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
     total = len(trades)
     return {"total": total, "wins": wins,
         "win_rate": round(wins * 100 / total) if total else 0,
@@ -1523,17 +1536,23 @@ def public_stats_m15():
             hist = []
     trades, pips_total, wins, sl_count, tp3_count = [], 0.0, 0, 0, 0
     for r in hist:
-        o = r.get("outcome"); pts = _trade_points(r)
-        pips_total += pts * 10
+        o = r.get("outcome"); entry = r.get("entry")
+        exit_price = {"TP3": r.get("tp3"), "TP2": r.get("tp2"), "TP1": r.get("tp1"),
+                      "BE": entry, "SL": r.get("sl")}.get(o, r.get("sl"))
+        try:
+            move = round(abs(float(exit_price) - float(entry)) * 10)
+            pips = -move if o == "SL" else (0 if o == "BE" else move)
+        except Exception:
+            pips = round(_trade_points(r) * 10)
+        pips_total += pips
         if o == "SL": sl_count += 1
         else:
             wins += 1
             if o == "TP3": tp3_count += 1
         cu = (r.get("closed_utc") or "")
-        exit_price = r.get("tp3") if o == "TP3" else r.get("sl")
         trades.append({"date": cu[:10], "time": cu[11:16], "side": r.get("side", ""),
-            "entry": r.get("entry", ""), "exit": exit_price if exit_price is not None else "",
-            "pips": round(pts * 10), "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
+            "entry": entry if entry is not None else "", "exit": exit_price if exit_price is not None else "",
+            "pips": pips, "result": "LOSS" if o == "SL" else "WIN", "outcome": o})
     total = len(trades)
     return {"total": total, "wins": wins,
         "win_rate": round(wins * 100 / total) if total else 0,

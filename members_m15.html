@@ -160,6 +160,8 @@ tr:hover td{background:rgba(0,212,255,.03)}
 .hist-sum{display:flex;gap:8px;flex-wrap:wrap;padding:12px 22px;border-bottom:1px solid var(--border-soft);font-size:11px;color:var(--dim)}
 .hist-sum .hs{background:rgba(255,255,255,.04);border-radius:14px;padding:4px 11px}
 .hist-sum .hs b{color:var(--text)}
+.hist-scroll{max-height:440px;overflow-y:auto}
+.hist-scroll thead th{position:sticky;top:0;background:#0d131f;z-index:2}
 /* market status banner */
 #market-status:empty{display:none}
 .ms{display:flex;gap:13px;align-items:flex-start;padding:14px 18px;border-bottom:1px solid var(--border-soft)}
@@ -251,8 +253,10 @@ tr:hover td{background:rgba(0,212,255,.03)}
       <b style="color:var(--accent)">Backtested &amp; live.</b> Results through <b>24 Aug 2026</b> are <b>backtested</b> on real historical gold prices (simulated, not live-executed). Signals are <b>live-tracked</b> from that date forward. Simulated results are not a guarantee of future performance.
     </div>
     <div class="hist-sum" id="hist-sum"></div>
+    <div class="hist-scroll">
     <table><thead><tr><th data-i18n="mem.histDate">Date</th><th data-i18n="mem.histSide">Side</th><th data-i18n="mem.histZone">Range</th><th data-i18n="mem.histRisk">Zone</th><th data-i18n="mem.histOutcome">Outcome</th><th>1 Lot</th></tr></thead>
     <tbody id="hist-body"></tbody></table>
+    </div>
   </div>
   </div><!-- /maingrid -->
 

@@ -142,7 +142,6 @@ td .muted{font-size:12px}
     <div class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
     <div class="tab" id="tab-affiliates" onclick="switchTab('affiliates')">Affiliates</div>
-    <div class="tab" id="tab-payments" onclick="switchTab('payments')">Payments</div>
     <div class="tab" id="tab-codes" onclick="switchTab('codes')">Access Codes</div>
     <div class="tab" id="tab-chats" onclick="switchTab('chats')">AI Chats</div>
   </div>
@@ -237,18 +236,6 @@ td .muted{font-size:12px}
       <table>
         <thead><tr><th>Affiliate</th><th>Code</th><th>Referrals</th><th>Paid</th><th>Owed</th><th>Paid out</th><th>Action</th></tr></thead>
         <tbody id="affbody"><tr><td colspan="7" class="empty">loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ============ PAYMENTS ============ -->
-  <div class="view" id="view-payments">
-    <div class="cards" id="pay-cards"></div>
-    <div class="section">
-      <div class="h"><div class="t"><span class="dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold)"></span>PAYMENTS · CRYPTO</div><div class="meta" id="pay-meta"></div></div>
-      <table>
-        <thead><tr><th>When</th><th>Member</th><th>Amount</th><th>Status</th><th>Order</th></tr></thead>
-        <tbody id="paybody"><tr><td colspan="5" class="empty">loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -438,13 +425,12 @@ async function saveRisk(enabled){
   else{out.style.color='#ff3366';out.textContent='✕ '+(d.error||'error');}
 }
 function switchTab(t){
-  ['overview','members','affiliates','payments','codes','chats'].forEach(x=>{
+  ['overview','members','affiliates','codes','chats'].forEach(x=>{
     var tb=document.getElementById('tab-'+x), vw=document.getElementById('view-'+x);
     if(tb) tb.classList.toggle('active',t===x);
     if(vw) vw.classList.toggle('active',t===x);
   });
   if(t==='affiliates') loadAffiliates();
-  if(t==='payments') loadPayments();
   if(t==='codes') loadCodes();
   if(t==='chats') loadChats();
 }
@@ -556,42 +542,6 @@ async function settleAff(email,owed){
   await fetch('/api/admin/affiliate/settle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
   loadAffiliates();
 }
-// ---------- PAYMENTS ----------
-async function loadPayments(){
-  const r=await fetch('/api/admin/payments'); const d=await r.json();
-  const ps=d.payments||[];
-  document.getElementById('pay-cards').innerHTML=
-    card('gold','$'+(d.revenue||0),'Revenue')+
-    card('green',d.paid_count||0,'Paid')+
-    card('accent',ps.length,'Total')+
-    card(d.enabled?'green':'red',d.enabled?'ON':'OFF','Checkout');
-  document.getElementById('pay-meta').textContent='Crypto: '+(d.crypto?'live':'off')+' · Card: '+(d.stripe?'live':'off');
-  const b=document.getElementById('paybody');
-  if(!ps.length){ b.innerHTML='<tr><td colspan="5" class="empty">No payments yet</td></tr>'; return; }
-  const cls={paid:'TP3',paid_over:'TP3',pending:'BE',process:'BE',confirm_check:'BE',cancel:'SL',fail:'SL',wrong_amount:'SL'};
-  b.innerHTML=ps.map(p=>
-    '<tr><td class="mono muted">'+(p.created||'')+'</td>'+
-    '<td>'+(p.email||'—')+'</td>'+
-    '<td class="mono">$'+Math.round(p.amount||0)+'</td>'+
-    '<td><span class="oc '+(cls[p.status]||'BE')+'">'+(p.status||'?')+'</span></td>'+
-    '<td class="mono muted" style="font-size:11px">'+(p.order_id||'')+
-      (p.status==='unmatched' && !p.fulfilled
-        ? ' <button class="mm-go" style="margin-left:8px;padding:3px 8px;font-size:11px" onclick="payAssign(\''+p.order_id+'\')">assign to member</button>'
-        : '')+
-    '</td></tr>').join('');
-}
-
-// Attach an unmatched crypto payment to the member who actually sent it, and fulfil it.
-async function payAssign(order_id){
-  const email=prompt('This payment landed but could not be matched automatically.\n\nEnter the member email who paid it — they will be granted 30 days (paid):');
-  if(!email) return;
-  const r=await fetch('/api/admin/payment_assign',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({order_id, email:email.trim()})});
-  const d=await r.json();
-  alert(d.ok ? ('✓ '+d.msg) : ('✕ '+(d.error||'failed')));
-  if(d.ok) loadPayments();
-}
-
 // ---------- AI CHATS ----------
 var CHATS=[], CHAT_CUR=null;
 function chEsc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}

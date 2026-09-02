@@ -699,7 +699,8 @@ async function load(){
       ? '&#9201; '+kT('mem.trialBanner').replace('{days}',u.days_left).replace('{price}',price)
       : '&#10003; '+kT('mem.activeBanner').replace('{days}',u.days_left);
     const renewBtn=(u.access_label==='trial')?payBtn():'';
-    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+renewBtn+'</div>');
+    const proof=(u.access_label==='trial')?'<div style="margin-top:10px;font-size:12.5px"><a href="/results" style="color:var(--accent);text-decoration:none;font-weight:600">📊 See every trade we have made &rarr;</a></div>':'';
+    c.insertAdjacentHTML('beforebegin','<div style="background:'+bannerColor+';border:1px solid '+bannerBorder+';border-radius:10px;padding:14px 18px;margin-bottom:18px;text-align:center;font-size:13.5px;color:var(--text-2)">'+txt+renewBtn+proof+'</div>');
     loadTelegram();
     loadSignals();
     setInterval(loadSignals, 45000);   // refresh signals + chart every 45s

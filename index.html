@@ -48,6 +48,13 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .nav-links a:hover{color:var(--accent)}
 .nav-cta{padding:8px 18px;border:1px solid var(--accent);border-radius:8px;color:var(--accent)!important;font-weight:600;transition:all .25s}
 .nav-cta:hover{background:var(--accent);color:var(--bg)!important;box-shadow:0 0 24px rgba(0,212,255,.4)}
+.wins-ticker{display:block;text-decoration:none;background:rgba(52,211,153,.06);border-top:1px solid rgba(52,211,153,.16);border-bottom:1px solid rgba(52,211,153,.16);overflow:hidden;white-space:nowrap}
+.wt-track{display:inline-block;padding:9px 0;animation:wtscroll 42s linear infinite;will-change:transform}
+.wins-ticker:hover .wt-track{animation-play-state:paused}
+.wt-i{display:inline-block;margin:0 20px;font-size:12.5px;color:var(--text-2);font-weight:600}
+.wt-i b{color:#34d399;font-family:var(--mono)}
+.wt-cap{display:inline-block;margin:0 20px;font-size:12.5px;color:var(--gold,#e6c07a);font-weight:700;letter-spacing:.5px}
+@keyframes wtscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* HERO */
 .hero{padding:64px 0 56px}
@@ -243,6 +250,8 @@ footer{border-top:1px solid var(--border-soft);padding:42px 0 56px;margin-top:70
     </div>
   </div>
 </nav>
+
+<a class="wins-ticker" href="/results" title="See full results"><div class="wt-track" id="wt-track"><span class="wt-cap">🟢 LIVE RESULTS</span></div></a>
 
 <header class="hero">
   <div class="wrap">
@@ -597,5 +606,21 @@ txt.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.pr
 })();
 </script>
 <!--End Kasandra Assistant-->
+<script>
+// Live wins ticker (closed WINS only — never live/pending signals)
+async function fillTicker(){
+  try{
+    const r=await fetch('/api/public_stats?t='+Date.now()); if(!r.ok) return;
+    const d=await r.json();
+    const wins=(d.trades||[]).filter(t=>t.result==='WIN').slice(0,22);
+    if(!wins.length) return;
+    const items=wins.map(t=>'<span class="wt-i">'+(t.outcome||'')+' <b>+'+(t.pips||0)+'p</b></span>').join('');
+    const one='<span class="wt-cap">🟢 LIVE RESULTS</span>'+items;
+    const el=document.getElementById('wt-track'); if(el) el.innerHTML=one+one;  // duplicate for seamless loop
+  }catch(e){}
+}
+fillTicker();
+setInterval(fillTicker, 90000);
+</script>
 </body>
 </html>

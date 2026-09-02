@@ -646,16 +646,18 @@ async function loadTelegram(){
   try{
     const r=await fetch('/api/telegram/invite'); if(!r.ok) return;
     const d=await r.json(); if(!d.ok||!d.url) return;
-    const c=document.querySelector('.connect');
-    c.insertAdjacentHTML('beforebegin',
-      '<a href="'+d.url+'" target="_blank" rel="noopener" '+
+    const html='<a href="'+d.url+'" target="_blank" rel="noopener" '+
       'style="display:flex;align-items:center;justify-content:center;gap:10px;'+
       'background:linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05));'+
-      'border:1px solid var(--gold);border-radius:12px;padding:15px 20px;margin-bottom:18px;'+
+      'border:1px solid var(--gold);border-radius:12px;padding:15px 20px;margin-bottom:20px;'+
       'text-decoration:none;color:var(--gold);font-weight:600;font-size:14.5px;transition:.15s" '+
       'onmouseover="this.style.background=\'rgba(212,175,55,.22)\'" '+
       'onmouseout="this.style.background=\'linear-gradient(135deg,rgba(212,175,55,.14),rgba(212,175,55,.05))\'">'+
-      '📢 '+kT('mem.tgAlerts')+'</a>');
+      '📢 '+kT('mem.tgAlerts')+'</a>';
+    // place it up top, right under the Lounge card (fall back to above the connect steps)
+    const lounge=document.querySelector('.lounge-cta');
+    if(lounge){ lounge.insertAdjacentHTML('afterend', html); }
+    else { const c=document.querySelector('.connect'); if(c) c.insertAdjacentHTML('beforebegin', html); }
   }catch(e){}
 }
 async function redeemCode(){

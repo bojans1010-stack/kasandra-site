@@ -100,6 +100,8 @@ def _init_db():
     cur.execute("""CREATE TABLE IF NOT EXISTS chat_logs(
         id SERIAL PRIMARY KEY, session TEXT, ip TEXT, role TEXT, content TEXT, created TEXT)""")
     cur.execute("""CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS sessions(
+        token TEXT PRIMARY KEY, email TEXT, exp DOUBLE PRECISION)""")
     conn.commit(); cur.close(); conn.close()
 
 def _get_member(email):
@@ -594,19 +596,54 @@ def _set_setting(key, value):
         data[key] = val
         json.dump(data, open(SETTINGS_FILE, "w", encoding="utf-8"))
 
+def _session_db_delete(tok):
+    if not (_USE_DB and tok):
+        return
+    try:
+        conn = _db(); cur = conn.cursor()
+        cur.execute("DELETE FROM sessions WHERE token=%s", (tok,))
+        conn.commit(); cur.close(); conn.close()
+    except Exception as e:
+        print("session delete error:", e)
+
 def _new_session(email):
     tok = secrets.token_urlsafe(32)
-    _SESSIONS[tok] = (email, time.time() + SESSION_DAYS * 86400)
+    exp = time.time() + SESSION_DAYS * 86400
+    _SESSIONS[tok] = (email, exp)
+    if _USE_DB:
+        try:
+            conn = _db(); cur = conn.cursor()
+            cur.execute("INSERT INTO sessions(token,email,exp) VALUES(%s,%s,%s) "
+                        "ON CONFLICT (token) DO UPDATE SET email=EXCLUDED.email, exp=EXCLUDED.exp",
+                        (tok, email, exp))
+            conn.commit(); cur.close(); conn.close()
+        except Exception as e:
+            print("session persist error:", e)
     return tok
 
 def _session_email(tok):
     if not tok: return None
     rec = _SESSIONS.get(tok)
-    if not rec: return None
-    email, exp = rec
-    if time.time() > exp:
-        _SESSIONS.pop(tok, None); return None
-    return email
+    if rec:
+        email, exp = rec
+        if time.time() > exp:
+            _SESSIONS.pop(tok, None); _session_db_delete(tok); return None
+        return email
+    # not in this process's memory (e.g. after a redeploy) — look it up in the DB
+    if _USE_DB:
+        try:
+            conn = _db(); cur = conn.cursor()
+            cur.execute("SELECT email, exp FROM sessions WHERE token=%s", (tok,))
+            row = cur.fetchone(); cur.close(); conn.close()
+            if row:
+                email, exp = row["email"], row["exp"]
+                if time.time() > exp:
+                    _session_db_delete(tok); return None
+                _SESSIONS[tok] = (email, exp)   # warm the in-memory cache
+                return email
+        except Exception as e:
+            print("session lookup error:", e)
+    return None
 
 def _admin_pw_hash():
     env = os.environ.get("ADMIN_PASSWORD", "").strip()
@@ -702,6 +739,7 @@ async def auth(request: Request):
 @app.post("/api/signout")
 def signout(k_session: str = Cookie(None)):
     _SESSIONS.pop(k_session, None)
+    _session_db_delete(k_session)
     resp = JSONResponse({"ok": True}); resp.delete_cookie("k_session"); return resp
 
 @app.post("/api/change_password")

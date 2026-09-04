@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <html lang="en"><head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18429110943"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18429110943');
+</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kasandra · Members</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -754,7 +763,7 @@ function updateMarketStatus(d){
 document.addEventListener('langchange',()=>updateMarketStatus(_lastSig));
 
 // ---- live performance banner (gold price + cumulative equity sparkline) ----
-function rowPts(r){ return ({TP3:11.7,TP2:5,TP1:1.7,BE:0,SL:-10})[r&&r.outcome] || 0; }
+function rowPts(r){ return ({TP3:20,TP2:10,TP1:5,BE:0,SL:-10})[r&&r.outcome] || 0; }
 function heroBanner(d){
   const tr=document.getElementById('hero-trend');
   if(tr){ const t=(d.trend||'').toUpperCase();

@@ -2059,6 +2059,9 @@ def academy_page(k_session: str = Cookie(None)):   # members-only (registered us
     if not _session_email(k_session): return RedirectResponse("/login")
     return _page("academy.html")
 
+@app.get("/guide")
+def guide_page(): return _page("guide.html")   # PUBLIC education page — Google Ads landing (no signals, no numbers)
+
 @app.get("/admin")
 def admin_page(): return _page("admin.html")
 

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18429110943"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18429110943');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Gold Trading Starter Guide · Kasandra</title>
+<meta name="description" content="A free, no-hype starter guide to the gold market (XAU/USD): how gold moves, how to size and manage risk, and the discipline rules that keep beginners in the game. Educational only.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060912;--card:#0d131f;--card-hi:#131b2e;
+  --border:rgba(0,212,255,0.18);--border-soft:rgba(0,212,255,0.08);
+  --accent:#00d4ff;--green:#00ff88;--text:#e6ebf2;--text-2:#a8b2c1;--dim:#6a7688;
+  --gold:#e6c07a;--gold-2:#f6dca6;--gold-glow:rgba(230,192,122,.32);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --display:'Space Grotesk',ui-sans-serif,sans-serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,.10),transparent 60%),var(--bg);
+  background-attachment:fixed;color:var(--text);font-family:var(--sans);min-height:100vh;font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(6,9,18,.82);border-bottom:1px solid var(--border)}
+.nav-in{max-width:820px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:.16em;color:var(--accent);display:flex;align-items:center;gap:11px}
+.brand .dot{width:9px;height:9px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}
+.nav-in a.home{color:var(--text-2);text-decoration:none;font-size:13px}
+.hero{padding:56px 0 34px;text-align:center}
+.pill{display:inline-block;padding:6px 14px;border:1px solid var(--border);border-radius:100px;background:rgba(0,212,255,.05);font-size:11.5px;letter-spacing:.06em;color:var(--text-2);margin-bottom:20px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,46px);line-height:1.06;letter-spacing:-1px;margin-bottom:18px}
+h1 .g{background:linear-gradient(180deg,var(--gold-2),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lead{font-size:16px;color:var(--text-2);max-width:600px;margin:0 auto 28px}
+.cta{display:inline-block;padding:15px 30px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;border-radius:11px;font-family:var(--display);font-weight:700;font-size:14.5px;text-decoration:none;box-shadow:0 10px 34px var(--gold-glow);transition:transform .2s}
+.cta:hover{transform:translateY(-2px)}
+.cta.ghost{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none;margin-left:8px}
+.note{font-size:12px;color:var(--dim);margin-top:14px}
+section.block{padding:30px 0}
+h2{font-family:var(--display);font-size:clamp(22px,3.5vw,30px);font-weight:700;letter-spacing:-.4px;margin-bottom:8px}
+.sub{color:var(--text-2);margin-bottom:22px}
+.card{background:linear-gradient(160deg,var(--card-hi),var(--card));border:1px solid var(--border);border-radius:14px;padding:22px 22px;margin-bottom:16px}
+.card h3{font-family:var(--display);font-size:18px;font-weight:600;margin-bottom:8px;color:var(--gold)}
+.card p{color:var(--text-2);font-size:14.5px}
+.checklist{list-style:none;counter-reset:c}
+.checklist li{position:relative;padding:14px 16px 14px 54px;border:1px solid var(--border-soft);border-radius:11px;margin-bottom:10px;background:rgba(255,255,255,.015)}
+.checklist li::before{counter-increment:c;content:counter(c);position:absolute;left:16px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:rgba(230,192,122,.14);color:var(--gold);font-family:var(--mono);font-size:13px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.checklist li b{color:var(--text)}
+.tgbox{text-align:center;background:linear-gradient(160deg,rgba(0,212,255,.06),rgba(0,255,136,.04));border:1px solid var(--border);border-radius:16px;padding:32px 22px;margin:14px 0}
+.tgbox h2{margin-bottom:10px}
+.disclaimer{max-width:760px;margin:26px auto 8px;padding:16px 18px;border-top:1px solid rgba(255,255,255,.10);font-size:11.5px;line-height:1.6;color:#8a94a6}
+.disclaimer b{color:#aab3c2}
+footer{border-top:1px solid var(--border);margin-top:20px}
+.foot-in{max-width:820px;margin:0 auto;padding:24px 20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--dim)}
+.foot-in a{color:var(--text-2);text-decoration:none;margin-left:16px}
+@media(max-width:560px){.cta.ghost{margin-left:0;margin-top:10px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-in">
+    <div class="brand"><span class="dot"></span>KASANDRA</div>
+    <a class="home" href="/">← Home</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="pill">Free · Educational · No hype</span>
+    <h1>Learn to trade <span class="g">gold</span> with discipline</h1>
+    <p class="lead">A free starter guide to the gold market (XAU/USD): how gold actually moves, how to size a trade and manage risk, and the simple rules that keep beginners from blowing their account. No signals to buy, no promises, just the fundamentals done right.</p>
+    <a class="cta" href="#guide">Read the free guide</a>
+    <a class="cta ghost" href="#join">Join our free education channel</a>
+    <div class="note">Educational content only. Not financial advice. Trading carries risk.</div>
+  </header>
+
+  <section class="block" id="guide">
+    <h2>What moves the price of gold</h2>
+    <p class="sub">Before any trade, understand the forces you are up against.</p>
+    <div class="card"><h3>The US dollar &amp; interest rates</h3><p>Gold is priced in dollars, so a stronger dollar usually pushes gold down and a weaker dollar lifts it. Rising interest rates make cash more attractive than gold; falling rates do the opposite.</p></div>
+    <div class="card"><h3>Fear &amp; safe-haven demand</h3><p>When markets panic (war, banking stress, recession fear), money often flows into gold as a store of value. This is why gold can spike hard on news.</p></div>
+    <div class="card"><h3>Sessions &amp; volatility</h3><p>Gold is most active during the London and New York sessions. More movement means more opportunity, and more risk. Quiet hours often chop sideways.</p></div>
+  </section>
+
+  <section class="block">
+    <h2>Risk &amp; position sizing</h2>
+    <p class="sub">This is the part that decides whether you survive. Most beginners skip it.</p>
+    <div class="card"><h3>The 1–2% rule</h3><p>Never risk more than 1–2% of your account on a single trade. On a $500 account that is $5–$10 of risk per trade. Boring, yes. It is also why disciplined traders are still around next year.</p></div>
+    <div class="card"><h3>Know your $ per point</h3><p>On gold, 0.01 lot means roughly $1 for every $1 the price moves; 1.00 lot means roughly $100. Same trade, 100× the swing, up and down. Always know your $/point before you click buy.</p></div>
+    <div class="card"><h3>Always use a stop loss</h3><p>Decide your maximum loss in dollars before you enter, and set a hard stop there. A fixed, pre-planned loss is a cost of doing business. An unplanned one is how accounts disappear.</p></div>
+  </section>
+
+  <section class="block">
+    <h2>The 5 discipline rules</h2>
+    <p class="sub">Print these. They matter more than any entry.</p>
+    <ul class="checklist">
+      <li><b>Fixed risk every trade.</b> Same small percentage, no exceptions, no "this one is different".</li>
+      <li><b>One entry, one plan.</b> No adding to losers, no martingale, no doubling down to "get it back".</li>
+      <li><b>Hard stop, always.</b> Know your exit before your entry. Let it do its job.</li>
+      <li><b>No revenge trading.</b> After a loss, step away. Chasing is how a bad hour becomes a bad month.</li>
+      <li><b>Journal every trade.</b> Win or loss. You cannot improve what you do not measure.</li>
+    </ul>
+  </section>
+
+  <section class="block" id="join">
+    <div class="tgbox">
+      <h2>Want to keep learning?</h2>
+      <p class="sub" style="margin-bottom:18px">Join our free education channel for plain-English gold market breakdowns and discipline reminders. No cost, no spam, leave any time.</p>
+      <a class="cta" href="https://t.me/Milan_Fx_Support" target="_blank" rel="noopener">Join the free channel</a>
+      <div class="note">Free to join. Educational content only, not financial advice.</div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <b>Risk Disclosure.</b> Trading foreign exchange, gold and CFDs is highly speculative, carries a high level of risk, and may not be suitable for all investors. You could lose some or all of your invested capital, so never trade with money you cannot afford to lose. Past performance is not indicative of future results. Kasandra Technologies provides market information and education only; nothing on this page is financial, investment or trading advice, and we are not a licensed financial advisor or broker. You trade entirely at your own risk through your own third-party broker account, where your funds remain in your name and under your control.
+  </div>
+</div>
+
+<footer>
+  <div class="foot-in">
+    <div>&copy; 2026 Kasandra Technologies · Educational resource</div>
+    <div>
+      <a href="/risk">Risk disclosure</a>
+      <a href="https://t.me/Milan_Fx_Support" target="_blank" rel="noopener">Contact</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

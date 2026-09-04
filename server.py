@@ -1581,6 +1581,32 @@ def health():
         n = -1
     return {"storage": mode, "members": n, "db_url_set": bool(DATABASE_URL)}
 
+# ---------------- live "visitors online" counter (in-memory, resets on redeploy) ----------------
+_ONLINE = {}            # visitor_id -> last-seen epoch seconds
+_ONLINE_WINDOW = 45     # a visitor counts as "online" if seen within this many seconds
+_ONLINE_LOCK = threading.Lock()
+
+def _online_count(now=None):
+    now = now or time.time()
+    cutoff = now - _ONLINE_WINDOW
+    with _ONLINE_LOCK:
+        for k in [k for k, v in list(_ONLINE.items()) if v < cutoff]:
+            _ONLINE.pop(k, None)
+        return len(_ONLINE)
+
+@app.get("/api/ping")
+def api_ping(vid: str = ""):
+    """Heartbeat from each visitor's page. Anonymous per-tab id, no PII stored."""
+    if vid:
+        with _ONLINE_LOCK:
+            _ONLINE[vid] = time.time()
+    return {"online": _online_count()}
+
+@app.get("/api/online")
+def api_online():
+    """Current number of visitors active in the last _ONLINE_WINDOW seconds."""
+    return {"online": _online_count()}
+
 def _page(name, media_type=None):
     """Serve a site file with no-cache so browsers (mobile especially) always revalidate."""
     resp = FileResponse(os.path.join(SITE, name), media_type=media_type)
@@ -2029,6 +2055,9 @@ def i18n_js(): return _page("i18n.js", media_type="application/javascript")
 
 @app.get("/disclaimer.js")
 def disclaimer_js(): return _page("disclaimer.js", media_type="application/javascript")
+
+@app.get("/ping.js")
+def ping_js(): return _page("ping.js", media_type="application/javascript")
 
 @app.get("/login")
 def login_page(): return _page("login.html")

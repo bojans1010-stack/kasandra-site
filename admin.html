@@ -135,6 +135,10 @@ td .muted{font-size:12px}
 <div id="panel"><div class="wrap">
   <div class="top">
     <div class="brand"><span class="dot"></span>KASANDRA <span style="color:var(--dim);font-size:12px;letter-spacing:1px;margin-left:8px">ADMIN</span></div>
+    <span id="online-badge" title="Visitors on the site right now (last 45s)" style="margin-left:auto;margin-right:16px;display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#a8b2c1">
+      <span style="width:9px;height:9px;border-radius:50%;background:#00ff88;box-shadow:0 0 10px #00ff88;display:inline-block;animation:pulse 1.6s infinite"></span>
+      <b id="online-n" style="color:#00ff88;font-family:ui-monospace,monospace;font-size:15px">–</b>&nbsp;online now
+    </span>
     <a class="signout" onclick="adminSignout()">Sign out</a>
   </div>
 
@@ -736,5 +740,12 @@ function gate(){document.getElementById('gate').style.display='flex';document.ge
 
 // auto-resume if admin session already active
 fetch('/api/admin/overview').then(r=>{if(r.status===200)showPanel();});
+// ---- live visitors-online badge ----
+async function loadOnline(){
+  try{ const r=await fetch('/api/online'); const d=await r.json();
+    const el=document.getElementById('online-n'); if(el) el.textContent=(d.online!=null?d.online:'–');
+  }catch(e){}
+}
+loadOnline(); setInterval(loadOnline, 8000);
 </script></body></html>
 

@@ -1066,19 +1066,19 @@ var PU='https://www.puprime.partners/forex-trading-account/?affid=MzM3NzA2MjY=';
 var COPY={
  en:{q:"Get your membership for free",
      b:"You do not have to pay 99 USDT a month. Open a PU Prime account through our link and deposit 100 USD or more, and your Kasandra membership is free for as long as you trade it.",
-     bonus:"PU Prime also gives a 100% one time deposit bonus on deposits up to 1000 USD.",
+     bonus:"",
      price:"You also get access to our private Telegram community.",
      note:"The account must be actively traded. We monitor for misuse and free membership is revoked on accounts that never trade.",
      cta:"Open PU Prime & claim it →", later:"Maybe later"},
  mk:{q:"Земи го членството бесплатно",
      b:"Не мора да плаќаш 99 USDT месечно. Отвори PU Prime сметка преку нашиот линк и депонирај 100 USD или повеќе, и твоето Kasandra членство е бесплатно се додека тргуваш на неа.",
-     bonus:"PU Prime дава и 100% еднократен бонус на депозит до 1000 USD.",
+     bonus:"",
      price:"Добиваш и пристап до нашата приватна Telegram заедница.",
      note:"Сметката мора активно да се тргува. Ја следиме злоупотребата и бесплатното членство се укинува на сметки што не тргуваат.",
      cta:"Отвори PU Prime и земи го →", later:"Можеби подоцна"},
  sr:{q:"Uzmi članstvo besplatno",
      b:"Ne moraš da plaćaš 99 USDT mesečno. Otvori PU Prime nalog preko našeg linka i uplati 100 USD ili više, i tvoje Kasandra članstvo je besplatno dok god trguješ na njemu.",
-     bonus:"PU Prime takođe daje 100% jednokratni bonus na depozit do 1000 USD.",
+     bonus:"",
      price:"Dobijaš i pristup našoj privatnoj Telegram zajednici.",
      note:"Nalog mora aktivno da se trguje. Pratimo zloupotrebe i besplatno članstvo se ukida na nalozima koji ne trguju.",
      cta:"Otvori PU Prime i uzmi →", later:"Možda kasnije"}
@@ -1096,7 +1096,7 @@ function build(){
    +'<div style="font-size:34px;margin-bottom:8px">⚡</div>'
    +'<h3 style="font-family:\'Space Grotesk\',system-ui,sans-serif;color:#f6dca6;font-size:21px;font-weight:700;margin:0 0 12px;text-shadow:0 0 20px rgba(230,192,122,.3)">'+t.q+'</h3>'
    +'<p style="color:#a8b2c1;font-size:13.5px;line-height:1.65;margin:0 0 12px">'+t.b+'</p>'
-   +'<p style="color:#00ff88;font-size:13px;font-weight:600;margin:0 0 10px">'+t.bonus+'</p>'
+   +(t.bonus?'<p style="color:#00ff88;font-size:13px;font-weight:600;margin:0 0 10px">'+t.bonus+'</p>':'')
    +'<p style="color:#e6c07a;font-size:13px;font-weight:600;margin:0 0 14px">'+t.price+'</p>'
    +'<p style="color:#6a7688;font-size:11.5px;line-height:1.5;margin:0 0 18px">'+t.note+'</p>'
    +'<a id="kap-cta" href="'+PU+'" target="_blank" rel="noopener" style="display:block;padding:14px 20px;background:linear-gradient(135deg,#f6dca6,#e6c07a);color:#241a06;border-radius:11px;font-family:\'Space Grotesk\',system-ui,sans-serif;font-weight:700;font-size:14px;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 30px rgba(230,192,122,.35)">'+t.cta+'</a>'

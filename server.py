@@ -2027,6 +2027,9 @@ def pub_results(): return FileResponse(RESULTS_FILE)
 @app.get("/i18n.js")
 def i18n_js(): return _page("i18n.js", media_type="application/javascript")
 
+@app.get("/disclaimer.js")
+def disclaimer_js(): return _page("disclaimer.js", media_type="application/javascript")
+
 @app.get("/login")
 def login_page(): return _page("login.html")
 

@@ -142,6 +142,11 @@ td .muted{font-size:12px}
     <a class="signout" onclick="adminSignout()">Sign out</a>
   </div>
 
+  <div id="online-members" style="margin:0 0 16px;padding:13px 16px;background:#0c1424;border:1px solid rgba(0,255,136,.20);border-radius:12px">
+    <div style="font-size:11px;letter-spacing:1.2px;color:#6a7688;text-transform:uppercase;margin-bottom:9px">Members online <span id="om-count" style="color:#00ff88;font-family:ui-monospace,monospace">0</span></div>
+    <div id="om-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+
   <div class="tabs">
     <div class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" id="tab-members" onclick="switchTab('members')">User Management</div>
@@ -747,5 +752,23 @@ async function loadOnline(){
   }catch(e){}
 }
 loadOnline(); setInterval(loadOnline, 8000);
+// ---- members online (who) ----
+async function loadOnlineMembers(){
+  try{
+    const r=await fetch('/api/online/members'); if(!r.ok) return;
+    const d=await r.json();
+    const cnt=document.getElementById('om-count'); if(cnt) cnt.textContent=d.count||0;
+    const list=document.getElementById('om-list'); if(!list) return;
+    if(d.count){
+      list.innerHTML=d.members.map(function(m){
+        return '<span style="font-size:12.5px;background:rgba(0,255,136,.10);border:1px solid rgba(0,255,136,.25);color:#d9fbe9;border-radius:20px;padding:4px 11px">🟢 '+
+          m.email+' <span style="color:#6a7688">'+m.ago+'s ago</span></span>';
+      }).join('');
+    } else {
+      list.innerHTML='<span style="font-size:12.5px;color:#6a7688">No logged-in members online right now.</span>';
+    }
+  }catch(e){}
+}
+loadOnlineMembers(); setInterval(loadOnlineMembers, 8000);
 </script></body></html>
 

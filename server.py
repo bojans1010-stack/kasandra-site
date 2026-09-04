@@ -1582,30 +1582,57 @@ def health():
     return {"storage": mode, "members": n, "db_url_set": bool(DATABASE_URL)}
 
 # ---------------- live "visitors online" counter (in-memory, resets on redeploy) ----------------
-_ONLINE = {}            # visitor_id -> last-seen epoch seconds
+_ONLINE = {}            # visitor_id -> {"t": last_seen_epoch, "email": member_email_or_None}
 _ONLINE_WINDOW = 45     # a visitor counts as "online" if seen within this many seconds
 _ONLINE_LOCK = threading.Lock()
 
-def _online_count(now=None):
-    now = now or time.time()
+def _online_prune(now):
     cutoff = now - _ONLINE_WINDOW
     with _ONLINE_LOCK:
-        for k in [k for k, v in list(_ONLINE.items()) if v < cutoff]:
+        for k in [k for k, v in list(_ONLINE.items()) if v["t"] < cutoff]:
             _ONLINE.pop(k, None)
+
+def _online_count(now=None):
+    now = now or time.time()
+    _online_prune(now)
+    with _ONLINE_LOCK:
         return len(_ONLINE)
 
 @app.get("/api/ping")
-def api_ping(vid: str = ""):
-    """Heartbeat from each visitor's page. Anonymous per-tab id, no PII stored."""
+def api_ping(vid: str = "", k_session: str = Cookie(None)):
+    """Heartbeat from each visitor's page. Anonymous per-tab id; if the visitor is a
+    logged-in member, their email is attached so the admin can see who is online."""
     if vid:
+        try:
+            email = _session_email(k_session)
+        except Exception:
+            email = None
         with _ONLINE_LOCK:
-            _ONLINE[vid] = time.time()
+            _ONLINE[vid] = {"t": time.time(), "email": email}
     return {"online": _online_count()}
 
 @app.get("/api/online")
 def api_online():
     """Current number of visitors active in the last _ONLINE_WINDOW seconds."""
     return {"online": _online_count()}
+
+@app.get("/api/online/members")
+def api_online_members(k_admin: str = Cookie(None)):
+    """Admin-only: which logged-in members are online right now."""
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    now = time.time()
+    _online_prune(now)
+    seen = {}
+    with _ONLINE_LOCK:
+        for v in _ONLINE.values():
+            em = v.get("email")
+            if em and (em not in seen or v["t"] > seen[em]):
+                seen[em] = v["t"]
+        total = len(_ONLINE)
+    members = sorted(({"email": em, "ago": int(now - t)} for em, t in seen.items()),
+                     key=lambda m: m["ago"])
+    return {"count": len(members), "members": members, "total_online": total}
 
 def _page(name, media_type=None):
     """Serve a site file with no-cache so browsers (mobile especially) always revalidate."""

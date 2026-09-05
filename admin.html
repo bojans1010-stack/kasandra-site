@@ -282,8 +282,20 @@ td .muted{font-size:12px}
       <div style="width:290px;border-right:1px solid var(--border-soft);overflow-y:auto;flex-shrink:0" id="chat-list">
         <div class="empty" style="padding:20px">loading...</div>
       </div>
-      <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px" id="chat-thread">
-        <div class="empty" style="margin:auto">Pick a conversation on the left.</div>
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px" id="chat-thread">
+          <div class="empty" style="margin:auto">Pick a conversation on the left.</div>
+        </div>
+        <div id="chat-reply" style="display:none;border-top:1px solid var(--border);padding:10px 12px;background:#0a0e16">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <button id="chat-takeover-btn" onclick="toggleTakeover()" style="font-size:12px;font-weight:600;padding:6px 13px;border-radius:7px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer">Take over</button>
+            <span id="chat-takeover-state" style="font-size:11.5px;color:var(--dim)">AI is handling this chat</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input id="chat-reply-input" placeholder="Reply as a human agent..." autocomplete="off" style="flex:1;background:#0d131f;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px" onkeydown="if(event.key==='Enter')sendAgent()">
+            <button onclick="sendAgent()" style="padding:10px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#241a06;font-weight:700;font-size:13px;cursor:pointer">Send</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="meta" id="chat-meta" style="margin-top:8px"></div>
@@ -578,14 +590,37 @@ function renderChatList(){
 function pickChat(s){ CHAT_CUR=s; renderChatList(); var c=CHATS.find(function(x){return x.session===s;}); if(c) renderChatThread(c); }
 function renderChatThread(c){
   var t=document.getElementById('chat-thread');
-  t.innerHTML=c.messages.map(function(m){
-    var ai=m.role==='assistant';
-    return '<div style="max-width:78%;padding:9px 13px;border-radius:11px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;'
-      +(ai?'align-self:flex-end;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2)':'align-self:flex-start;background:rgba(0,212,255,.07);border:1px solid var(--border-soft)')+'">'
-      +'<div style="font-size:10px;color:var(--dim);margin-bottom:4px">'+(ai?'AI':'customer')+' · '+chEsc(m.created)+'</div>'
+  t.innerHTML=(c.messages||[]).map(function(m){
+    var role=m.role, bg, lbl;
+    if(role==='agent'){ bg='align-self:flex-end;background:rgba(230,192,122,.12);border:1px solid rgba(230,192,122,.35)'; lbl='You'; }
+    else if(role==='assistant'){ bg='align-self:flex-end;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2)'; lbl='AI'; }
+    else { bg='align-self:flex-start;background:rgba(0,212,255,.07);border:1px solid var(--border-soft)'; lbl='customer'; }
+    return '<div style="max-width:78%;padding:9px 13px;border-radius:11px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;'+bg+'">'
+      +'<div style="font-size:10px;color:var(--dim);margin-bottom:4px">'+lbl+' · '+chEsc(m.created)+'</div>'
       +chEsc(m.content)+'</div>';
   }).join('');
   t.scrollTop=t.scrollHeight;
+  document.getElementById('chat-reply').style.display='block';
+  var on=!!c.takeover;
+  var btn=document.getElementById('chat-takeover-btn'), st=document.getElementById('chat-takeover-state');
+  if(on){ btn.textContent='Hand back to AI'; btn.style.borderColor='var(--gold)'; btn.style.color='var(--gold)'; st.textContent='You have taken over — AI is paused'; st.style.color='var(--gold)'; }
+  else { btn.textContent='Take over'; btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)'; st.textContent='AI is handling this chat'; st.style.color='var(--dim)'; }
+}
+async function toggleTakeover(){
+  if(!CHAT_CUR) return;
+  var c=CHATS.find(function(x){return x.session===CHAT_CUR;});
+  var on=!(c&&c.takeover);
+  try{ await fetch('/api/admin/chat/takeover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:CHAT_CUR,on:on})});
+    if(c){ c.takeover=on; renderChatThread(c); } loadChats();
+  }catch(e){}
+}
+async function sendAgent(){
+  var inp=document.getElementById('chat-reply-input'); var v=(inp.value||'').trim();
+  if(!v||!CHAT_CUR) return; inp.value='';
+  try{ await fetch('/api/admin/chat/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:CHAT_CUR,text:v})});
+    var c=CHATS.find(function(x){return x.session===CHAT_CUR;});
+    if(c){ c.messages.push({role:'agent',content:v,created:'now'}); c.takeover=true; renderChatThread(c); } loadChats();
+  }catch(e){}
 }
 setInterval(function(){ if(document.getElementById('tab-chats').classList.contains('active')) loadChats(); }, 10000);
 

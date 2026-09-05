@@ -1742,6 +1742,19 @@ def _log_chat(session, ip, role, content):
     except Exception as e:
         print("chat log error:", e)
 
+# ---- human takeover state (in-memory; resets on redeploy) ----
+_TAKEOVER = {}          # session -> last agent/admin activity epoch
+_TAKEOVER_TTL = 3600    # auto-hand-back to AI after 1h with no agent activity
+
+def _takeover_on(session):
+    ts = _TAKEOVER.get(session)
+    if ts is None:
+        return False
+    if time.time() - ts > _TAKEOVER_TTL:
+        _TAKEOVER.pop(session, None)
+        return False
+    return True
+
 @app.post("/api/chat")
 async def chat(request: Request):
     if not CHAT_ENABLED:
@@ -1767,6 +1780,9 @@ async def chat(request: Request):
     if not msgs or msgs[-1]["role"] != "user":
         return JSONResponse({"ok": False, "error": "no message"}, status_code=400)
     _log_chat(session, ip, "user", msgs[-1]["content"])
+    if _takeover_on(session):
+        _TAKEOVER[session] = time.time()   # keep the takeover alive while the visitor is active
+        return {"ok": True, "reply": "", "human": True}   # AI stays quiet; a human is handling this one
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -1809,7 +1825,59 @@ def admin_chats(k_admin: str = Cookie(None)):
         c["messages"].append({"role": r.get("role"), "content": r.get("content"), "created": r.get("created")})
         c["last"] = r.get("created", c["last"])
     out = sorted(convos.values(), key=lambda c: c["last"], reverse=True)
+    for c in out:
+        c["takeover"] = _takeover_on(c["session"])
     return {"conversations": out, "count": len(out), "messages": len(rows)}
+
+@app.get("/api/chat/poll")
+def chat_poll(session: str = "", after: int = 0):
+    """Widget polls this for human-agent replies pushed from the admin."""
+    session = str(session)[:40]
+    out = []; last = after
+    if session:
+        try:
+            if _USE_DB:
+                conn = _db(); cur = conn.cursor()
+                cur.execute("SELECT id,content,created FROM chat_logs WHERE session=%s AND role='agent' AND id>%s ORDER BY id ASC LIMIT 50", (session, after))
+                for r in cur.fetchall():
+                    out.append({"id": r["id"], "content": r["content"], "created": r["created"]}); last = r["id"]
+                cur.close(); conn.close()
+            elif os.path.exists(CHAT_LOG_FILE):
+                data = json.load(open(CHAT_LOG_FILE, encoding="utf-8"))
+                for i, r in enumerate(data, start=1):
+                    if i > after and r.get("session") == session and r.get("role") == "agent":
+                        out.append({"id": i, "content": r.get("content"), "created": r.get("created")}); last = i
+        except Exception as e:
+            print("chat poll error:", e)
+    return {"messages": out, "last": last, "human": _takeover_on(session)}
+
+@app.post("/api/admin/chat/send")
+async def admin_chat_send(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    try: body = await request.json()
+    except Exception: return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
+    session = str(body.get("session") or "")[:40]
+    text = str(body.get("text") or "").strip()[:2000]
+    if not session or not text:
+        return JSONResponse({"ok": False, "error": "missing session or text"}, status_code=400)
+    _TAKEOVER[session] = time.time()   # replying implies you've taken over
+    _log_chat(session, "admin", "agent", text)
+    return {"ok": True}
+
+@app.post("/api/admin/chat/takeover")
+async def admin_chat_takeover(request: Request, k_admin: str = Cookie(None)):
+    if not _is_admin(k_admin):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    try: body = await request.json()
+    except Exception: return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
+    session = str(body.get("session") or "")[:40]
+    if not session:
+        return JSONResponse({"ok": False, "error": "missing session"}, status_code=400)
+    on = bool(body.get("on"))
+    if on: _TAKEOVER[session] = time.time()
+    else: _TAKEOVER.pop(session, None)
+    return {"ok": True, "on": on}
 
 @app.get("/chatlog")
 def chatlog_page(): return _page("chatlog.html")
@@ -2123,6 +2191,9 @@ def disclaimer_js(): return _page("disclaimer.js", media_type="application/javas
 
 @app.get("/ping.js")
 def ping_js(): return _page("ping.js", media_type="application/javascript")
+
+@app.get("/chat-agent.js")
+def chat_agent_js(): return _page("chat-agent.js", media_type="application/javascript")
 
 @app.get("/login")
 def login_page(): return _page("login.html")

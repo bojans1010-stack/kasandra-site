@@ -21,7 +21,7 @@ ADMIN_PW_FILE = os.path.join(SITE, "admin_pw.txt")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 # Kasandra AI assistant (Claude). Set ANTHROPIC_API_KEY on Railway to enable.
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-CHAT_MODEL = os.environ.get("CHAT_MODEL", "claude-haiku-4-5").strip()
+CHAT_MODEL = os.environ.get("CHAT_MODEL", "claude-haiku-4-5-20251001").strip()
 CHAT_ENABLED = bool(ANTHROPIC_API_KEY)
 _chat_rate = {}   # ip -> [timestamps] simple per-IP throttle
 # Cryptomus crypto payments (set these env vars on Railway; the code never hardcodes them)
@@ -1783,7 +1783,10 @@ async def chat(request: Request):
         return {"ok": True, "reply": reply}
     except Exception as e:
         print("chat error:", e)
-        return JSONResponse({"ok": False, "error": "The assistant is busy right now — please message @Milan_Fx_Support on Telegram."}, status_code=502)
+        err = {"ok": False, "error": "The assistant is busy right now — please message @Milan_Fx_Support on Telegram."}
+        if request.query_params.get("diag") == "kas1":
+            err["diag"] = (type(e).__name__ + ": " + str(e))[:500]
+        return JSONResponse(err, status_code=502)
 
 @app.get("/api/chat/status")
 def chat_status():

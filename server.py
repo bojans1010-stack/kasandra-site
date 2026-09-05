@@ -1771,6 +1771,9 @@ async def chat(request: Request):
         return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
     history = body.get("messages") or []
     session = (str(body.get("session_id") or "")[:40]) or ("ip-" + str(abs(hash(ip)) % 10**8))
+    _mem = _session_email(request.cookies.get("k_session"))
+    if _mem:
+        session = "m:" + _mem[:38]   # logged-in members chat under their email (one thread per member)
     msgs = []
     for m in history[-10:]:
         role = "assistant" if m.get("role") == "assistant" else "user"
@@ -1830,9 +1833,12 @@ def admin_chats(k_admin: str = Cookie(None)):
     return {"conversations": out, "count": len(out), "messages": len(rows)}
 
 @app.get("/api/chat/poll")
-def chat_poll(session: str = "", after: int = 0):
+def chat_poll(session: str = "", after: int = 0, k_session: str = Cookie(None)):
     """Widget polls this for human-agent replies pushed from the admin."""
     session = str(session)[:40]
+    _mem = _session_email(k_session)
+    if _mem:
+        session = "m:" + _mem[:38]   # a logged-in member always polls their own email thread
     out = []; last = after
     if session:
         try:

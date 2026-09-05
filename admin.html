@@ -796,8 +796,10 @@ async function loadOnlineMembers(){
     const list=document.getElementById('om-list'); if(!list) return;
     if(d.count){
       list.innerHTML=d.members.map(function(m){
+        var e=String(m.email||'').replace(/[<>"']/g,'');
         return '<span style="font-size:12.5px;background:rgba(0,255,136,.10);border:1px solid rgba(0,255,136,.25);color:#d9fbe9;border-radius:20px;padding:4px 11px">🟢 '+
-          m.email+' <span style="color:#6a7688">'+m.ago+'s ago</span></span>';
+          e+' <span style="color:#6a7688">'+m.ago+'s</span>'+
+          ' <a onclick="messageMember(\''+e+'\')" style="cursor:pointer;color:var(--gold);font-weight:600;margin-left:5px">Message</a></span>';
       }).join('');
     } else {
       list.innerHTML='<span style="font-size:12.5px;color:#6a7688">No logged-in members online right now.</span>';
@@ -805,5 +807,15 @@ async function loadOnlineMembers(){
   }catch(e){}
 }
 loadOnlineMembers(); setInterval(loadOnlineMembers, 8000);
+// ---- proactively message an online member ----
+async function messageMember(email){
+  var text=prompt('Message to '+email+':'); if(!text||!text.trim()) return;
+  var session='m:'+email;
+  try{
+    await fetch('/api/admin/chat/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:session,text:text.trim()})});
+    if(typeof switchTab==='function') switchTab('chats');
+    CHAT_CUR=session; setTimeout(loadChats,150);
+  }catch(e){}
+}
 </script></body></html>
 

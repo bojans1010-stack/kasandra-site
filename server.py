@@ -1783,10 +1783,7 @@ async def chat(request: Request):
         return {"ok": True, "reply": reply}
     except Exception as e:
         print("chat error:", e)
-        err = {"ok": False, "error": "The assistant is busy right now — please message @Milan_Fx_Support on Telegram."}
-        if request.query_params.get("diag") == "kas1":
-            err["diag"] = (type(e).__name__ + ": " + str(e))[:500]
-        return JSONResponse(err, status_code=200)   # 200 so the edge doesn't mask the body; widget reads .ok
+        return JSONResponse({"ok": False, "error": "The assistant is busy right now — please message @Milan_Fx_Support on Telegram."}, status_code=200)   # 200 so the edge doesn't mask the body; widget reads .ok
 
 @app.get("/api/chat/status")
 def chat_status():

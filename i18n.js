@@ -621,9 +621,28 @@ const LANGS = [
   { code: "sr", label: "Srpski / Hrvatski", short: "SR" }
 ];
 
+// Detect the visitor's language from their browser. Balkan codes map to
+// Serbian/Macedonian; everything we don't have falls back to English.
+function kDetectLang(){
+  try{
+    var list = (navigator.languages && navigator.languages.length)
+      ? navigator.languages
+      : [navigator.language || navigator.userLanguage || 'en'];
+    for (var i=0;i<list.length;i++){
+      var c = String(list[i]||'').toLowerCase();
+      if (c.indexOf('mk')===0) return 'mk';
+      if (c.indexOf('sr')===0 || c.indexOf('hr')===0 || c.indexOf('bs')===0 || c.indexOf('sh')===0 || c.indexOf('me')===0) return 'sr';
+      if (c.indexOf('en')===0) return 'en';
+    }
+  }catch(e){}
+  return 'en';   // universal fallback for any language we don't offer yet
+}
 function kGetLang(){
-  const l = localStorage.getItem('k_lang') || 'en';
-  return TRANSLATIONS[l] ? l : 'en';
+  // A manual choice always wins; otherwise auto-detect on first visit.
+  var saved = localStorage.getItem('k_lang');
+  if (saved && TRANSLATIONS[saved]) return saved;
+  var d = kDetectLang();
+  return TRANSLATIONS[d] ? d : 'en';
 }
 function kSetLang(l){ localStorage.setItem('k_lang', l); kApplyLang(l); }
 function kT(key){ const l=kGetLang(); return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || (TRANSLATIONS.en[key]) || key; }

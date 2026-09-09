@@ -470,6 +470,17 @@ function toggleRangeBox(){
 function onDay(v){ DAY=v; showingAll=false; toggleRangeBox(); renderTrades(); }
 function onRange(){ RFROM=document.getElementById('range-from').value; RTO=document.getElementById('range-to').value; renderTrades(); }
 function inRange(d){ return (!RFROM||d>=RFROM) && (!RTO||d<=RTO); }
+// Phase 1: show 5M trade times in the visitor's LOCAL timezone (5M timestamps are true UTC).
+// Display-only + defensive: any failure falls back to the original UTC strings. Never touches results/pips.
+function kLD(dstr, tstr){
+  try{
+    if(!dstr) return { d: dstr||'', t: tstr||'' };
+    var dt = new Date(dstr + 'T' + ((tstr && tstr.length>=4) ? tstr : '00:00') + ':00Z');
+    if(isNaN(dt.getTime())) return { d: dstr, t: tstr||'' };
+    var p = function(n){ return String(n).padStart(2,'0'); };
+    return { d: dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate()), t: p(dt.getHours())+':'+p(dt.getMinutes()) };
+  }catch(e){ return { d: dstr||'', t: tstr||'' }; }
+}
 function renderTrades(){
   const body=document.getElementById('trades-body');
   const filtered = DAY==='all' ? allTrades : (DAY==='custom' ? allTrades.filter(t=>inRange(t.date)) : allTrades.filter(t=>t.date===DAY));
@@ -478,8 +489,8 @@ function renderTrades(){
     const ptsCls=t.pips>=0?'pos':'neg';
     const ptsTxt=(t.pips>=0?'+':'')+t.pips;
     return '<tr>'+
-      '<td class="date">'+t.date+'</td>'+
-      '<td class="date">'+t.time+'</td>'+
+      '<td class="date">'+kLD(t.date,t.time).d+'</td>'+
+      '<td class="date">'+kLD(t.date,t.time).t+'</td>'+
       '<td class="side '+t.side+'">'+t.side+'</td>'+
       '<td>'+t.entry+'</td>'+
       '<td>'+t.exit+'</td>'+

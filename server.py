@@ -1899,7 +1899,11 @@ def _puprime_call(endpoint, start="2025-01-01 00:00:00", end=None, timeout=20):
         end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
     body = json.dumps({"userId": int(PUPRIME_IB_UID) if PUPRIME_IB_UID.isdigit() else PUPRIME_IB_UID,
                        "secret": PUPRIME_IB_SECRET, "startTime": start, "endTime": end}).encode("utf-8")
-    req = urllib.request.Request(PUPRIME_BASE + path, data=body, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(PUPRIME_BASE + path, data=body, headers={
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    })
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode("utf-8", "ignore"))

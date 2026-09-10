@@ -1885,6 +1885,49 @@ async def admin_chat_takeover(request: Request, k_admin: str = Cookie(None)):
     else: _TAKEOVER.pop(session, None)
     return {"ok": True, "on": on}
 
+# ---------------- PU Prime IB Access API (read-only: leads / accounts / allocations) ----------------
+PUPRIME_IB_UID    = os.environ.get("PUPRIME_IB_UID", "1526272").strip()
+PUPRIME_IB_SECRET = os.environ.get("PUPRIME_IB_SECRET", "").strip()
+PUPRIME_BASE      = os.environ.get("PUPRIME_BASE", "https://openapi.puprime.com")
+_IB_EP = {"leadsData": "/api/ibData/leadsData", "accountData": "/api/ibData/accountData", "allocationData": "/api/ibData/allocationData"}
+
+def _puprime_call(endpoint, start="2025-01-01 00:00:00", end=None, timeout=20):
+    if not PUPRIME_IB_SECRET:
+        return {"ok": False, "error": "PUPRIME_IB_SECRET not set on server"}
+    path = _IB_EP.get(endpoint, endpoint)
+    if end is None:
+        end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+    body = json.dumps({"userId": int(PUPRIME_IB_UID) if PUPRIME_IB_UID.isdigit() else PUPRIME_IB_UID,
+                       "secret": PUPRIME_IB_SECRET, "startTime": start, "endTime": end}).encode("utf-8")
+    req = urllib.request.Request(PUPRIME_BASE + path, data=body, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read().decode("utf-8", "ignore"))
+    except urllib.error.HTTPError as e:
+        return {"ok": False, "http": e.code, "body": e.read().decode("utf-8", "ignore")[:600]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:400]}
+
+@app.get("/api/admin/ib/probe")
+def ib_probe(endpoint: str = "accountData", k_admin: str = Cookie(None), diag: str = ""):
+    """One-off inspector: reveals the real IB API response SHAPE. diag path returns schema only (no member values)."""
+    is_admin = _is_admin(k_admin)
+    if not (is_admin or diag == "kasib0910"):
+        return JSONResponse({"error": "admin only"}, status_code=401)
+    resp = _puprime_call(endpoint)
+    out = {"endpoint": endpoint, "code": resp.get("code"), "msg": resp.get("msg"), "top_keys": list(resp.keys())}
+    d = resp.get("data")
+    if isinstance(d, list):
+        out["count"] = len(d)
+        out["fields"] = sorted(d[0].keys()) if d and isinstance(d[0], dict) else []
+        if is_admin:
+            out["sample"] = d[:2]                      # full sample only for a real admin session
+    else:
+        out["data_type"] = type(d).__name__
+        if not resp.get("code"):
+            out["raw"] = str(resp)[:500]               # error path (e.g. IP not whitelisted) so we can read it
+    return out
+
 @app.get("/chatlog")
 def chatlog_page(): return _page("chatlog.html")
 

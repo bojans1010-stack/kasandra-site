@@ -2242,6 +2242,9 @@ def i18n_js(): return _page("i18n.js", media_type="application/javascript")
 @app.get("/disclaimer.js")
 def disclaimer_js(): return _page("disclaimer.js", media_type="application/javascript")
 
+@app.get("/pipmove.js")
+def pipmove_js(): return _page("pipmove.js", media_type="application/javascript")   # 22 Oct 2026: Kasandra -> PIP Trading move banner
+
 @app.get("/ping.js")
 def ping_js(): return _page("ping.js", media_type="application/javascript")
 
